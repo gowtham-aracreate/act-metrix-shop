@@ -2,4 +2,4 @@
 Training Project
 
 
-This is Metix shop Dashbaord
+This is Metix shop Admin
