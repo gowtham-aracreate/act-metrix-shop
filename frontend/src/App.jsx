@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import './App.css'
-import RegisterPage from './pages/register'
-import LoginPage from './pages/login'
+import OrderPage from './pages/order'
 import { BrowserRouter, Routes, Route, useNavigate } from "react-router-dom";
 
 function App() {
@@ -10,8 +9,7 @@ function App() {
   return (
     <BrowserRouter>
     <Routes>
-      <Route path="/login" element={<LoginPage />} />
-      <Route path="/register" element={<RegisterPage />} />
+      <Route path="/order" element={<OrderPage />} />
     </Routes>
   </BrowserRouter>
   )
