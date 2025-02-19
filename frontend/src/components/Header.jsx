@@ -1,33 +1,23 @@
-
 import React from "react";
 
 const Header = () => {
   return (
-    <div className="bg-white shadow p-4 flex justify-between items-center">
-      <h1 className="text-lg font-bold">Dashboard</h1>
+    <div className="bg-white p-4 shadow flex justify-between items-center px-6">
       
-      <div className="flex items-center space-x-4">
-        <span className="bg-gray-200 px-3 py-1 rounded-full">Nanny's Shop</span>
-        <div className="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center">
-         </div>
+    
+
+      
+      <div className="flex items-center space-x-6">
+       
+        <div className="text-gray-600  text-sm">Nanny's Shop v</div>
+
+        
+        <div className="w-10 h-10 flex items-center justify-center bg-gray-300 rounded-full text-lg font-medium text-white">
+          
+        </div>
       </div>
     </div>
   );
 };
 
 export default Header;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
