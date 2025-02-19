@@ -11,6 +11,7 @@ const LoginPage = () => {
   return (
    <Auth>
     <h1 className=''>Login</h1>
+    <h2>hello</h2>
     <input placeholder='enter your name login'/>
     <button onClick={handleRegisterNavigation}>Go to Register</button>
    </Auth>
