@@ -1,15 +1,14 @@
-import React from 'react';
-import Sidebar from '../components/Sidebar';
-import Header from '../components/Header';
-
-const Dashboard = ({children}) => {
+import React from "react";
+import Sidebar from "../components/Sidebar"; 
+import Header from "../components/Header"; 
+const Dashboard = () => {
   return (
-    <div className='flex'>
+    <div className="flex">
       <Sidebar />
-      <div className="flex flex-col flex-1">
+      <div className="ml-64 w-full">
         <Header />
-        <div className="p-6">
-          {children}
+        <div className="p-6 mt-16">
+          
         </div>
       </div>
     </div>
@@ -17,8 +16,3 @@ const Dashboard = ({children}) => {
 };
 
 export default Dashboard;
-
-
-
-
-
