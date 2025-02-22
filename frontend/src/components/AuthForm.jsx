@@ -10,6 +10,9 @@ export const AuthForm = ({ title, subtitle, fields, buttonText,question, linkTex
     const handleLinkClick = () => {
         navigate(linkPath)
     }
+    const handleCustomer = () => {  
+
+    }
     const Passwordvisible = () => {
         setShowPassword(!showPassword)
     }
@@ -46,7 +49,7 @@ export const AuthForm = ({ title, subtitle, fields, buttonText,question, linkTex
               </div>
                 <div className='pt-[20px] text-center'>
                     <p className='pb-[20px]'>{question} <a className='text-blue-600' href="#" onClick={handleLinkClick}>{linkText}</a> </p>
-                    <button type='submit' className='bg-blue-600 text-white px-8 py-3 rounded-lg' >{buttonText}</button>
+                    <button type='submit' className='cursor-pointer bg-blue-600 text-white px-8 py-3 rounded-lg' onClick={handleCustomer} >{buttonText}</button>
                 </div>
              </div>
             </div>
