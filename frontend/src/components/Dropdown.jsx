@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 
-const Dropdown = ({ buttonStyle, menuStyle, buttonText, options }) => {
+const Dropdown = ({ dropdownButtonStyle, dropdownMenuStyle, dropdownButtonText,  dropdownOptions}) => {
   const [isOpen, setIsOpen] = useState(false);
-  const [selectedOption, setSelectedOption] = useState(buttonText);
+  const [selectedOption, setSelectedOption] = useState(dropdownButtonText);
 
   const toggleDropdown = () => {
     setIsOpen(!isOpen);
@@ -17,13 +17,12 @@ const Dropdown = ({ buttonStyle, menuStyle, buttonText, options }) => {
       <div>
         <button
           onClick={toggleDropdown}
-          className={`inline-flex justify-center w-full rounded-md 
-          px-4 py-2 text-sm font-medium
-           ${buttonStyle}`}
+          className={`inline-flex
+           ${dropdownButtonStyle}`}
         >
             {selectedOption}
           <svg
-            className="ml-2 -mr-1 h-5 w-5"
+            className="ml-2 -mr-1 h-6.5 w-5"
             xmlns="http://www.w3.org/2000/svg"
             fill="none"
             viewBox="0 0 24 24"
@@ -33,7 +32,7 @@ const Dropdown = ({ buttonStyle, menuStyle, buttonText, options }) => {
             <path
               strokeLinecap="round"
               strokeLinejoin="round"
-              strokeWidth="2"
+              strokeWidth="3"
               d="M19 9l-7 7-7-7"
             />
           </svg>
@@ -43,11 +42,11 @@ const Dropdown = ({ buttonStyle, menuStyle, buttonText, options }) => {
       {isOpen && (
         <div
           className={`origin-top-right absolute right-0 mt-2 w-56 
-          rounded-md ${menuStyle}`}
+          rounded-md ${dropdownMenuStyle}`}
           role="menu"
         >
           <div className="py-1" role="none">
-            {options.map((option, index) => (
+            { dropdownOptions.map((option, index) => (
               <a
                 key={index}
                 href={option.href}

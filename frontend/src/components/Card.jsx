@@ -10,10 +10,10 @@ export const Card = ({ icon, alt, cardStyle, dropdownButtonStyle, dropdownMenuSt
                 </div>
                 <div className="absolute top-3 right-3 ">
                     <Dropdown
-                        buttonStyle={dropdownButtonStyle}
-                        menuStyle={dropdownMenuStyle}
-                        buttonText={dropdownButtonText}
-                        options={dropdownOptions}
+                        dropdownButtonStyle={dropdownButtonStyle}
+                        dropdownMenuStyle={dropdownMenuStyle}
+                        dropdownButtonText={dropdownButtonText}
+                        dropdownOptions={dropdownOptions}
                     />
                 </div>
             </div>
