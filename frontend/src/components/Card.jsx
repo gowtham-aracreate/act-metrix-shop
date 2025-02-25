@@ -1,14 +1,14 @@
-import React from 'react'
-import DropDown from './DropDown'
+import React from 'react';
+import Dropdown from './DropDown';
 
 export const Card = ({ icon, alt, cardStyle, dropdownButtonStyle, dropdownMenuStyle, dropdownButtonText, dropdownOptions, titles }) => {
     return (
         <div className={cardStyle}>
             <div className='relative'>
-            <div className="absolute top-3 left-3">
+                <div className="absolute top-3 left-3">
                     <img src={icon} alt={alt} className="" />
                 </div>
-                <div className="absolute top-3 right-3 ">
+                <div className="absolute top-3 right-3">
                     <Dropdown
                         dropdownButtonStyle={dropdownButtonStyle}
                         dropdownMenuStyle={dropdownMenuStyle}
@@ -26,5 +26,5 @@ export const Card = ({ icon, alt, cardStyle, dropdownButtonStyle, dropdownMenuSt
                 ))}
             </div>
         </div>
-    )
-}
+    );
+};
