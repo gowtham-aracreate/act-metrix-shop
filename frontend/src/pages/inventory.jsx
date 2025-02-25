@@ -64,21 +64,16 @@ const tableTitle =[
 'Order Total',
 'Customer Since',
 'Status',
+'pic',
 ];
 
 const tableData =[
-  {name:'john',email:'abc@gmail.com',phone:'39402049302',order:'23',Total:'23000',customer:'2002',status:'active'},
-  {name:'john',email:'abc@gmail.com',phone:'39402049302',order:'23',Total:'23000',customer:'2002',status:'active'},
-  {name:'john',email:'abc@gmail.com',phone:'39402049302',order:'23',Total:'23000',customer:'2002',status:'active'},
-  {name:'john',email:'abc@gmail.com',phone:'39402049302',order:'23',Total:'23000',customer:'2002',status:'active'},
+  {name:'john',email:'abc@gmail.com',phone:'39402049302',order:'23',total:'23000',customer:'2002',status:'active'},
+  {name:'john',email:'abc@gmail.com',phone:'39402049302',order:'23',total:'23000',customer:'2002',status:'active'},
+  {name:'john',email:'abc@gmail.com',phone:'39402049302',order:'23',total:'23000',customer:'2002',status:'active'},
+  {name:'john',email:'abc@gmail.com',phone:'39402049302',order:'23',total:'23000',customer:'2002',status:'active'},
 ]
 
-const table = [
-  {
-   heading: tableTitle,
-   data:tableData,
-  }
-];
 
 const InventoryPage = () => {
   const navigate = useNavigate();
@@ -92,7 +87,7 @@ const InventoryPage = () => {
       <Table
         title='Customer'
         heading={tableTitle}
-        tableContent={table}
+        tableContent={tableData}
       />
 
 

@@ -5,10 +5,11 @@ import Calendar from "../assets/calendar.svg";
 import Send from "../assets/send.svg";
 import Dropdown from "./dropdown";
 
-const Table = (title, tableContent, heading) => {
+const Table = ({title, tableContent, heading}) => {
   const navigate = useNavigate();
   return (
     <div className="p-[22px] bg-white rounded-lg h-screen">
+      <table className="w-full">
       <caption className="pb-[25px]">
         <div className=" flex">
           <div>
@@ -18,8 +19,8 @@ const Table = (title, tableContent, heading) => {
           </div>
           <div className="absolute flex right-[28px]  gap-[12px]">
             <div>
-              <div class="relative">
-                <div class="absolute inset-y-0 rtl:inset-r-0 start-0 items-center ps-3 pt-2 pointer-events-none">
+              <div className="relative">
+                <div className="absolute inset-y-0 rtl:inset-r-0 start-0 items-center ps-3 pt-2 pointer-events-none">
                   <svg
                     className="w-4 h-4 text-gray-500"
                     aria-hidden="true"
@@ -29,9 +30,9 @@ const Table = (title, tableContent, heading) => {
                   >
                     <path
                       stroke="black"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
                       d="m19 19-4-4m0-7A7 7 0 1 1 1 8a7 7 0 0 1 14 0Z"
                     />
                   </svg>
@@ -39,7 +40,7 @@ const Table = (title, tableContent, heading) => {
               </div>
               <input
                 type="text"
-                class="block ps-10 w-[176px] h-[29px] border border-gray-300 rounded-lg "
+                className="block ps-10 w-[176px] h-[29px] border border-gray-300 rounded-lg "
                 placeholder="Search"
               />
             </div>
@@ -85,26 +86,20 @@ const Table = (title, tableContent, heading) => {
           </div>
         </div>
       </caption>
-      <table className="w-full text-left">
-        <thead className="border-y border-gray-300">
-          <tr>
-            <th scope="col" className="p-4">
-              <div className="flex items-center">
-                <input
-                  type="checkbox"
-                  className="w-4 h-4 rounded-sm focus:ring-blue-500"
-                />
-              </div>
-            </th>
-            {heading.map((topic, index) => {
+        <thead className="border-y border-gray-300 w-full text-left">
+        <tr>
+              <th scope="col" className="p-4">
+              <input type="checkbox" className="w-4 h-4 rounded-sm focus:ring-blue-500" />
+              </th>
+            {heading.map((topic, index) => (
                 <th
                 key={index}
                   scope="col"
-                  className="px-6 py-3 flex text-[14px] text-[#2C2D33]"
+                  className="px-6 py-3 text-[14px] text-[#2C2D33]"
                 >
                   {topic}
                   <svg
-                    className="ml-3"
+                    className="ml-3 inline-flex"
                     xmlns="http://www.w3.org/2000/svg"
                     width="18"
                     height="22"
@@ -128,20 +123,15 @@ const Table = (title, tableContent, heading) => {
                     />
                   </svg>
                 </th>
-            })}
-          </tr>
+            ))}
+         </tr>
         </thead>
         <tbody>
-            {tableContent.map((data, index) => {
-               <tr key={index}>
-               <td className="w-4 p-4">
-                 <div className="flex items-center">
-                   <input
-                     type="checkbox"
-                     className="w-4 h-4 rounded-sm focus:ring-blue-500"
-                   />
-                 </div>
-               </td>
+            {tableContent.map((data, index) => (
+               <tr key={index} className="border-b border-gray-300">
+               <td className="px-4 py-4">
+                <input type="checkbox" className="w-4 h-4 rounded-sm focus:ring-blue-500" />
+              </td>
                 <td className="px-6 py-4">{data.name}</td>
                 <td className="px-6 py-4">{data.email}</td>
                 <td className="px-6 py-4">{data.phone}</td>
@@ -150,7 +140,7 @@ const Table = (title, tableContent, heading) => {
                 <td className="px-6 py-4">{data.customer}</td>
                 <td className="px-6 py-4">{data.status}</td> 
               </tr>
-            })}
+            ))}
         </tbody>
       </table>
       <nav className="bottom-0">
@@ -177,13 +167,13 @@ const Table = (title, tableContent, heading) => {
                 fill="none"
                 viewBox="0 0 24 24"
                 width="10"
-                stroke-width="1.5"
+                strokeWidth="1.5"
                 stroke="currentColor"
                 className="size-5 mt-1"
               >
                 <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
                   d="M15.75 19.5 8.25 12l7.5-7.5"
                 />
               </svg>
@@ -193,13 +183,13 @@ const Table = (title, tableContent, heading) => {
                 xmlns="http://www.w3.org/2000/svg"
                 fill="none"
                 viewBox="0 0 24 24"
-                stroke-width="1.5"
+                strokeWidth="1.5"
                 stroke="currentColor"
                 className="size-5 mt-1"
               >
                 <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
                   d="m8.25 4.5 7.5 7.5-7.5 7.5"
                 />
               </svg>
