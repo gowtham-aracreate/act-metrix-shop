@@ -1,19 +1,46 @@
 import React from 'react'
 import Auth from '../layout/auth'
-import { useNavigate } from 'react-router-dom'
+import Message from '../assets/message.svg'
+import lock from '../assets/lock.svg'
+
+import AuthForm from '../components/AuthForm'
 
 const LoginPage = () => {
-  const navigate = useNavigate()
-
-  const handleRegisterNavigation = () => {
-    navigate('/register')
+  const handleLogin = (event) => {
+    event.preventDefault()
+    // Add login logic here
   }
+
+  const fields = [
+    {
+      icon: Message,
+      alt: 'Email',
+      type: 'email',
+      placeholder: 'Email Address',
+      required: true,
+    },
+    {
+      icon: lock,
+      alt: 'Password',
+      type: 'password',
+      placeholder: 'Password',
+      required: true,
+    },
+  ]
   return (
-   <Auth>
-    <h1 className=''>Login</h1>
-    <input placeholder='enter your name login'/>
-    <button onClick={handleRegisterNavigation}>Go to Register</button>
-   </Auth>
+    <Auth>
+      <AuthForm 
+            title="Welcome Back!" 
+            subtitle="Login to your account" 
+            fields={fields} 
+            buttonText="Login"   
+            question="Don't have an account?"
+            linkText="Sign Up"
+            linkPath="/register"
+            recover="Recover Password"
+            onSubmit={handleLogin}
+          />
+    </Auth>
   )
 }
 
