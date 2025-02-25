@@ -11,10 +11,9 @@ import conversationslogo from "../assets/conversationslogo.svg";
 import settingslogo from "../assets/settingslogo.svg";
 import contactlogo from "../assets/contactlogo.svg";
 import giftlogo from "../assets/giftlogo.svg";
-
 const Sidebar = () => {
   return (
-    <div className="w-64 h-screen bg-white text-black-500 p-6 fixed left-0 top-0 shadow-md">
+    <div className="w-64 text-black-500 p-6 fixed left-0 top-0 shadow-md">
       
       <div className="flex items-center mb-6">
         <img src={metrixlogo} alt="Logo" className="h-8 w-8 mr-2" />
