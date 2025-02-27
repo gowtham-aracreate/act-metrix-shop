@@ -6,11 +6,6 @@ import lock from '../assets/lock.svg'
 import AuthForm from '../components/AuthForm'
 
 const LoginPage = () => {
-  const handleLogin = (event) => {
-    event.preventDefault()
-    // Add login logic here
-  }
-
   const fields = [
     {
       icon: Message,
@@ -18,6 +13,7 @@ const LoginPage = () => {
       type: 'email',
       placeholder: 'Email Address',
       required: true,
+      name: 'email',
     },
     {
       icon: lock,
@@ -25,11 +21,13 @@ const LoginPage = () => {
       type: 'password',
       placeholder: 'Password',
       required: true,
+      name: 'password',
     },
   ]
   return (
     <Auth>
       <AuthForm 
+      mode="login"
             title="Welcome Back!" 
             subtitle="Login to your account" 
             fields={fields} 
@@ -38,7 +36,6 @@ const LoginPage = () => {
             linkText="Sign Up"
             linkPath="/register"
             recover="Recover Password"
-            onSubmit={handleLogin}
           />
     </Auth>
   )
