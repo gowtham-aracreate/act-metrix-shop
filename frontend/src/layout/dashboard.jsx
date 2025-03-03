@@ -1,27 +1,19 @@
 import React from "react";
-import Sidebar from "../components/Sidebar"; 
-import Header from "../components/Header"; 
-import PieChart from "../components/PieChart"; 
-import Card from "../components/Card";
-import Cards from "../components/Cards"; 
-
+import Sidebar from "./Sidebar"; 
+import Header from "./Header"; 
+import PieChartComponent from "../components/piechart"; 
+import { Card } from "../components/Card"; 
+import Cards from "../components/Cards";
 
 const Dashboard = () => {
   return (
     <div className="flex">
       {/* Sidebar Navigation */}
       <Sidebar />
-      <div className="ml-64 w-[calc(100%-16rem)]">
-        {/* Page Header */}
+      <div className="ml-64">
         <Header />
-        <div className="p-6">
-          {/* Pie Chart Section */}
-          <PieChart />
-          <div className="mt-8">
-            {/* Cards Section */}
-            <Cards />
-           
-          </div>
+        <div className="p-6 mt-16">
+          <PieChartComponent /> 
         </div>
       </div>
     </div>

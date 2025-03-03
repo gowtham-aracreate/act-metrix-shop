@@ -1,6 +1,7 @@
 import React from 'react';
 import { Card } from './Card';
-const Cards = ({ fields,cardplace }) => {
+
+const Cards = ({ fields, cardplace }) => {
   return (
     <div className={cardplace}>
       {fields.map((field, index) => (
@@ -13,6 +14,10 @@ const Cards = ({ fields,cardplace }) => {
                 dropdownMenuStyle= {field.dropdownMenuStyle}
                 dropdownButtonText= {field.dropdownButtonText}
                 dropdownOptions= {field.dropdownOptions}
+                maintitleStyle={field.maintitleStyle}
+                titleStyle={field.titleStyle}
+                subtitleStyle={field.subtitleStyle}
+                showDropdown={field.showDropdown}
                 titles= {[
                   { title: field.title1, subTitle: field.subTitle1},
                   { title: field.title2, subTitle: field.subTitle2 },
