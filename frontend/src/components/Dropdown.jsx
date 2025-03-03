@@ -17,12 +17,12 @@ const Dropdown = ({ dropdownButtonStyle, dropdownMenuStyle, dropdownButtonText, 
       <div>
         <button
           onClick={toggleDropdown}
-          className={`inline-flex
+          className={`inline-flex relative
            ${dropdownButtonStyle}`}
         >
             {selectedOption}
           <svg
-            className="ml-2 -mr-1 h-6.5 w-5"
+            className="absolute right-5 ml-2 -mr-1 h-6.5 w-5"
 
             fill="none"
             viewBox="0 0 24 24"

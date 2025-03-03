@@ -1,7 +1,7 @@
 import React from "react";
 import Auth from "../layout/auth";
 import { useNavigate } from "react-router-dom";
-import Profile from "../assets/profile.svg";
+import profile from "../assets/profile.svg";
 import Message from "../assets/message.svg";
 import lock from "../assets/lock.svg";
 import AuthForm from "../components/AuthForm";
@@ -9,7 +9,7 @@ import AuthForm from "../components/AuthForm";
 const RegisterPage = () => {
   const fields = [
     {
-      icon: Profile,
+      icon: profile,
       alt: "Username",
       type: "text",
       placeholder: "Your Full Name",
@@ -37,7 +37,7 @@ const RegisterPage = () => {
   return (
     <Auth>
       <AuthForm
-      mode="register"
+        mode="register"
         title="Get Started with Metrix"
         subtitle="Create Your free account"
         fields={fields}
