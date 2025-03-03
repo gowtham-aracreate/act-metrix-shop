@@ -198,3 +198,4 @@ const Table = ({title, tableContent, heading}) => {
   );
 };
 export default Table;
+

@@ -30,3 +30,7 @@ export const Card = ({ icon, alt, cardStyle, dropdownButtonStyle, dropdownMenuSt
         </div>
     )
 }
+export default Card;
+
+
+

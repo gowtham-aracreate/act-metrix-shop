@@ -8,6 +8,7 @@ import Cards from "../components/Cards";
 const Dashboard = () => {
   return (
     <div className="flex">
+      {/* Sidebar Navigation */}
       <Sidebar />
       <div className="ml-64">
         <Header />

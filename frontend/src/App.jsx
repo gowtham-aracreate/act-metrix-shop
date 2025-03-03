@@ -11,9 +11,7 @@ import { NewInventory } from './pages/NewInventory'
 
 
 function App() {
-  
   return (
-    <>
     <BrowserRouter>
     <Routes>
       <Route path="/" element={< Dashboard />} />
@@ -25,8 +23,10 @@ function App() {
       <Route path='/newinventory' element={<NewInventory/>}/>
     </Routes>
   </BrowserRouter>
-  </>
   )
 }
 export default App
+
+
+
 
