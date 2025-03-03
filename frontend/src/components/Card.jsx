@@ -8,14 +8,14 @@ export const Card = ({ icon, alt, cardStyle, dropdownButtonStyle, dropdownMenuSt
             <div className="absolute top-3 left-3">
                     <img src={icon} alt={alt} className="" />
                 </div>
-                <div className="absolute top-3 right-3 ">
+                 <div className="absolute top-3 right-3 ">
                     <Dropdown
                         dropdownButtonStyle={dropdownButtonStyle}
                         dropdownMenuStyle={dropdownMenuStyle}
                         dropdownButtonText={dropdownButtonText}
                         dropdownOptions={dropdownOptions}
                     />
-                </div>
+                </div> 
             </div>
             <div className="flex left-0 pt-[46px] mb-[10px]">
                 {Array.isArray(titles) && titles.map((title, index) => (
@@ -28,3 +28,7 @@ export const Card = ({ icon, alt, cardStyle, dropdownButtonStyle, dropdownMenuSt
         </div>
     )
 }
+export default Card;
+
+
+

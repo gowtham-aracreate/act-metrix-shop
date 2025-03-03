@@ -1,6 +1,5 @@
 import React from 'react';
 import { Card } from './Card';
-
 const Cards = ({ fields,cardplace }) => {
   return (
     <div className={cardplace}>
@@ -25,5 +24,9 @@ const Cards = ({ fields,cardplace }) => {
     </div>
   );
 };
-
 export default Cards;
+
+
+
+
+

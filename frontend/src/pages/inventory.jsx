@@ -1,6 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import Cards from '../components/cards';
+import Card from '../components/Card';
+import Cards from '../components/Cards';
 import Table from '../components/Table';
 // import sales from '../assets/sales.svg';
 // import order from '../assets/order.svg';

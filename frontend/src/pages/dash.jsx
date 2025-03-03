@@ -1,20 +1,23 @@
-import React from 'react';
-import DashboardLayout from '../layout/dashboard';
+import React from "react";
+import Sidebar from "../components/Sidebar"; 
+import Header from "../components/Header"; 
+import { PieChart } from "../components/PieChart";
 
-const Dash = () => {
+const Dashboard = () => {
   return (
-    <DashboardLayout>
-      <div className=" text-center w-240 text-grey-500 p-10">
-        
-        
+    <div className="flex">
+      <Sidebar />
+      <div className="ml-64 w-full">
+        <Header />
+        <div className="p-10">
+          <PieChart/>
+        </div>
       </div>
-    </DashboardLayout>
+    </div>
   );
 };
 
-export default Dash;
-
-
+export default Dashboard;
 
 
 
