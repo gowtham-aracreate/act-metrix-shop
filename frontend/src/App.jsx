@@ -6,6 +6,7 @@ import InventoryPage from './pages/inventory'
 import Dropdown from './components/dropdown'
 import Table from './components/Table'
 import Dashboard   from './layout/dashboard';
+import ProductPage from './pages/productDetail'
 import { BrowserRouter, Routes, Route, useNavigate } from "react-router-dom";
 import { NewInventory } from './pages/NewInventory'
 
@@ -16,13 +17,14 @@ function App() {
     <>
     <BrowserRouter>
     <Routes>
-      <Route path="/" element={< Dashboard />} />
+      <Route path="/dashboard" element={< Dashboard />} />
       <Route path="/login" element={<LoginPage />} />
       <Route path="/register" element={<RegisterPage />} />
       <Route path='/dropdown' element={<Dropdown />} />
      <Route path="/inventory" element={<InventoryPage />} />
       <Route path="/table" element={<Table />} />
       <Route path='/newinventory' element={<NewInventory/>}/>
+      <Route path='/productDetail' element={<ProductPage/>}/>
     </Routes>
   </BrowserRouter>
   </>

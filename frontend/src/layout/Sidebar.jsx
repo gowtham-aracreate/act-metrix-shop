@@ -1,15 +1,41 @@
 import React from "react";
 import { IoLogOut } from "react-icons/io5";
 import metrixlogo from "../assets/metrixlogo.svg";
+import Dropdown from "../components/dropdown";
+import notification from "../assets/notification.svg";
+import profile from "../assets/profile.svg";
+import { useNavigate } from "react-router-dom";
+
 
 const Sidebar = ({children}) => {
   const [activeLink, setActiveLink] = React.useState("Dashboard");
 
-  const handleLinkClick = (link) => {
+  const handleLinkClick = (link,path) => {
     setActiveLink(link);
+    navigate(path);
   };
-
+const navigate = useNavigate();
   return (
+    
+    <div>
+      <header>
+      <div className=" absolute left-64 bg-white fixed top-0 pt-4 pb-4 flex justify-between items-center">
+      <h3 className="text-lg pl-3 font-semibold">Dashboard</h3>
+      <div className="relative">
+        <div className=" flex justify-between pl-235">
+          <Dropdown
+            dropdownButtonStyle="bg-[#FFCC9133] border-none justify-center pr-5 w-[173px] h-[32px] rounded-md "
+            dropdownMenuStyle="bg-white"
+            dropdownButtonText="Nanny's Shop"
+          />
+        </div>
+      </div>
+      <div className="flex r-0">
+        <img src={notification} alt="Notification" className="h-6 w-6 mr-1" />
+        <img src={profile} alt="Profile" className="h-6 w-6 mr-1" />
+      </div>
+    </div>
+    </header>
     <div className="">
       <div className="w-64 text-[14px] text-black-500 p-6 fixed left-0 top-0">
         <div className="flex items-center mb-6">
@@ -20,7 +46,7 @@ const Sidebar = ({children}) => {
         <ul className="">
           <a
             href="#"
-            onClick={() => handleLinkClick("Dashboard")}
+            onClick={() => handleLinkClick("Dashboard","/dashboard")}
             className={`p-3 rounded-md flex items-center ${
               activeLink === "Dashboard"
                 ? "bg-[#5570F1] text-white"
@@ -159,7 +185,7 @@ const Sidebar = ({children}) => {
           </a>
           <a
             href="#"
-            onClick={() => handleLinkClick("Inventory")}
+            onClick={() => handleLinkClick("Inventory","/inventory")}
             className={`p-3 flex items-center rounded-md ${
               activeLink === "Inventory"
                 ? "bg-[#5570F1] text-white"
@@ -409,6 +435,7 @@ const Sidebar = ({children}) => {
         </ul>
       </div>
       {children}
+    </div>
     </div>
    
   );

@@ -46,7 +46,7 @@ const Table = ({title, tableContent, heading}) => {
               </div>
               <div className="flex gap-[12px]">
                 <div>
-                  <button className="flex w-[67px] h-[29px] justify-center text-gray-600 border border-gray-600 rounded-lg">
+                  <button className="flex w-[67px] pt-1 h-[30px] justify-center text-gray-600 border border-gray-600 rounded-lg">
                     <img
                       className="w-[16px] h-[16px] mt-1 mr-1"
                       src={Filter}
@@ -56,7 +56,7 @@ const Table = ({title, tableContent, heading}) => {
                   </button>
                 </div>
                 <div>
-                  <button className="flex w-[67px] h-[29px] justify-center text-gray-600 border border-gray-600 rounded-lg">
+                  <button className="flex w-[67px] pt-1 h-[30px] justify-center text-gray-600 border border-gray-600 rounded-lg">
                     <img
                       className="w-[16px] h-[16px] mt-1 mr-1"
                       src={Calendar}
@@ -66,7 +66,7 @@ const Table = ({title, tableContent, heading}) => {
                   </button>
                 </div>
                 <div>
-                  <button className="flex w-[67px] h-[29px] justify-center text-gray-600 border border-gray-600 rounded-lg">
+                  <button className="flex w-[67px] pt-1 h-[30px] justify-center text-gray-600 border border-gray-600 rounded-lg">
                     <img
                       className="w-[16px] h-[16px] mt-1 mr-1"
                       src={Send}
@@ -77,7 +77,7 @@ const Table = ({title, tableContent, heading}) => {
                 </div>
                 <div>
                   <Dropdown
-                    dropdownButtonStyle="text-gray-600 h-[29px] justify-center w-[120px] border border-gray-600 rounded-lg"
+                    dropdownButtonStyle="text-gray-600 h-[30px] pt-1 justify-center w-[135px] pr-5 border border-gray-600 rounded-lg"
                     dropdownMenuStyle="bg-white"
                     dropdownButtonText="Bulk Action"
                   />
@@ -144,7 +144,7 @@ const Table = ({title, tableContent, heading}) => {
         <div className="flex border-t border-[#E1E2E9] pt-[9px]">
           <div className="flex">
             <Dropdown
-              dropdownButtonStyle="text-gray-600 h-[23px] justify-center w-[60px] bg-[#5E636614] text-[15px] rounded-lg"
+              dropdownButtonStyle="text-gray-600 h-[23px] justify-center pr-8 w-[60px] bg-[#5E636614] text-[15px] rounded-lg"
               dropdownMenuStyle="bg-white"
               dropdownButtonText="10"
             />
@@ -153,7 +153,7 @@ const Table = ({title, tableContent, heading}) => {
           </div>
           <div className="flex absolute right-[30px] pr-[22px]">
             <Dropdown
-              dropdownButtonStyle="text-gray-600 h-[23px] justify-center w-[60px] bg-[#5E636614] text-[15px] rounded-lg"
+              dropdownButtonStyle="text-gray-600 h-[23px] justify-center w-[60px] pr-8  bg-[#5E636614] text-[15px] rounded-lg"
               dropdownMenuStyle="bg-white"
               dropdownButtonText="1"
             />

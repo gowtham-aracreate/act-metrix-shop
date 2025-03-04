@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import { useNavigate } from "react-router-dom";
 import Cards from "../components/Cards";
 import Table from "../components/Table";
@@ -6,8 +6,7 @@ import sales from "../assets/sales.svg";
 import inventory from "../assets/inventory.svg";
 import product from "../assets/product.png";
 import Dropdown from "../components/dropdown";
-import Sidebar from "../layout/Sidebar"; 
-import Header from "../layout/Header"; 
+import Sidebar from "../layout/Sidebar";
 
 const options = [
   { label: "This Month", href: "#" },
@@ -34,7 +33,7 @@ const fields = [
     alt: "Sales",
     cardStyle: "bg-white rounded-lg w-[605px] h-[145px]",
     maintitleStyle: "gap-35 pl-4",
-    dropdownButtonStyle: "text-gray-400 border-none ",
+    dropdownButtonStyle: "text-gray-400 border-none pr-10",
     dropdownMenuStyle: "bg-white",
     dropdownButtonText: "This Week",
     dropdownOptions: options,
@@ -66,15 +65,15 @@ const actionOption = [
   { label: "Unpublish", href: "#" },
 ];
 
-const action =  (
+const action = (
   <Dropdown
-    dropdownButtonStyle="text-gray-400 border-none bg-[#5E636614] px-2 rounded-lg"
+    dropdownButtonStyle="text-gray-400 bg-[#5E636614] w-[110px] h-[23px] pl-3 pr-3 rounded-lg"
     dropdownMenuStyle="bg-white"
     dropdownButtonText="Publish"
-    dropdownOptions= {actionOption}
+    dropdownOptions={actionOption}
   />
 );
-const tableContent=[
+const tableContent = [
   {
     icon: product,
     product: "iPhone 13 Pro",
@@ -119,55 +118,58 @@ const tableContent=[
     action: action,
     status: "Publish",
   },
-]
-
+];
 
 const InventoryPage = () => {
-
+  const navigate = useNavigate();
   return (
     <div className="">
-      <Sidebar/>
-   <div className="flex flex-col">
-    <Header/> 
-    <div className="ml-64 mt-15 bg-[#5E636614]">
-  <div className="ml-4">
-      <div className="flex mb-[20px] pt-4 justify-between">
-        <h1 className="text-[16px] pt-4">Inventory Summary</h1>
-        <button className="bg-[#5570F1] inline-flex w-[205px] h-[36px] justify-center rounded-lg text-[14px] mt-3 mr-4 pt-2 text-white">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="24"
-            height="24"
-            viewBox="0 0 24 24"
-            fill="none"
-            className="mr-3"
-          >
-            <path
-              d="M12 5V19"
-              stroke="white"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-            <path
-              d="M5 12H19"
-              stroke="white"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
-          Add a New Product
-        </button>
+      <Sidebar />
+        <div className="ml-64 mt-15 bg-[#5E636614] h-screen">
+          <div className="ml-4">
+            <div className="flex mb-[20px] pt-4 justify-between">
+              <h1 className="text-[16px] pt-4">Inventory Summary</h1>
+              <button
+                onClick={() => navigate("/NewInventory")}
+                className="bg-[#5570F1] inline-flex w-[205px] h-[36px] justify-center rounded-lg text-[14px] mt-3 mr-4 pt-2 text-white"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  className="mr-3"
+                >
+                  <path
+                    d="M12 5V19"
+                    stroke="white"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                  <path
+                    d="M5 12H19"
+                    stroke="white"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+                Add a New Product
+              </button>
+            </div>
+            <div>
+              <Cards fields={fields} cardplace="flex flex-row gap-4" />
+              <Table
+                title="Customer"
+                heading={tableTitle}
+                tableContent={tableContent}
+              />
+            </div>
+          </div>
+        </div>
       </div>
-      <div>
-        <Cards fields={fields} cardplace="flex flex-row gap-4" />
-        <Table title="Customer" heading={tableTitle} tableContent={tableContent} />
-      </div>
-    </div>
-  </div>
-    </div>
-    </div>
   );
 };
 
