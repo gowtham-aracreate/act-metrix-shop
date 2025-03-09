@@ -4,7 +4,6 @@ const port = 3000;
 const cors = require('cors');
 const mongoose = require('mongoose');
 const bcrypt = require('bcrypt');
-const multer = require("multer");
 
 app.use(cors());
 app.use(express.json());
@@ -27,12 +26,15 @@ const productSchema = new mongoose.Schema({
   sellingPrice: Number,
   costPrice: Number,
   quantity: Number,
-  orderType: String,
   discount: Boolean,
+  discountValue: Number,
   expiryDate: String,
   returnPolicy: Boolean,
-  description: String,
-  productImage: String, // Store image URL instead of Base64
+  shortDescription: String,
+  longDescription: String, 
+  dateAdded: String, 
+  time: String, 
+  status: String,
 });
 
 const UserDetail = mongoose.model("User", UserSchema);
@@ -80,31 +82,103 @@ app.get('/get-user', async (req, res) => {
   res.json(data);
 });
 
+app.post('/product', async (req, res) => {
+  const { productName, productCategory, sellingPrice, costPrice, quantity, discount, discountValue, expiryDate, returnPolicy, shortDescription, longDescription, dateAdded, time, status} = req.body; 
 
-// Multer Storage Configuration
-const storage = multer.diskStorage({
-  destination: "./uploads/",
-  filename: (req, file, cb) => {
-    cb(null, Date.now() + path.extname(file.originalname)); // Unique filename
-  },
-});
-
-const upload = multer({ storage: storage });
-
-// Route to Add a Product with Image Upload
-app.post("/products", upload.single("productImage"), async (req, res) => {
   try {
-    const productData = JSON.parse(req.body.productData); // Convert string to JSON
-    const newProduct = new Product({
-      ...productData,
-      productImage: req.file ? `/uploads/${req.file.filename}` : "",
+    const product = await Product.create({
+      productName,
+      productCategory,
+      sellingPrice,
+      costPrice,
+      quantity,
+      discount, 
+      discountValue, 
+      expiryDate,
+      returnPolicy,
+      shortDescription,
+      longDescription, 
+      dateAdded, 
+      time, 
+      status
     });
-    await newProduct.save();
-    res.status(201).json({ message: "Product saved successfully!" });
+    res.send(product);
   } catch (error) {
-    res.status(500).json({ error: "Failed to save product" });
+    res.status(500).send('Error creating product');
   }
 });
+
+app.get('/products', async (req, res) => {
+  try {
+    const products = await Product.find();
+    res.json(products);
+  } catch (error) {
+    res.status(500).send('Error fetching products');
+  }
+});
+
+app.patch('/products/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
+
+    if (!status) {
+      return res.status(400).json({ error: "Status is required" });
+    }
+
+    const updatedProduct = await Product.findByIdAndUpdate(
+      id,
+      { status },
+      { new: true } // Returns the updated document
+    );
+
+    if (!updatedProduct) {
+      return res.status(404).json({ error: "Product not found" });
+    }
+
+    res.json(updatedProduct);
+  } catch (error) {
+    console.error("Error updating product status:", error);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+// app.get('/product/:id', async (req, res) => {
+//   try {
+//     const product = await Product.findById(req.params.id);
+//     if (!product) {
+//       return res.status(404).send('Product not found');
+//     }
+//     res.json(product);
+//   } catch (error) {
+//     res.status(500).send('Error fetching product');
+//   }
+// });
+
+// app.put('/product/:id', async (req, res) => {
+//   try {
+//     const product = await Product.findByIdAndUpdate(req.params.id, req.body, { new: true });
+//     if (!product) {
+//       return res.status(404).send('Product not found');
+//     }
+//     res.json(product);
+//   } catch (error) {
+//     res.status(500).send('Error updating product');
+//   }
+// });
+
+// app.delete('/product/:id', async (req, res) => {
+//   try {
+//     const product = await Product.findByIdAndDelete(req.params.id);
+//     if (!product) {
+//       return res.status(404).send('Product not found');
+//     }
+//     res.send('Product deleted');
+//   } catch (error) {
+//     res.status(500).send('Error deleting product');
+//   }
+// });
+
 
 
 app.listen(port, () => {

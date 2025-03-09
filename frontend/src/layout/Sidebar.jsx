@@ -8,7 +8,7 @@ import { useNavigate } from "react-router-dom";
 
 
 const Sidebar = ({children}) => {
-  const [activeLink, setActiveLink] = React.useState("Dashboard");
+  const [activeLink, setActiveLink] = React.useState("");
 
   const handleLinkClick = (link,path) => {
     setActiveLink(link);

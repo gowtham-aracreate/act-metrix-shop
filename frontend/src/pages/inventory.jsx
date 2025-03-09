@@ -7,6 +7,8 @@ import inventory from "../assets/inventory.svg";
 import product from "../assets/product.png";
 import Dropdown from "../components/dropdown";
 import Sidebar from "../layout/Sidebar";
+import { useState, useEffect } from "react";
+import axios from "axios";
 
 const options = [
   { label: "This Month", href: "#" },
@@ -32,7 +34,7 @@ const fields = [
     icon: sales,
     alt: "Sales",
     cardStyle: "bg-white rounded-lg w-[605px] h-[145px]",
-    maintitleStyle: "gap-35 pl-4",
+    maintitleStyle: "gap-50 pl-4",
     dropdownButtonStyle: "text-gray-400 border-none pr-10",
     dropdownMenuStyle: "bg-white",
     dropdownButtonText: "This Week",
@@ -43,11 +45,11 @@ const fields = [
     subTitle1: "23",
     title2: "Expired",
     subTitle2: "3",
-    title3: "1 Star Rating",
-    subTitle3: "2",
     showDropdown: true,
   },
 ];
+
+
 
 const tableTitle = [
   "Product name",
@@ -65,111 +67,141 @@ const actionOption = [
   { label: "Unpublish", href: "#" },
 ];
 
-const action = (
-  <Dropdown
-    dropdownButtonStyle="text-gray-400 bg-[#5E636614] w-[110px] h-[23px] pl-3 pr-3 rounded-lg"
-    dropdownMenuStyle="bg-white"
-    dropdownButtonText="Publish"
-    dropdownOptions={actionOption}
-  />
-);
-const tableContent = [
-  {
-    icon: product,
-    product: "iPhone 13 Pro",
-    category: "abc@gmail.com",
-    unit: "39402049302",
-    stock: "23",
-    discount: "23000",
-    total: "2002",
-    action: action,
-    status: "Publish",
-  },
-  {
-    icon: product,
-    product: "iPhone 13 Pro",
-    category: "abc@gmail.com",
-    unit: "39402049302",
-    stock: "23",
-    discount: "23000",
-    total: "2002",
-    action: action,
-    status: "Publish",
-  },
-  {
-    icon: product,
-    product: "iPhone 13 Pro",
-    category: "abc@gmail.com",
-    unit: "39402049302",
-    stock: "23",
-    discount: "23000",
-    total: "2002",
-    action: action,
-    status: "Publish",
-  },
-  {
-    icon: product,
-    product: "iPhone 13 Pro",
-    category: "abc@gmail.com",
-    unit: "39402049302",
-    stock: "23",
-    discount: "23000",
-    total: "2002",
-    action: action,
-    status: "Publish",
-  },
-];
+
 
 const InventoryPage = () => {
   const navigate = useNavigate();
+  const [products, setProducts] = useState([]);
+
+
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const res = await axios.get("http://localhost:3000/products");
+        setProducts(res.data);
+      } catch (error) {
+        console.error("Error fetching products:", error);
+      }
+    };
+    fetchProducts();
+  }, []);
+  
+  const handleActionChange = async (productId, selectedOption) => {
+    try {
+      const newStatus = selectedOption.label;
+      await axios.patch(`http://localhost:3000/products/${productId}`, {
+        status: newStatus,
+      });
+        setProducts((prevProducts) =>
+        prevProducts.map((product) =>
+          product._id === productId ? { ...product, status: newStatus } : product
+        )
+      );
+    } catch (error) {
+      console.error("Error updating product status:", error);
+    }
+  };
+  
+
+  const calculateTotal = (item) => {
+    const unitPrice = parseFloat(item.sellingPrice);
+    const quantity = parseInt(item.quantity);
+    const discount = item.discountValue ? parseFloat(item.discountValue) : 0;
+
+    if (discount > 0) {
+      const discountAmount = unitPrice * (discount / 100);
+      return (unitPrice - discountAmount) * quantity;
+    }
+    return unitPrice * quantity;
+  };
+
+  const Products = products.map((item) => {
+    const discount = item.discountValue ? parseFloat(item.discountValue) : 0;
+    const unitPrice = parseFloat(item.sellingPrice);
+    const discountAmount = discount > 0 ? unitPrice * (discount / 100) : 0;
+
+    return {
+      product: item.productName || "-",
+      category: item.productCategory || "-",
+      unit: item.sellingPrice || "-",
+      stock: item.quantity || "-",
+      discount: discount > 0 ? `₦ ${discountAmount.toFixed(2)}` : "-",
+      total: item.total || calculateTotal(item),
+      action: (
+        <Dropdown
+        dropdownButtonStyle="text-gray-600 h-[23px] justify-center w-[120px] pr-10 bg-[#5E636614] text-[15px] rounded-md"
+        dropdownButtonText={item.status}
+        dropdownOptions={[
+          { label: "Publish" },
+          { label: "Unpublish" },
+        ]}
+        onSelect={(selectedOption) =>
+          handleActionChange(item._id, selectedOption)
+        }
+        />
+      ),
+      status: item.status || "unpublished",
+    };
+  });
+
+
   return (
     <div className="">
       <Sidebar />
-        <div className="ml-64 mt-15 bg-[#5E636614] h-screen">
-          <div className="ml-4">
-            <div className="flex mb-[20px] pt-4 justify-between">
-              <h1 className="text-[16px] pt-4">Inventory Summary</h1>
-              <button
-                onClick={() => navigate("/NewInventory")}
-                className="bg-[#5570F1] inline-flex w-[205px] h-[36px] justify-center rounded-lg text-[14px] mt-3 mr-4 pt-2 text-white"
+      <div className="ml-64 mt-15 bg-[#5E636614] h-screen">
+        <div className="ml-4">
+          <div className="flex mb-[20px] pt-4 justify-between">
+            <h1 className="text-[16px] pt-4">Inventory Summary</h1>
+            <button
+              onClick={() => navigate("/NewInventory")} 
+              className="bg-[#5570F1] inline-flex w-[205px] h-[36px] justify-center rounded-lg text-[14px] mt-3 mr-4 pt-2 text-white"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                className="mr-3"
               >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="24"
-                  height="24"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  className="mr-3"
-                >
-                  <path
-                    d="M12 5V19"
-                    stroke="white"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                  <path
-                    d="M5 12H19"
-                    stroke="white"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
-                Add a New Product
-              </button>
-            </div>
-            <div>
-              <Cards fields={fields} cardplace="flex flex-row gap-4" />
-              <Table
-                title="Customer"
-                heading={tableTitle}
-                tableContent={tableContent}
-              />
-            </div>
+                <path
+                  d="M12 5V19"
+                  stroke="white"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+                <path
+                  d="M5 12H19"
+                  stroke="white"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+              Add a New Product
+            </button>
+          </div>
+          <div>
+            <Cards fields={fields} cardplace="flex flex-row gap-4" />
+             <Table
+             title="Inventory"
+              heading={tableTitle}
+              tableContent={Products.map((item) => [
+                item.product, 
+                item.category, 
+                item.unit ? `₦ ${item.unit}` : "-", 
+                item.stock, 
+                item.discount, 
+                item.total ? `₦ ${item.total}` : "-",
+                item.action, 
+                item.status, 
+              ])}
+            />
           </div>
         </div>
       </div>
+    </div>
   );
 };
 
