@@ -231,3 +231,4 @@ const Table = ({ title, tableContent, heading, onSearch }) => {
 };
 
 export default Table;
+

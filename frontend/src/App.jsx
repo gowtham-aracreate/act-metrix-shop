@@ -15,9 +15,7 @@ import { Email } from './pages/email'
 
 
 function App() {
-  
   return (
-    <>
     <BrowserRouter>
     <Routes>
       <Route path="/dashboard" element={< Dashboard />} />
@@ -34,8 +32,10 @@ function App() {
 
     </Routes>
   </BrowserRouter>
-  </>
   )
 }
 export default App
+
+
+
 
