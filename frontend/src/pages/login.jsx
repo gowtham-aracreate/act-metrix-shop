@@ -2,7 +2,6 @@ import React from 'react'
 import Auth from '../layout/auth'
 import Message from '../assets/message.svg'
 import lock from '../assets/lock.svg'
-
 import AuthForm from '../components/AuthForm'
 
 const LoginPage = () => {
@@ -32,10 +31,11 @@ const LoginPage = () => {
             subtitle="Login to your account" 
             fields={fields} 
             buttonText="Login"   
-            question="Don't have an account?"
+            question="Don't have an account? "
             linkText="Sign Up"
             linkPath="/register"
             recover="Recover Password"
+            password="/recover"
           />
     </Auth>
   )

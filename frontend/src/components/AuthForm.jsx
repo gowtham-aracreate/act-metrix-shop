@@ -14,6 +14,7 @@ export const AuthForm = ({
   linkText,
   linkPath,
   recover,
+  password,
 }) => {
   const navigate = useNavigate();
   const [formValues, setFormValues] = useState({
@@ -23,10 +24,6 @@ export const AuthForm = ({
   });
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
-
-  const handleLinkClick = () => {
-    navigate(linkPath);
-  };
 
   const handleChange = (event) => {
     setFormValues({ ...formValues, [event.target.name]: event.target.value });
@@ -107,27 +104,27 @@ export const AuthForm = ({
           ))}
           {error && <div className="text-red-500 text-center mt-4">{error}</div>}
           <div className="pt-3 pl-[229px]">
-            <a className="text-blue-600 right-0" href="#">
-              {recover}
-            </a>
-          </div>
-          <div className="pt-[20px] text-center">
-            <p className="pb-[20px]">
-              {question}{" "}
-              <a className="text-blue-600" href="#" onClick={handleLinkClick}>
-                {linkText}
-              </a>
-            </p>
-            <button
-              type="submit"
-              className="cursor-pointer bg-blue-600 text-white px-8 py-3 rounded-lg"
-            >
-              {buttonText}
-            </button>
-          </div>
-        </form>
+            <a className="text-blue-600 right-0 cursor-pointer" onClick={() =>navigate(password)}>
+            {recover}
+          </a>
       </div>
-    </div>
+      <div className="pt-[20px] text-center">
+        <p className="pb-[20px]">
+          {question}
+          <a className="text-blue-600 cursor-pointer" onClick= {() =>navigate(linkPath)}>
+            {linkText}
+          </a>
+        </p>
+        <button
+          type="submit"
+          className="cursor-pointer bg-blue-600 text-white px-8 py-3 rounded-lg"
+        >
+          {buttonText}
+        </button>
+      </div>
+    </form>
+      </div >
+    </div >
   );
 };
 
