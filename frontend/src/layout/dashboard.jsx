@@ -4,19 +4,22 @@ import Sidebar from "./Sidebar";
 import PieChartComponent from "../components/piechart"; 
 import { Card } from "../components/Card"; 
 import Cards from "../components/Cards";
-
 const Dashboard = () => {
   return (
-    <div className="flex w-full">
+    <div className="flex">
+      
       <Sidebar />
       <div className="ml-64">
-        {/* <Header /> */}
-        <div className="p-6 mt-16">
-          <PieChartComponent /> 
-        </div>
+        <Header />
+        { <div className="p-6 mt-16">
+          <Dashboard/>
+        </div> }
+        
       </div>
     </div>
   );
 };
 
 export default Dashboard;
+
+
