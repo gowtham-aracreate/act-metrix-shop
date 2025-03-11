@@ -8,7 +8,7 @@ import { useNavigate } from "react-router-dom";
 
 
 const Sidebar = ({children}) => {
-  const [activeLink, setActiveLink] = React.useState("Dashboard");
+  const [activeLink, setActiveLink] = React.useState("");
 
   const handleLinkClick = (link,path) => {
     setActiveLink(link);
@@ -79,7 +79,7 @@ const navigate = useNavigate();
           </a>
           <a
             href="#"
-            onClick={() => handleLinkClick("Orders")}
+            onClick={() => handleLinkClick("Orders","/order")}
             className={`p-3 flex items-center rounded-md ${
               activeLink === "Orders"
                 ? "bg-[#5570F1] text-white"

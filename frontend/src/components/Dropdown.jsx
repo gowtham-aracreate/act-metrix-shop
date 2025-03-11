@@ -1,29 +1,32 @@
 import React, { useState } from 'react';
 
-const Dropdown = ({ dropdownButtonStyle, dropdownMenuStyle, dropdownButtonText,  dropdownOptions}) => {
+const Dropdown = ({ dropdownButtonStyle, dropdownMenuStyle, dropdownButtonText, dropdownOptions, onSelect }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [selectedOption, setSelectedOption] = useState(dropdownButtonText);
 
   const toggleDropdown = () => {
     setIsOpen(!isOpen);
   };
-  const handleOptionClick = (label) => {
-    setSelectedOption(label);
+
+  const handleOptionClick = (option) => {
+    setSelectedOption(option.label);
     setIsOpen(false);
+    if (onSelect) {
+      onSelect(option); 
+    }
   };
 
   return (
     <div className="relative inline-block text-left">
       <div>
         <button
+        type="button"
           onClick={toggleDropdown}
-          className={`inline-flex relative
-           ${dropdownButtonStyle}`}
+          className={`inline-flex relative ${dropdownButtonStyle}`}
         >
-            {selectedOption}
+          {selectedOption}
           <svg
             className="absolute right-5 ml-2 -mr-1 h-6.5 w-5"
-
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"
@@ -41,21 +44,22 @@ const Dropdown = ({ dropdownButtonStyle, dropdownMenuStyle, dropdownButtonText, 
 
       {isOpen && (
         <div
-          className={`origin-top-right absolute right-0 mt-2 w-56 
-          rounded-md ${dropdownMenuStyle}`}
+          className={`origin-top-right absolute right-0 mt-2 w-56 rounded-md ${dropdownMenuStyle}`}
           role="menu"
         >
-          <div className="py-1" role="none">
-            { dropdownOptions.map((option, index) => (
-              <a
+          <div className="py-1 bg-white border border-gray-400 rounded-lg pl-4" role="none">
+            {dropdownOptions.map((option, index) => (
+              <button
+
                 key={index}
-                href={option.href}
-                onClick={() => handleOptionClick(option.label)}
-                className="block px-4 py-2 text-sm text-gray-700"
+                // href={option.href}
+                onClick={() => handleOptionClick(option)}
+                className="block py-2 text-sm  text-gray-700"
                 role="menuitem"
               >
                 {option.label}
-              </a>
+              </button>
+
             ))}
           </div>
         </div>
