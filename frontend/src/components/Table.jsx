@@ -77,7 +77,7 @@ const Table = ({title, tableContent, heading}) => {
                 </div>
                 <div>
                   <Dropdown
-                    dropdownButtonStyle="text-gray-600 h-[29px] justify-center w-[120px] border border-gray-600 rounded-lg"
+                    dropdownButtonStyle="text-gray-600 h-[29px] justify-between  w-[110px] border border-gray-600 rounded-lg"
                     dropdownMenuStyle="bg-white"
                     dropdownButtonText="Bulk Action"
                   />
