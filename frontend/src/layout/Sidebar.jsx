@@ -79,7 +79,7 @@ const navigate = useNavigate();
           </a>
           <a
             href="#"
-            onClick={() => handleLinkClick("Orders")}
+            onClick={() => handleLinkClick("Orders","/order")}
             className={`p-3 flex items-center rounded-md ${
               activeLink === "Orders"
                 ? "bg-[#5570F1] text-white"

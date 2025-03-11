@@ -49,8 +49,6 @@ const fields = [
   },
 ];
 
-
-
 const tableTitle = [
   "Product name",
   "Category",
@@ -72,10 +70,14 @@ const actionOption = [
 const InventoryPage = () => {
   const navigate = useNavigate();
   const [products, setProducts] = useState([]);
+  const [originalProducts, setOriginalProducts] = useState([]);
 
+  const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
     const fetchProducts = async () => {
+      const res = await axios.get("http://localhost:3000/products");
+      setOriginalProducts(res.data);
       try {
         const res = await axios.get("http://localhost:3000/products");
         setProducts(res.data);
@@ -85,7 +87,25 @@ const InventoryPage = () => {
     };
     fetchProducts();
   }, []);
-  
+
+  const handleSearch = (searchTerm) => {
+    setSearchQuery(searchTerm);
+    if (searchTerm === "") {
+      setProducts(originalProducts);
+
+    } else {
+      const filteredProducts = products.filter((product) =>
+        product.productName.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+      setProducts(filteredProducts);
+    }
+  };
+
+
+  const filteredProducts = products.filter((item) =>
+    item.productName.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   const handleActionChange = async (productId, selectedOption) => {
     try {
       const newStatus = selectedOption.label;
@@ -115,7 +135,7 @@ const InventoryPage = () => {
     return unitPrice * quantity;
   };
 
-  const Products = products.map((item) => {
+  const Products = filteredProducts.map((item) => {
     const discount = item.discountValue ? parseFloat(item.discountValue) : 0;
     const unitPrice = parseFloat(item.sellingPrice);
     const discountAmount = discount > 0 ? unitPrice * (discount / 100) : 0;
@@ -186,8 +206,8 @@ const InventoryPage = () => {
             <Cards fields={fields} cardplace="flex flex-row gap-4" />
              <Table
              title="Inventory"
-              heading={tableTitle}
-              tableContent={Products.map((item) => [
+             heading={tableTitle}
+             tableContent={Products.map((item) => [
                 item.product, 
                 item.category, 
                 item.unit ? `₦ ${item.unit}` : "-", 
@@ -197,6 +217,7 @@ const InventoryPage = () => {
                 item.action, 
                 item.status, 
               ])}
+
             />
           </div>
         </div>

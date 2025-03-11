@@ -1,12 +1,38 @@
-import React from "react";
+import React, { useState } from "react";
+import SortingPopup from "./SortingPopup"; 
 import { useNavigate } from "react-router-dom";
 import Filter from "../assets/filter.svg";
 import Calendar from "../assets/calendar.svg";
 import Send from "../assets/send.svg";
 import Dropdown from "./dropdown";
 
-const Table = ({title, tableContent, heading}) => {
+const Table = ({ title, tableContent, heading, onSearch }) => {
+  const [sortOptions, setSortOptions] = useState({
+    orderType: '',
+    status: 'All',
+    amountFrom: 0,
+    amountTo: 0,
+  });
+
+  const [isSortingOpen, setIsSortingOpen] = useState(false); 
+  const [searchQuery, setSearchQuery] = useState("");
   const navigate = useNavigate();
+
+  const handleSearch = (event) => {
+    const value = event.target.value;
+    setSearchQuery(value);
+    if (onSearch) {
+      onSearch(value);
+    }
+  };
+
+  const filteredContent = tableContent.filter((item) => {
+    // Implement sorting logic based on sortOptions
+    const { orderType, status, amountFrom, amountTo } = sortOptions;
+    // Add filtering logic here based on orderType, status, amountFrom, and amountTo
+    return true; // Placeholder for actual filtering logic
+  });
+
   return (
     <div className="bg-white rounded-lg h-auto mt-[20px] pl-[21px] mr-[22px] py-[22px] text-[14px]">
       <table className="w-full">
@@ -42,18 +68,24 @@ const Table = ({title, tableContent, heading}) => {
                   type="text"
                   className="block ps-10 w-[220px] h-[29px] border border-gray-300 rounded-lg "
                   placeholder="Search"
+                  value={searchQuery}
+                  onChange={handleSearch}
                 />
               </div>
               <div className="flex gap-[12px]">
                 <div>
-                  <button className="flex w-[67px] pt-1 h-[30px] justify-center text-gray-600 border border-gray-600 rounded-lg">
+                  <button 
+                    className="flex w-[67px] pt-1 h-[30px] justify-center text-gray-600 border border-gray-600 rounded-lg"
+                    onClick={() => setIsSortingOpen(!isSortingOpen)} 
+                  >
                     <img
                       className="w-[16px] h-[16px] mt-1 mr-1"
                       src={Filter}
                       alt="filter"
                     />
-                    Filter
+                    Sort
                   </button>
+                  {isSortingOpen && <SortingPopup onSortChange={setSortOptions} />}
                 </div>
                 <div>
                   <button className="flex w-[67px] pt-1 h-[30px] justify-center text-gray-600 border border-gray-600 rounded-lg">
@@ -123,18 +155,18 @@ const Table = ({title, tableContent, heading}) => {
                   />
                 </svg>
               </th>
-            ))}
+            ))} 
           </tr>
         </thead>
         <tbody>
-          {tableContent.map((data, index) => (
+          {filteredContent.map((data, index) => (
             <tr key={index} className="border-b border-gray-300 text-[#6E7079]">
               <td className="px-4 py-4 inline-flex">
                 <input type="checkbox" className="w-4 h-4 rounded-sm focus:ring-blue-500" />
                 <img className="pl-5" src={data.icon} alt="" />
               </td>
-              {Object.keys(data).map((key, idx) => (
-                key !== 'icon' && <td key={idx} className="px-4 py-4">{data[key]}</td>
+              {data.map((cell, idx) => (
+                <td key={idx} className="px-4 py-4">{cell}</td>
               ))}
             </tr>
           ))}
@@ -197,4 +229,5 @@ const Table = ({title, tableContent, heading}) => {
     </div>
   );
 };
+
 export default Table;

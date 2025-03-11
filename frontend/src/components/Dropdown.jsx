@@ -47,14 +47,14 @@ const Dropdown = ({ dropdownButtonStyle, dropdownMenuStyle, dropdownButtonText, 
           className={`origin-top-right absolute right-0 mt-2 w-56 rounded-md ${dropdownMenuStyle}`}
           role="menu"
         >
-          <div className="py-1" role="none">
+          <div className="py-1 bg-white border border-gray-400 rounded-lg pl-4" role="none">
             {dropdownOptions.map((option, index) => (
               <button
 
                 key={index}
                 // href={option.href}
                 onClick={() => handleOptionClick(option)}
-                className="block px-4 py-2 text-sm text-gray-700"
+                className="block py-2 text-sm  text-gray-700"
                 role="menuitem"
               >
                 {option.label}

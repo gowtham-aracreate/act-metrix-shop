@@ -42,7 +42,7 @@ const RegisterPage = () => {
         subtitle="Create Your free account"
         fields={fields}
         buttonText="Register"
-        question="Already have an account?"
+        question="Already have an account? "
         linkText="Login"
         linkPath="/login"
       />
