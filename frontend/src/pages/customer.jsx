@@ -1,3 +1,7 @@
+import React, { useState } from "react";
+import Table from "../components/Table";
+import Cards from "../components/Cards";
+import { AiOutlineClose } from "react-icons/ai";
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";

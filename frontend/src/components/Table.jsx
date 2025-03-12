@@ -1,22 +1,31 @@
 import React, { useState } from "react";
-import SortingPopup from "./SortingPopup"; 
+import SortingPopup from "./SortingPopup";
+
 import { useNavigate } from "react-router-dom";
 import Filter from "../assets/filter.svg";
 import Calendar from "../assets/calendar.svg";
 import Send from "../assets/send.svg";
 import Dropdown from "./dropdown";
+import { CalenderPopup } from "./CalenderPopup";
 
-const Table = ({ title, tableContent, heading, onSearch }) => {
-  const [sortOptions, setSortOptions] = useState({
-    orderType: '',
-    status: 'All',
-    amountFrom: 0,
-    amountTo: 0,
-  });
-
-  const [isSortingOpen, setIsSortingOpen] = useState(false); 
+const Table = ({ title, tableContent, heading, onSearch, mode }) => {
+  const [isSortingOpen, setIsSortingOpen] = useState(false);
+  const [isCalender, setIsCalender] =useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const navigate = useNavigate();
+  const [filters, setFilters] = useState({
+    status: "All",
+    amountFrom: 0,
+    amountTo: 0,
+    selectedCheckboxes: [],
+  });
+
+  const handleSortChange = (newFilters) => {
+    setFilters(newFilters);
+    console.log("Applied Filters:", newFilters);
+    setIsSortingOpen(false);
+  };
+
 
   const handleSearch = (event) => {
     const value = event.target.value;
@@ -26,15 +35,13 @@ const Table = ({ title, tableContent, heading, onSearch }) => {
     }
   };
 
-  const filteredContent = tableContent.filter((item) => {
-    // Implement sorting logic based on sortOptions
-    const { orderType, status, amountFrom, amountTo } = sortOptions;
-    // Add filtering logic here based on orderType, status, amountFrom, and amountTo
-    return true; // Placeholder for actual filtering logic
-  });
+  const filteredContent = tableContent.filter((item) =>
+    item.some((data) => data.toString().toLowerCase().includes(searchQuery.toLowerCase()))
+  );
 
   return (
     <div className="bg-white rounded-lg h-auto mt-[20px] pl-[21px] mr-[22px] py-[22px] text-[14px]">
+
       <table className="w-full">
         <caption className="pb-[25px]">
           <div className="flex">
@@ -74,9 +81,9 @@ const Table = ({ title, tableContent, heading, onSearch }) => {
               </div>
               <div className="flex gap-[12px]">
                 <div>
-                  <button 
+                  <button
                     className="flex w-[67px] pt-1 h-[30px] justify-center text-gray-600 border border-gray-600 rounded-lg"
-                    onClick={() => setIsSortingOpen(!isSortingOpen)} 
+                    onClick={() => setIsSortingOpen(!isSortingOpen)}
                   >
                     <img
                       className="w-[16px] h-[16px] mt-1 mr-1"
@@ -85,10 +92,13 @@ const Table = ({ title, tableContent, heading, onSearch }) => {
                     />
                     Sort
                   </button>
-                  {isSortingOpen && <SortingPopup onSortChange={setSortOptions} />}
+                  {isSortingOpen && <SortingPopup mode={mode} onSortChange={handleSortChange} onClose={() => setShowPopup(false)} />
+                  }
                 </div>
                 <div>
-                  <button className="flex w-[67px] pt-1 h-[30px] justify-center text-gray-600 border border-gray-600 rounded-lg">
+                  <button className="flex w-[67px] pt-1 h-[30px] justify-center text-gray-600 border border-gray-600 rounded-lg"
+                  onClick={() => setIsCalender(!isCalender)}
+                  >
                     <img
                       className="w-[16px] h-[16px] mt-1 mr-1"
                       src={Calendar}
@@ -96,6 +106,8 @@ const Table = ({ title, tableContent, heading, onSearch }) => {
                     />
                     Filter
                   </button>
+                  {isCalender && <CalenderPopup />
+                  }
                 </div>
                 <div>
                   <button className="flex w-[67px] pt-1 h-[30px] justify-center text-gray-600 border border-gray-600 rounded-lg">
@@ -155,7 +167,7 @@ const Table = ({ title, tableContent, heading, onSearch }) => {
                   />
                 </svg>
               </th>
-            ))} 
+            ))}
           </tr>
         </thead>
         <tbody>
@@ -229,6 +241,4 @@ const Table = ({ title, tableContent, heading, onSearch }) => {
     </div>
   );
 };
-
 export default Table;
-

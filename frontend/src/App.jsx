@@ -47,6 +47,7 @@ import Order from "./pages/order";
 import Header from './layout/Header';
 import Recover from './pages/recover'
 import { Email } from './pages/email'
+import CustomersPage from './pages/customer'
 
 function App() {
   return (

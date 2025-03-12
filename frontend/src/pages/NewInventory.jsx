@@ -44,7 +44,8 @@ export const NewInventory = () => {
 
     setFormData((prevFormData) => ({
       ...prevFormData,
-      [type]: selectedValue,
+      [type]: selectedValue.label, // Extract the string value from the selected object
+
     }));
   };
 
