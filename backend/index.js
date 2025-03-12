@@ -104,7 +104,9 @@ app.post('/product', async (req, res) => {
     });
     res.send(product);
   } catch (error) {
+    console.error('Error creating product:', error); // Log the actual error
     res.status(500).send('Error creating product');
+
   }
 });
 
@@ -178,8 +180,6 @@ app.delete('/product/:id', async (req, res) => {
     res.status(500).send('Error deleting product');
   }
 });
-
-
 
 app.listen(port, () => {
   console.log(`Server running on http://localhost:${port}`);

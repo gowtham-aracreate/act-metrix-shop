@@ -12,6 +12,7 @@ import { NewInventory } from './pages/NewInventory'
 import Order from './pages/order'
 import Recover from './pages/recover'
 import { Email } from './pages/email'
+import CustomersPage from './pages/customer'
 
 
 function App() {
@@ -29,6 +30,7 @@ function App() {
       <Route path='/newinventory' element={<NewInventory/>}/>
       <Route path='/productDetail' element={<ProductPage/>}/>
       <Route path='/order' element={<Order/>}/>
+      <Route path='/customer' element={<CustomersPage/>}/>
 
     </Routes>
   </BrowserRouter>

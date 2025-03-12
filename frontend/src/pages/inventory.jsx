@@ -206,6 +206,7 @@ const InventoryPage = () => {
             <Cards fields={fields} cardplace="flex flex-row gap-4" />
              <Table
              title="Inventory"
+             mode="inventory"
              heading={tableTitle}
              tableContent={Products.map((item) => [
                 item.product, 
