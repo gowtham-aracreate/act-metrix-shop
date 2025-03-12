@@ -2,141 +2,185 @@ import React, { useState } from "react";
 import Table from "../components/Table";
 import Cards from "../components/Cards";
 import { AiOutlineClose } from "react-icons/ai";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-
-const customerSummary = [
-  { title1: "All Customers", subTitle1: "1,250", title2: "Active", subTitle2: "1,180", title3: "In-Active", subTitle3: "70", cardStyle: "bg-white shadow-md p-3 rounded-lg" },
-  { title1: "New Customers", subTitle1: "30", title2: "Purchasing", subTitle2: "657", title3: "Abandoned Carts", subTitle3: "5", cardStyle: "bg-white shadow-md p-3 rounded-lg" },
-];
-const tableTitle = [
-  "Customer Name", "Email", "Phone", "Orders", "Order Total", "Customer Since", "Status"
-];
-const tableData = [
-  { name: "Janet Adebayo", email: "janet.a@mail.com", phone: "+2348065650633", Orders: "10", total: "250,000.00", CustomerSince: "12 Aug 2022 - 12:25 am", status: "Active" },
-];
-const duplicatedTableData = Array(10).fill(tableData).flat();
+import axios from "axios";
+import Table from "../components/Table";
+import { AiOutlineClose } from "react-icons/ai";
+import Sidebar from "../layout/Sidebar";
+import Header from "../layout/Header";
+import { MdPersonAddAlt } from "react-icons/md";
 
 const CustomersPage = () => {
+  const [customers, setCustomers] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [showAddress, setShowAddress] = useState(false);
+  const [addAddress, setAddAddress] = useState(false);
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    phone: "",
+    address: "",
+    city: "",
+    country: "",
+    state: "",
+  });
+
   const navigate = useNavigate();
 
-  const handleSubmit = (event) => {
+  useEffect(() => {
+    fetchCustomers();
+  }, []);
+
+  const fetchCustomers = async () => {
+    try {
+      const customersRes = await axios.get("http://localhost:3000/customers");
+      setCustomers(customersRes.data);
+    } catch (error) {
+      console.error("Error fetching customers:", error);
+    }
+  };
+
+  const handleChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const handleSubmit = async (event) => {
     event.preventDefault();
-    navigate("/order");
+
+    try {
+      const response = await axios.post("http://localhost:3000/customers", formData);
+      console.log("API Response:", response.data); // Debugging API response
+
+      if (response.data) {
+        fetchCustomers(); // Fetch updated customer list
+        setIsModalOpen(false);
+        console.log("Navigating to /order"); // Debugging navigation
+        navigate("/order"); // Redirect to Order Page
+      }
+    } catch (error) {
+      console.error("Error adding customer:", error);
+    }
   };
 
   return (
-    <div className="relative p-6">
-      <div className={`transition-all duration-300 ${isModalOpen ? "blur-background" : ""}`}>
-        <h2 className="text-2xl font-semibold mb-4">Customers Summary</h2>
-        <div className="flex flex-row justify-between gap-4">
-          <Cards fields={customerSummary.slice(0, 1)} cardplace="flex flex-row justify-between gap-4" />
-          <div className="flex flex-col justify-between">
-            <button
-              onClick={() => setIsModalOpen(true)}
-              className="w-40 py-2 ml-10 bg-blue-500 text-white rounded-md">
-              Add New Customer
-            </button>
-            <Cards fields={customerSummary.slice(1, 2)} cardplace="flex flex-row justify-between gap-4" />
-          </div>
+    <div className="flex">
+      <Sidebar className="h-screen fixed" />
+      <div className="w-full ml-[17%] p-6 pt-20 bg-gray-100 pr-10">
+        <Header />
+
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-2xl font-semibold">Customers</h2>
+          <button
+            onClick={() => setIsModalOpen(true)}
+            className="bg-blue-500 text-white flex items-center px-5 py-2 rounded-lg hover:bg-blue-600"
+          >
+            <MdPersonAddAlt size={20} className="mr-2" /> Add a New Customer
+          </button>
         </div>
-        <div className="mt-6">
-          <Table title="Customers" heading={tableTitle} tableContent={duplicatedTableData} />
+
+        <div className="bg-white p-6 shadow-md rounded-lg mt-6">
+          <Table
+            title="Customers"
+            heading={[
+              "Customer Name",
+              "Email",
+              "Phone",
+              "Orders",
+              "Order Total",
+              "Status",
+            ]}
+            tableContent={customers}
+          />
         </div>
-      </div>
-      {isModalOpen && (
-        <div className="fixed inset-0 flex items-center justify-center bg-opacity-10 backdrop-blur-md">
-          <div className="bg-white p-6 rounded-2xl shadow-md w-96">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-lg font-semibold">Add a New Customer</h2>
-              <button onClick={() => setIsModalOpen(false)} className="text-gray-600 hover:text-gray-900">
-                <AiOutlineClose size={20} />
-              </button>
-            </div>
-            <form onSubmit={handleSubmit}>
-              <div className="mb-3">
+
+        {isModalOpen && (
+          <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-30 backdrop-blur-lg">
+            <div className="bg-white p-8 rounded-xl shadow-lg w-[400px]">
+              <div className="flex justify-between items-center mb-5">
+                <h2 className="text-xl font-semibold">Add a New Customer</h2>
+                <button
+                  onClick={() => setIsModalOpen(false)}
+                  className="text-gray-500 hover:text-gray-900"
+                >
+                  <AiOutlineClose size={22} />
+                </button>
+              </div>
+
+              <form onSubmit={handleSubmit}>
                 <input
                   type="text"
-                  className="w-full p-3 border rounded-md focus:ring-2 focus:ring-blue-500"
+                  name="name"
+                  value={formData.name}
+                  onChange={handleChange}
+                  className="w-full p-3 border rounded-lg mb-3 focus:outline-blue-400"
                   placeholder="Customer Name"
+                  required
                 />
-              </div>
-              <div className="mb-3">
                 <input
                   type="email"
-                  className="w-full p-3 border rounded-md focus:ring-2 focus:ring-blue-500"
+                  name="email"
+                  value={formData.email}
+                  onChange={handleChange}
+                  className="w-full p-3 border rounded-lg mb-3 focus:outline-blue-400"
                   placeholder="Customer Email"
+                  required
                 />
-              </div>
-              <div className="mb-3 flex items-center gap-2">
-                <div className="flex items-center border p-2 rounded-md">
-                  <select className="focus:outline-none bg-transparent text-gray-600">
-                    <option value="+234">+234</option>
-                  </select>
-                </div>
                 <input
                   type="tel"
-                  className="w-full p-3 border rounded-md focus:ring-2 focus:ring-blue-500"
-                  placeholder="8023456789"
+                  name="phone"
+                  value={formData.phone}
+                  onChange={handleChange}
+                  className="w-full p-3 border rounded-lg mb-3 focus:outline-blue-400"
+                  placeholder="Phone Number"
+                  required
                 />
-              </div>
-              <div className="mb-3 flex items-center justify-between">
-                <label className="text-gray-600 text-sm">Add Address</label>
-                <input
-                  type="checkbox"
-                  className="toggle-checkbox"
-                  checked={showAddress}
-                  onChange={() => setShowAddress(!showAddress)}
-                />
-              </div>
-              {showAddress && (
-                <>
-                  <div className="mb-3">
+
+                <div className="flex items-center justify-between mb-4">
+                  <span className="text-gray-700">Add Address</span>
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input
+                      type="checkbox"
+                      className="sr-only"
+                      onChange={() => setAddAddress(!addAddress)}
+                    />
+                    <div className="w-10 h-5 bg-gray-300 rounded-full peer-checked:bg-blue-500"></div>
+                  </label>
+                </div>
+
+                {addAddress && (
+                  <>
                     <input
                       type="text"
-                      className="w-full p-3 border rounded-md focus:ring-2 focus:ring-blue-500"
-                      placeholder="Building No., Street Address"
+                      name="address"
+                      value={formData.address}
+                      onChange={handleChange}
+                      className="w-full p-3 border rounded-lg mb-3"
+                      placeholder="Street Address"
+                      required
                     />
-                  </div>
-                  <div className="mb-3">
-                    <input
-                      type="text"
-                      className="w-full p-3 border rounded-md focus:ring-2 focus:ring-blue-500"
-                      placeholder="City"
-                    />
-                  </div>
-                  <div className="flex gap-2">
-                    <input
-                      type="text"
-                      className="w-1/2 p-3 border rounded-md focus:ring-2 focus:ring-blue-500"
-                      placeholder="Country"
-                    />
-                    <input
-                      type="text"
-                      className="w-1/2 p-3 border rounded-md focus:ring-2 focus:ring-blue-500"
-                      placeholder="State"
-                    />
-                  </div>
-                </>
-              )}
-              <div className="flex justify-between mt-5">
-                <button
-                  type="button"
-                  onClick={() => setIsModalOpen(false)}
-                  className="w-1/3 py-2 border rounded-lg text-gray-600 hover:bg-gray-100">
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="w-1/3 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600">
-                  Add
-                </button>
-              </div>
-            </form>
+                  </>
+                )}
+
+                <div className="flex justify-between">
+                  <button
+                    type="button"
+                    onClick={() => setIsModalOpen(false)}
+                    className="py-2 px-6 border rounded-lg text-gray-600 hover:bg-gray-100"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="py-2 px-10 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+                  >
+                    Add
+                  </button>
+                </div>
+              </form>
+            </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 };
