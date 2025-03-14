@@ -44,7 +44,7 @@ export const NewInventory = () => {
 
     setFormData((prevFormData) => ({
       ...prevFormData,
-      [type]: selectedValue.label, // Extract the string value from the selected object
+      [type]: selectedValue.label,
 
     }));
   };
@@ -83,7 +83,7 @@ export const NewInventory = () => {
     const totalValue = (unitPrice - totalDiscount) * parseInt(formData.quantity, 10);
 
     const submittedData = {
-      product: formData.productName,
+product: formData.productName,
       category: formData.productCategory,
       unit: formData.sellingPrice,
       stock: formData.quantity,
@@ -462,3 +462,4 @@ export const NewInventory = () => {
     </div>
   )
 }
+

@@ -3,7 +3,7 @@ import Auth from '../layout/auth'
 import Message from '../assets/message.svg'
 import { useNavigate } from "react-router-dom";
 
-export const Email = () => {
+ const Email = () => {
     const navigate = useNavigate();
     const [Email, setEmail] = useState("");
 
@@ -48,3 +48,4 @@ export const Email = () => {
         </Auth>
     )
 }
+export default Email;

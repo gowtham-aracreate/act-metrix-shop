@@ -6,20 +6,13 @@ export default function EmptyDonutChart() {
   const data = [{ value: 100 }];
 
   return (
-    <div className="w-full h-full bg-white p-6 rounded-lg shadow-md">
-      <div className="flex gap-60">
-    
-
+    <div className="w-105 h-90 bg-white p-6 rounded-md shadow-md">
+      <div className="flex gap-40">
 
       <h2 className=" font-bold text-gray-900 mb-4 text-medium flex">Marketing</h2>
       <div>
-        This week
-        {/* <HiChevronDown className="ml-20" />   */}
-                 
+        This week      
       </div>
-      
-     
-      
       </div>
       <div className="flex justify-center gap-12  font-small mb-4">
         <div className="flex items-center space-x-2">
@@ -37,18 +30,16 @@ export default function EmptyDonutChart() {
       </div>
       <ResponsiveContainer width={400} height={300}>
         <PieChart>
-          {/* outer layer */}
+          
           <Pie
             data={data}
     
             innerRadius={50}
             outerRadius={100}
             fill="#E0E0E0"
-           
           >
-           
           </Pie>
-          {/* /* inner layer */ }
+         
           <Pie
             data={data}
             cx="50%"
@@ -58,10 +49,11 @@ export default function EmptyDonutChart() {
             fill="#E0E0E0"
             dataKey="value"
           >
+            
             <Cell fill="#FFFFFF" />
           </Pie>
         </PieChart>
       </ResponsiveContainer>
-    </div>
+      </div>
   );
 }
