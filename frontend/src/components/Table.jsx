@@ -159,7 +159,7 @@ const Table = ({ title, tableContent, heading, onSearch }) => {
           </tr>
         </thead>
         <tbody>
-          {filteredContent.map((data, index) => (
+          {/* {filteredContent.map((data, index) => (
             <tr key={index} className="border-b border-gray-300 text-[#6E7079]">
               <td className="px-4 py-4 inline-flex">
                 <input type="checkbox" className="w-4 h-4 rounded-sm focus:ring-blue-500" />
@@ -169,7 +169,20 @@ const Table = ({ title, tableContent, heading, onSearch }) => {
                 <td key={idx} className="px-4 py-4">{cell}</td>
               ))}
             </tr>
-          ))}
+          ))} */}
+
+{filteredContent.map((data, index) => (
+  <tr key={index} className="border-b border-gray-300 text-[#6E7079]">
+    <td className="px-4 py-4 inline-flex">
+      <input type="checkbox" className="w-4 h-4 rounded-sm focus:ring-blue-500" />
+      {data.icon && <img className="pl-5" src={data.icon} alt="icon" />}
+    </td>
+    {Object.values(data).map((cell, idx) => (
+      <td key={idx} className="px-4 py-4">{cell}</td>
+    ))}
+  </tr>
+))}
+
         </tbody>
       </table>
       <nav className="bottom-0">
