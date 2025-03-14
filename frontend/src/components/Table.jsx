@@ -6,24 +6,15 @@ import Filter from "../assets/filter.svg";
 import Calendar from "../assets/calendar.svg";
 import Send from "../assets/send.svg";
 import Dropdown from "./dropdown";
-import { CalenderPopup } from "./CalenderPopup";
+import { CalendarPopup } from "./CalendarPopup";
 
-const Table = ({ title, tableContent, heading, onSearch, mode }) => {
+const Table = ({ title, tableContent, heading, onSearch, mode, onSortChange, filters }) => {
   const [isSortingOpen, setIsSortingOpen] = useState(false);
-  const [isCalender, setIsCalender] =useState(false);
+  const [isCalendar, setIsCalendar] =useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const navigate = useNavigate();
-  const [filters, setFilters] = useState({
-    status: "All",
-    amountFrom: 0,
-    amountTo: 0,
-    selectedCheckboxes: [],
-  });
-
   const handleSortChange = (newFilters) => {
-    setFilters(newFilters);
-    console.log("Applied Filters:", newFilters);
-    setIsSortingOpen(false);
+    onFilterChange(newFilters);
   };
 
 
@@ -92,12 +83,12 @@ const Table = ({ title, tableContent, heading, onSearch, mode }) => {
                     />
                     Sort
                   </button>
-                  {isSortingOpen && <SortingPopup mode={mode} onSortChange={handleSortChange} onClose={() => setShowPopup(false)} />
+                  {isSortingOpen && <SortingPopup mode={mode} onSortChange={onSortChange} filters={filters}/>
                   }
                 </div>
                 <div>
                   <button className="flex w-[67px] pt-1 h-[30px] justify-center text-gray-600 border border-gray-600 rounded-lg"
-                  onClick={() => setIsCalender(!isCalender)}
+                  onClick={() => setIsCalendar(!isCalendar)}
                   >
                     <img
                       className="w-[16px] h-[16px] mt-1 mr-1"
@@ -106,7 +97,7 @@ const Table = ({ title, tableContent, heading, onSearch, mode }) => {
                     />
                     Filter
                   </button>
-                  {isCalender && <CalenderPopup />
+                  {isCalendar && <CalendarPopup />
                   }
                 </div>
                 <div>

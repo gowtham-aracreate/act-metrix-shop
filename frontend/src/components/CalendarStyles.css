@@ -1,0 +1,49 @@
+.custom-calendar {
+    width: 100%;
+    border: none;
+    font-family: Arial, sans-serif;
+  }
+  
+  .react-calendar {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    padding: 10px;
+    width: 100%;
+    border: none;
+  }
+  
+  /* Current Day (Light Gray Circle) */
+  .react-calendar__tile--now {
+    background: #f3f4f6;
+    color: black;
+    border-radius: 50%;
+  }
+  
+  /* Selected Dates (Dark Blue) */
+  .react-calendar__tile--active {
+    background: #3b82f6 !important;
+    color: white;
+    border-radius: 50%;
+  }
+  
+  /* Date Range Background (Light Blue) */
+  .react-calendar__tile--range {
+    background: #e0e7ff !important;
+    border-radius: 10px;
+  }
+  
+  /* Start and End Dates (Solid Blue Circle) */
+  .react-calendar__tile--rangeStart,
+  .react-calendar__tile--rangeEnd {
+    background: #2563eb !important;
+    color: white;
+    border-radius: 50%;
+  }
+  
+  /* Hover Effect */
+  .react-calendar__tile:hover {
+    background: #dbeafe;
+  }
+  
+  
