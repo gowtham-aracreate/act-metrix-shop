@@ -26,7 +26,7 @@ export const NewInventory = () => {
     productCategory: "",
     sellingPrice: "",
     costPrice: "",
-    quantity: 0,
+    quantity: "",
     discount: false,
     discountValue: "",
     expiryDate: false,
@@ -45,6 +45,7 @@ export const NewInventory = () => {
     setFormData((prevFormData) => ({
       ...prevFormData,
       [type]: selectedValue.label,
+
     }));
   };
 
@@ -147,9 +148,9 @@ product: formData.productName,
   
 
   return (
-    <div className="z-2">
+    <div className="">
       <Sidebar />
-      <div className="ml-64 mt-15 bg-[#5E636614] w-screen h-screen fixed">
+      <div className="ml-64 mt-15 bg-[#5E636614] md:h-screen ">
         <div className="ml-6">
           <form onSubmit={(event) => handleSubmit(event, formData.status)}>
             <div className="pt-3 pb-3 flex text-[18px]">
@@ -163,7 +164,7 @@ product: formData.productName,
                 </button>
               </div>
             </div>
-            <div className="flex flex-row">
+            <div className="flex">
               <div className="flex">
                 <div className="flex flex-col bg-white gap-[20px] px-[33px] py-[25px] ">
                   <input

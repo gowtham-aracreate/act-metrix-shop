@@ -4,7 +4,6 @@ import Cards from "../components/Cards";
 import Table from "../components/Table";
 import sales from "../assets/sales.svg";
 import inventory from "../assets/inventory.svg";
-import product from "../assets/product.png";
 import Dropdown from "../components/dropdown";
 import Sidebar from "../layout/Sidebar";
 import { useState, useEffect } from "react";
@@ -64,22 +63,28 @@ const actionOption = [
   { label: "Publish", href: "#" },
   { label: "Unpublish", href: "#" },
 ];
-
-
+const newFilters = {
+  status: 'Publish',
+  amountFrom: '',
+  amountTo: '',
+  selectedCheckboxes: ['Fashion', 'Gadgets'], // Update this to include the correct values
+};
 
 const InventoryPage = () => {
   const navigate = useNavigate();
   const [products, setProducts] = useState([]);
   const [originalProducts, setOriginalProducts] = useState([]);
-
   const [searchQuery, setSearchQuery] = useState("");
+  const [filters, setFilters] = useState({
+    status: 'All',
+    category: [],
+  });
 
   useEffect(() => {
     const fetchProducts = async () => {
-      const res = await axios.get("http://localhost:3000/products");
-      setOriginalProducts(res.data);
       try {
         const res = await axios.get("http://localhost:3000/products");
+        setOriginalProducts(res.data);
         setProducts(res.data);
       } catch (error) {
         console.error("Error fetching products:", error);
@@ -90,80 +95,98 @@ const InventoryPage = () => {
 
   const handleSearch = (searchTerm) => {
     setSearchQuery(searchTerm);
-    if (searchTerm === "") {
-      setProducts(originalProducts);
-
-    } else {
-      const filteredProducts = products.filter((product) =>
-        product.productName.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-      setProducts(filteredProducts);
-    }
+    const filteredProducts = originalProducts.filter((product) =>
+      product.productName.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+    setProducts(filteredProducts);
   };
 
-
   const filteredProducts = products.filter((item) =>
-    item.productName.toLowerCase().includes(searchQuery.toLowerCase())
+    item.productName.toLowerCase().includes(searchQuery.toLowerCase()) &&
+    (filters.category.length === 0 || filters.category.includes(item.productCategory)) &&
+    (filters.status === 'All' || item.status === filters.status)
   );
+
+  const handleSortChange = (newFilters) => {
+    console.log("newFilters:", newFilters);
+    
+    let sortedProducts = [...originalProducts];
+      if (newFilters.status && newFilters.status !== "All") {
+      sortedProducts = sortedProducts.filter(product => product.status?.toLowerCase() === newFilters.status.toLowerCase());
+    }
+      if (newFilters.selectedCheckboxes?.length) {
+      sortedProducts = sortedProducts.filter(product => newFilters.selectedCheckboxes.includes(product.productCategory));
+    }
+  
+    if (newFilters.category?.length) {
+      sortedProducts = sortedProducts.filter(product => newFilters.category.includes(product.productCategory));
+    }
+    if (newFilters.amountFrom) {
+      sortedProducts = sortedProducts.filter(product => parseFloat(product.sellingPrice) >= parseFloat(newFilters.amountFrom));
+    }
+  
+    if (newFilters.amountTo) {
+      sortedProducts = sortedProducts.filter(product => parseFloat(product.sellingPrice) <= parseFloat(newFilters.amountTo));
+    }
+  
+    console.log("Final sortedProducts:", sortedProducts);
+    setProducts(sortedProducts);
+  };
+  
 
   const handleActionChange = async (productId, selectedOption) => {
     try {
       const newStatus = selectedOption.label;
-      await axios.patch(`http://localhost:3000/products/${productId}`, {
-        status: newStatus,
-      });
-        setProducts((prevProducts) =>
+      await axios.patch(`http://localhost:3000/products/${productId}`, { status: newStatus });
+
+      setProducts((prevProducts) =>
         prevProducts.map((product) =>
           product._id === productId ? { ...product, status: newStatus } : product
         )
       );
+
+      // Reapply the filters after updating the status
+      handleSortChange(filters);
     } catch (error) {
       console.error("Error updating product status:", error);
     }
   };
-  
 
   const calculateTotal = (item) => {
-    const unitPrice = parseFloat(item.sellingPrice);
-    const quantity = parseInt(item.quantity);
-    const discount = item.discountValue ? parseFloat(item.discountValue) : 0;
+    const unitPrice = parseFloat(item.sellingPrice) || 0;
+    const quantity = parseInt(item.quantity) || 0;
+    const discount = parseFloat(item.discountValue) || 0;
 
-    if (discount > 0) {
-      const discountAmount = unitPrice * (discount / 100);
-      return (unitPrice - discountAmount) * quantity;
-    }
-    return unitPrice * quantity;
+    const discountAmount = unitPrice * (discount / 100);
+    return (unitPrice - discountAmount) * quantity;
   };
 
   const Products = filteredProducts.map((item) => {
-    const discount = item.discountValue ? parseFloat(item.discountValue) : 0;
-    const unitPrice = parseFloat(item.sellingPrice);
+    const discount = parseFloat(item.discountValue) || 0;
+    const unitPrice = parseFloat(item.sellingPrice) || 0;
     const discountAmount = discount > 0 ? unitPrice * (discount / 100) : 0;
 
     return {
       product: item.productName || "-",
       category: item.productCategory || "-",
-      unit: item.sellingPrice || "-",
+      unit: unitPrice > 0 ? ` ${unitPrice.toFixed(2)}` : "-",
       stock: item.quantity || "-",
       discount: discount > 0 ? `₦ ${discountAmount.toFixed(2)}` : "-",
       total: item.total || calculateTotal(item),
       action: (
         <Dropdown
-        dropdownButtonStyle="text-gray-600 h-[23px] justify-center w-[120px] pr-10 bg-[#5E636614] text-[15px] rounded-md"
-        dropdownButtonText={item.status}
-        dropdownOptions={[
-          { label: "Publish" },
-          { label: "Unpublish" },
-        ]}
-        onSelect={(selectedOption) =>
-          handleActionChange(item._id, selectedOption)
-        }
+          dropdownButtonStyle="text-gray-600 h-[23px] justify-center w-[120px] pr-10 bg-[#5E636614] text-[15px] rounded-md"
+          dropdownButtonText={item.status}
+          dropdownOptions={[
+            { label: "Publish" },
+            { label: "Unpublish" },
+          ]}
+          onSelect={(selectedOption) => handleActionChange(item._id, selectedOption)}
         />
       ),
-      status: item.status || "unpublished",
+      status: item.status || "Unpublished",
     };
   });
-
 
   return (
     <div className="">
@@ -173,7 +196,7 @@ const InventoryPage = () => {
           <div className="flex mb-[20px] pt-4 justify-between">
             <h1 className="text-[16px] pt-4">Inventory Summary</h1>
             <button
-              onClick={() => navigate("/NewInventory")} 
+              onClick={() => navigate("/NewInventory")}
               className="bg-[#5570F1] inline-flex w-[205px] h-[36px] justify-center rounded-lg text-[14px] mt-3 mr-4 pt-2 text-white"
             >
               <svg
@@ -204,20 +227,22 @@ const InventoryPage = () => {
           </div>
           <div>
             <Cards fields={fields} cardplace="flex flex-row gap-4" />
-             <Table
-             title="Inventory"
-             heading={tableTitle}
-             tableContent={Products.map((item) => [
-                item.product, 
-                item.category, 
-                item.unit ? `₦ ${item.unit}` : "-", 
-                item.stock, 
-                item.discount, 
+            <Table
+              title="Inventory"
+              mode="inventory"
+              heading={tableTitle}
+              onSortChange={handleSortChange}
+              filters={filters}
+              tableContent={Products.map((item) => [
+                item.product,
+                item.category,
+                item.unit ? `₦ ${item.unit}` : "-",
+                item.stock,
+                item.discount,
                 item.total ? `₦ ${item.total}` : "-",
-                item.action, 
-                item.status, 
+                item.action,
+                item.status,
               ])}
-
             />
           </div>
         </div>
