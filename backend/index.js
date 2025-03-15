@@ -240,6 +240,7 @@ const UserSchema = new mongoose.Schema({
   password: String,
 });
 
+//Product Schema
 const productSchema = new mongoose.Schema({
   productName: String,
   productCategory: String,
@@ -257,9 +258,6 @@ const productSchema = new mongoose.Schema({
   status: String,
 });
 
-const UserDetail = mongoose.model("User", UserSchema);
-const Product = mongoose.model("Product", productSchema);
-
 // Customer Schema
 const CustomerSchema = new mongoose.Schema({
   name: String,
@@ -275,8 +273,6 @@ const CustomerSchema = new mongoose.Schema({
   status: String
 });
 
-const Customer = mongoose.model("Customer", CustomerSchema);
-
 // Order Schema
 const OrderSchema = new mongoose.Schema({
   orderDate: String,
@@ -287,6 +283,9 @@ const OrderSchema = new mongoose.Schema({
   status: String,
 });
 
+const UserDetail = mongoose.model("User", UserSchema);
+const Product = mongoose.model("Product", productSchema);
+const Customer = mongoose.model("Customer", CustomerSchema);
 const Order = mongoose.model("Order", OrderSchema);
 
 // Create User
@@ -294,7 +293,7 @@ app.post("/create", async (req, res) => {
   const { name, email, password } = req.body;
   try {
     const hashedPassword = await bcrypt.hash(password, 10);
-    const data = await User.create({ name, email, password: hashedPassword });
+    const data = await UserDetail.create({ name, email, password: hashedPassword });
     res.json(data);
   } catch (error) {
     res.status(500).send("Error creating user");
@@ -305,7 +304,7 @@ app.post("/create", async (req, res) => {
 app.post("/login", async (req, res) => {
   const { email, password } = req.body;
   try {
-    const user = await User.findOne({ email });
+    const user = await UserDetail.findOne({ email });
     if (!user) return res.status(401).send("Invalid email or password");
 
     const isMatch = await bcrypt.compare(password, user.password);
@@ -357,7 +356,8 @@ app.post("/orders", async (req, res) => {
     res.status(500).send("Error adding order");
   }
 });
-// Start Server
+
+//Inventory Page
 app.post('/product', async (req, res) => {
   const { productName, productCategory, sellingPrice, costPrice, quantity, discount, discountValue, expiryDate, returnPolicy, shortDescription, longDescription, dateAdded, time, status} = req.body; 
 
@@ -380,7 +380,7 @@ app.post('/product', async (req, res) => {
     });
     res.send(product);
   } catch (error) {
-    console.error('Error creating product:', error); // Log the actual error
+    console.error('Error creating product:', error); 
     res.status(500).send('Error creating product');
 
   }

@@ -4,7 +4,6 @@ import axios from "axios";
 import Table from "../components/Table";
 import { AiOutlineClose } from "react-icons/ai";
 import Sidebar from "../layout/Sidebar";
-import Header from "../layout/Header";
 import { MdPersonAddAlt } from "react-icons/md";
 
 const CustomersPage = () => {
@@ -62,7 +61,6 @@ const CustomersPage = () => {
     <div className="flex">
       <Sidebar className="h-screen fixed" />
       <div className="w-full ml-[17%] p-6 pt-20 bg-gray-100 pr-10">
-        <Header />
 
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-2xl font-semibold">Customers</h2>

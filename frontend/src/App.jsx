@@ -10,10 +10,10 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { NewInventory } from './pages/NewInventory';
 import Customer from "./pages/customer"; 
 import Order from "./pages/order"; 
-import Header from './layout/Header';
 import Recover from './pages/recover'
 import { Email } from './pages/email'
 import CustomersPage from './pages/customer'
+import { NewOrder } from './pages/newOrder';
 
 function App() {
   return (
@@ -30,10 +30,9 @@ function App() {
         <Route path='/newinventory' element={<NewInventory />} />
         <Route path="/customer" element={<Customer />} />
         <Route path="/custorder" element={<custOrder />} />
-        <Route path='/header' element={<Header />} />
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path='/order' element={<Order/>}/>
-
+        <Route path='/newOrder' element={<NewOrder/>}/>
       </Routes>
     </BrowserRouter>
   );
