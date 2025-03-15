@@ -394,14 +394,14 @@ const CustOrderPage = () => {
       action: "Pending",
       status: "Pending",
     },
-    // Add the new customer details to the table
+    
     {
       orderDate: "N/A",
       orderType: "N/A",
       trackingID: "N/A",
       orderTotal: "N/A",
       action: "N/A",
-      status: customer.status || "Active", // Example status
+      status: customer.status || "Active", 
     },
   ];
 

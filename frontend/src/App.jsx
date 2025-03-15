@@ -51,7 +51,7 @@ import React from 'react';
 import RegisterPage from './pages/register';
 import LoginPage from './pages/login';
 import InventoryPage from './pages/inventory';
-import Dropdown from './components/dropdown';
+import Dropdown from './components/Dropdown';
 import Table from './components/Table';
 import Dashboard from './pages/dashboard'; 
 import { BrowserRouter, Routes, Route } from "react-router-dom";
@@ -60,12 +60,12 @@ import Customer from "./pages/customer";
 import Order from "./pages/order"; 
 import Header from './layout/Header';
 import Recover from './pages/recover';
-import  Email  from './pages/email';
+
 import CustOrder from "./pages/custorder"; 
 import  PieChart  from "./components/piechart";
 import SalesSummaryChart from './components/SalesSummaryChart';
-import Recover from './pages/recover'
-import { Email } from './pages/email'
+
+import  Email  from './pages/email'
 import CustomersPage from './pages/customer'
 
 function App() {
