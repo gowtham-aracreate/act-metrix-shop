@@ -8,6 +8,8 @@ import { useState, useEffect } from "react";
 import container from "../assets/iconContainer.svg";
 import {NewOrder} from "../pages/newOrder";
 
+
+
 const options = [
     { label: "This Month", href: "#" },
     { label: "Last Month", href: "#" },
@@ -63,9 +65,9 @@ const fields = [
         dropdownButtonText: "This Week",
         dropdownOptions: options,
         titleStyle: "text-[#8B8D97]",
-        subtitleStyle: "font-bold text-[#45464E]",
-        title1: "Customer",
-        subTitle1: "23",
+        subtitleStyle:"font-bold text-[#45464E]",
+        title1:"Customer",
+        subTitle1:"23",
         showDropdown: true,
     }
 ];
@@ -109,8 +111,10 @@ const Order = () => {
                                     strokeLinejoin="round"
                                 />
                             </svg>
-                            Create a New Order
-                        </button>
+                            Create New Order
+                            </button>
+
+
                     </div>
                     <div>
                         <Cards fields={fields} cardplace="flex flex-row gap-4" />
@@ -170,3 +174,5 @@ const Order = () => {
 };
 
 export default Order;
+
+
