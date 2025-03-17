@@ -44,7 +44,7 @@ const Dropdown = ({ dropdownButtonStyle, dropdownMenuStyle, dropdownButtonText, 
 
       {isOpen && (
         <div
-          className={`origin-top-right absolute right-0 mt-2 w-56 rounded-md ${dropdownMenuStyle}`}
+          className={`z-1 origin-top-right absolute right-0 mt-2 w-56 rounded-md ${dropdownMenuStyle}`}
           role="menu"
         >
           <div className="py-1 bg-white border border-gray-400 rounded-lg pl-4" role="none">

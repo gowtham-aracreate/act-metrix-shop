@@ -63,12 +63,12 @@ const actionOption = [
   { label: "Publish", href: "#" },
   { label: "Unpublish", href: "#" },
 ];
-const newFilters = {
-  status: 'Publish',
-  amountFrom: '',
-  amountTo: '',
-  selectedCheckboxes: ['Fashion', 'Gadgets'], // Update this to include the correct values
-};
+// const newFilters = {
+//   status: 'Publish',
+//   amountFrom: '',
+//   amountTo: '',
+//   selectedCheckboxes: ['Fashion', 'Gadgets'], 
+// };
 
 const InventoryPage = () => {
   const navigate = useNavigate();
@@ -144,8 +144,6 @@ const InventoryPage = () => {
           product._id === productId ? { ...product, status: newStatus } : product
         )
       );
-
-      // Reapply the filters after updating the status
       handleSortChange(filters);
     } catch (error) {
       console.error("Error updating product status:", error);

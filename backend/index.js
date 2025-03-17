@@ -280,6 +280,7 @@ const UserSchema = new mongoose.Schema({
 });
 const UserDetail = mongoose.model("User", UserSchema);
 
+//Product Schema
 // Product Schema
 const ProductSchema = new mongoose.Schema({
   productName: String,
@@ -316,15 +317,20 @@ const CustomerSchema = new mongoose.Schema({
 const Customer = mongoose.model("Customer", CustomerSchema);
 
 // Order Schema (renamed to CustOrder)
-const CustOrderSchema = new mongoose.Schema({
-  orderDate: String,
-  orderType: String,
-  trackingID: String,
-  orderTotal: String,
-  action: String,
-  status: String,
+const OrderSchema = new mongoose.Schema({
+  customer: { type: String, required: true },
+  items: { type: Array, required: true },
+  orderDate: { type: String, required: true },
+  orderTime: { type: String, required: true },
+  orderType: { type: String, required: true },
+  paymentType: { type: String, required: true },
+  trackingID: { type: String, required: true },
+  shortDescription: { type: String, default: "" },
+  status: { type: String, default: "Pending" },
+  totalAmount: { type: Number, required: true },
 });
-const CustOrder = mongoose.model("CustOrder", CustOrderSchema);
+
+const Order = mongoose.model("Order", OrderSchema);
 
 // User Registration
 app.post("/create", async (req, res) => {
@@ -376,9 +382,9 @@ app.post("/customers", async (req, res) => {
 });
 
 // Fetch Orders
-app.get("/custorders", async (req, res) => {
+app.get("/orders", async (req, res) => {
   try {
-    const orders = await CustOrder.find();
+    const orders = await Order.find();
     res.json(orders);
   } catch (error) {
     res.status(500).send("Error fetching orders");
@@ -386,9 +392,9 @@ app.get("/custorders", async (req, res) => {
 });
 
 // Add Order
-app.post("/custorders", async (req, res) => {
+app.post("/orders", async (req, res) => {
   try {
-    const newOrder = new CustOrder(req.body);
+    const newOrder = new Order(req.body);
     await newOrder.save();
     res.json(newOrder);
   } catch (error) {
