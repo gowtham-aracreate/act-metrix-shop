@@ -362,7 +362,6 @@ import ordericon from "../assets/ordericon.svg";
 import orderstatus from "../assets/orderstatus.svg";
 import cart from "../assets/cart.svg";
 import Table from "../components/Table";
-import Header from "../layout/Header";
 import Sidebar from "../layout/Sidebar";
 
 const CustOrderPage = () => {
@@ -411,9 +410,7 @@ const CustOrderPage = () => {
     <div className="flex h-screen">
       <div className="fixed w-65">
         <Sidebar />
-      </div>
       <div className="flex-1 ml-64">
-        <Header />
         <div className="p-4">
           <div className="flex justify-between items-center mt-20">
             <h2 className="text-lg font-bold">Order Number #743648</h2>
@@ -537,6 +534,7 @@ const CustOrderPage = () => {
           </div>
         </div>
       </div>
+    </div>
     </div>
   );
 };

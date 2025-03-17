@@ -6,9 +6,10 @@ import cart from "../assets/cart.svg";
 import Sidebar from "../layout/Sidebar";
 import { useState, useEffect } from "react";
 import container from "../assets/iconContainer.svg";
-import {NewOrder} from "../pages/newOrder";
-
-
+import { NewOrder } from "../pages/newOrder";
+import Table from "../components/Table";
+import Dropdown from "../components/dropdown";
+import axios from "axios";
 
 const options = [
     { label: "This Month", href: "#" },
@@ -65,17 +66,96 @@ const fields = [
         dropdownButtonText: "This Week",
         dropdownOptions: options,
         titleStyle: "text-[#8B8D97]",
-        subtitleStyle:"font-bold text-[#45464E]",
-        title1:"Customer",
-        subTitle1:"23",
+        subtitleStyle: "font-bold text-[#45464E]",
+        title1: "Customer",
+        subTitle1: "23",
         showDropdown: true,
     }
+];
+const tableTitle = [
+    "Customer Name",
+    "Order Date",
+    "Order Type",
+    "Tracking ID",
+    "Order Total",
+    "Action",
+    "Status",
 ];
 
 const Order = () => {
     const navigate = useNavigate();
     const [orders, setOrders] = useState([]);
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [originalOrders, setOriginalOrders] = useState([]);
+    const [searchQuery, setSearchQuery] = useState("");
+
+    useEffect(() => {
+        const fetchOrders = async () => {
+            try {
+                const res = await axios.get("http://localhost:3000/orders");
+                console.log("Fetched orders:", res.data); 
+                setOriginalOrders(res.data);
+                setOrders(res.data);
+            } catch (error) {
+                console.error("Error fetching orders:", error);
+            }
+        };
+        fetchOrders();
+    }, []);
+
+    const handleActionChange = async (orderId, selectedOption) => {
+        try {
+            const newStatus = selectedOption.label;
+            await axios.patch(`http://localhost:3000/orders/${orderId}`, {
+                status: newStatus,
+            });
+
+            setOrders((prevOrders) =>
+                prevOrders.map((order) =>
+                    order._id === orderId ? { ...order, status: newStatus } : order
+                )
+            );
+        } catch (error) {
+            console.error("Error updating order status:", error);
+        }
+    };
+
+    const formatDate = (dateString) => {
+        const date = new Date(dateString);
+        return date.toLocaleString("en-GB", {
+            day: "2-digit",
+            month: "short",
+            year: "numeric",
+            hour: "2-digit",
+            minute: "2-digit",
+            hour12: true,
+        });
+    };
+
+    const filteredOrders = orders.filter((order) =>
+        (order.customerName || "").toLowerCase().includes(searchQuery.toLowerCase())
+    );        
+    
+    const OrderData = filteredOrders.map((order) => ({
+        customerName: order.customer || "-",
+        orderDate: order.orderDate ? formatDate(order.orderDate) : "-",
+        orderType: order.orderType || "-",
+        trackingId: order.trackingID || "-",
+        orderTotal: order.totalAmount ? `₦ ${order.totalAmount.toFixed(2)}` : "-",
+        action: (
+            <Dropdown
+                dropdownButtonStyle="text-gray-600 h-[23px] justify-center w-[120px] pr-10 bg-[#5E636614] text-[15px] rounded-md"
+                dropdownButtonText={order.status}
+                dropdownOptions={[
+                    { label: "Pending" },
+                    { label: "In-Progress" },
+                    { label: "Completed" },
+                ]}
+                onSelect={(selectedOption) => handleActionChange(order._id, selectedOption)}
+            />
+        ),
+        status: order.status || "Pending",
+    }));
 
     return (
         <div className="">
@@ -112,7 +192,7 @@ const Order = () => {
                                 />
                             </svg>
                             Create New Order
-                            </button>
+                        </button>
 
 
                     </div>
@@ -161,8 +241,20 @@ const Order = () => {
                             </div>
                         ) : (
                             <div className="bg-white mt-[22px] rounded-md mr-4 p-4">
-                                <h2 className="text-lg font-semibold mb-4">Order List</h2>
-                                <Table data={orders} />
+                                <Table
+                                    title="Orders"
+                                    mode="orders"
+                                    heading={tableTitle}
+                                    tableContent={OrderData.length > 0 ? OrderData.map((order) => [
+                                        order.customerName,
+                                        order.orderDate,
+                                        order.orderType,
+                                        order.trackingId,
+                                        order.orderTotal,
+                                        order.action,
+                                        order.status,
+                                    ]) : []}
+                                />
                             </div>
                         )}
                     </div>

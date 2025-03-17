@@ -192,7 +192,6 @@ import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import Table from "../components/Table";
 import { AiOutlineClose } from "react-icons/ai";
-
 import Sidebar from "../layout/Sidebar";
 import Cust from "../assets/cust.svg";
 import Order from "../assets/order.svg";

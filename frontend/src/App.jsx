@@ -57,7 +57,6 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { NewInventory } from './pages/NewInventory';
 import Customer from "./pages/customer"; 
 import Order from "./pages/order"; 
-import Header from './layout/Header';
 import Recover from './pages/recover';
 import CustOrder from "./pages/custorder"; 
 import  PieChart  from "./components/piechart";
@@ -75,13 +74,11 @@ function App() {
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/recover" element={<Recover/>}/>
         <Route path="/email" element={<Email/>}/>
-        <Route path='/dropdown' element={<Dropdown />} />
         <Route path="/inventory" element={<InventoryPage />} />
         <Route path="/table" element={<Table />} />
         <Route path='/newinventory' element={<NewInventory />} />
         <Route path="/customer" element={<Customer />} />
         <Route path="/custorder" element={<CustOrder />} /> 
-        <Route path='/header' element={<Header />} />
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path='/order' element={<Order/>}/>
         <Route path='/newOrder' element={<NewOrder/>}/>
