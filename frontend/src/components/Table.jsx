@@ -5,7 +5,7 @@
 // import Filter from "../assets/filter.svg";
 // import Calendar from "../assets/calendar.svg";
 // import Send from "../assets/send.svg";
-// import Dropdown from "./dropdown";
+// import Dropdown from "./Dropdown";
 // import { CalendarPopup } from "./CalendarPopup";
 
 // const Table = ({ title, tableContent, heading, onSearch, mode, onSortChange, filters }) => {
@@ -236,10 +236,9 @@
 //   );
 // };
 // export default Table;
-
-
 import React, { useState } from "react";
 import SortingPopup from "./SortingPopup";
+
 import { useNavigate } from "react-router-dom";
 import Filter from "../assets/filter.svg";
 import Calendar from "../assets/calendar.svg";
@@ -247,99 +246,106 @@ import Send from "../assets/send.svg";
 import Dropdown from "./Dropdown";
 import { CalendarPopup } from "./CalendarPopup";
 
-const Table = ({ title, tableContent = [], heading, onSearch, mode, onSortChange, filters }) => {
+const Table = ({ title, tableContent, heading, onSearch, mode, onSortChange, filters, selectedCustomer, onCheckboxClick }) => {
   const [isSortingOpen, setIsSortingOpen] = useState(false);
   const [isCalendar, setIsCalendar] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
 
-  const navigate = useNavigate();
-
-  
   const handleSearch = (event) => {
     const value = event.target.value;
     setSearchQuery(value);
-    if (onSearch) onSearch(value);
+    if (onSearch) {
+      onSearch(value);
+    }
   };
 
-  
   const filteredContent = tableContent.filter((item) =>
-    Object.values(item).some((data) => data?.toString().toLowerCase().includes(searchQuery.toLowerCase()))
+    Object.values(item).some((data) => data.toString().toLowerCase().includes(searchQuery.toLowerCase()))
   );
 
   return (
     <div className="bg-white rounded-lg h-auto mt-[20px] pl-[21px] mr-[22px] py-[22px] text-[14px]">
       <table className="w-full">
         <caption className="pb-[25px]">
-          <div className="flex justify-between">
-            <h1 className="text-[16px] text-[#45464E] font-semibold">{title}</h1>
-            <div className="flex gap-[12px]">
-              
-              <div className="relative">
-                <input
-                  type="text"
-                  className="block ps-10 w-[220px] h-[29px] border border-gray-300 rounded-lg"
-                  placeholder="Search"
-                  value={searchQuery}
-                  onChange={handleSearch}
-                />
-                <svg
-                  className="w-4 h-4 text-gray-500 absolute left-3 top-2.5"
-                  aria-hidden="true"
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 20 20"
-                >
-                  <path
-                    stroke="black"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="m19 19-4-4m0-7A7 7 0 1 1 1 8a7 7 0 0 1 14 0Z"
+          <div className="flex">
+            <div>
+              <h1 className="text-[16px] text-[#45464E] font-semibold">{title}</h1>
+            </div>
+            <div className="absolute flex right-[42px] gap-[12px]">
+              <div>
+                <div className="relative">
+                  <div className="absolute inset-y-0 rtl:inset-r-0 start-0 items-center ps-3 pt-2 pointer-events-none">
+                    <svg
+                      className="w-4 h-4 text-gray-500"
+                      aria-hidden="true"
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 20 20"
+                    >
+                      <path
+                        stroke="black"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="m19 19-4-4m0-7A7 7 0 1 1 1 8a7 7 0 0 1 14 0Z"
+                      />
+                    </svg>
+                  </div>
+                  <input
+                    type="text"
+                    className="block ps-10 w-[220px] h-[29px] border border-gray-300 rounded-lg"
+                    placeholder="Search"
+                    value={searchQuery}
+                    onChange={handleSearch}
                   />
-                </svg>
+                </div>
               </div>
-
-              {/* Sort Button */}
-              <button
-                className="flex items-center w-[67px] h-[30px] justify-center text-gray-600 border border-gray-600 rounded-lg"
-                onClick={() => setIsSortingOpen(!isSortingOpen)}
-              >
-                <img className="w-[16px] h-[16px] mr-1" src={Filter} alt="filter" />
-                Sort
-              </button>
-              {isSortingOpen && <SortingPopup mode={mode} onSortChange={onSortChange} filters={filters} />}
-
-              {/* Filter*/}
-              <button
-                className="flex items-center w-[67px] h-[30px] justify-center text-gray-600 border border-gray-600 rounded-lg"
-                onClick={() => setIsCalendar(!isCalendar)}
-              >
-                <img className="w-[16px] h-[16px] mr-1" src={Calendar} alt="calendar" />
-                Filter
-              </button>
-              {isCalendar && <CalendarPopup />}
-
-              {/* Share */}
-              <button className="flex items-center w-[67px] h-[30px] justify-center text-gray-600 border border-gray-600 rounded-lg">
-                <img className="w-[16px] h-[16px] mr-1" src={Send} alt="send" />
-                Share
-              </button>
-
-              
-              <Dropdown
-                dropdownButtonStyle="text-gray-600 h-[30px] justify-center w-[135px] pr-5 border border-gray-600 rounded-lg"
-                dropdownMenuStyle="bg-white"
-                dropdownButtonText="Bulk Action"
-              />
+              <div className="flex gap-[12px]">
+                <div>
+                  <button
+                    className="flex w-[67px] pt-1 h-[30px] justify-center text-gray-600 border border-gray-600 rounded-lg"
+                    onClick={() => setIsSortingOpen(!isSortingOpen)}
+                  >
+                    <img className="w-[16px] h-[16px] mt-1 mr-1" src={Filter} alt="filter" />
+                    Sort
+                  </button>
+                  {isSortingOpen && <SortingPopup mode={mode} onSortChange={onSortChange} filters={filters} />}
+                </div>
+                <div>
+                  <button
+                    className="flex w-[67px] pt-1 h-[30px] justify-center text-gray-600 border border-gray-600 rounded-lg"
+                    onClick={() => setIsCalendar(!isCalendar)}
+                  >
+                    <img className="w-[16px] h-[16px] mt-1 mr-1" src={Calendar} alt="calendar" />
+                    Filter
+                  </button>
+                  {isCalendar && <CalendarPopup />}
+                </div>
+                <div>
+                  <button className="flex w-[67px] pt-1 h-[30px] justify-center text-gray-600 border border-gray-600 rounded-lg">
+                    <img className="w-[16px] h-[16px] mt-1 mr-1" src={Send} alt="send" />
+                    Share
+                  </button>
+                </div>
+                <div>
+                  <Dropdown
+                    dropdownButtonStyle="text-gray-600 h-[30px] pt-1 justify-center w-[135px] pr-5 border border-gray-600 rounded-lg"
+                    dropdownMenuStyle="bg-white"
+                    dropdownButtonText="Bulk Action"
+                  />
+                </div>
+              </div>
             </div>
           </div>
         </caption>
-
-        
         <thead className="border-y border-gray-300 w-full text-left">
           <tr>
             <th scope="col" className="p-4">
-              <input type="checkbox" className="w-4 h-4 rounded-sm focus:ring-blue-500" />
+              <input
+                type="checkbox"
+                className="w-4 h-4 rounded-sm focus:ring-blue-500"
+                onChange={() => onCheckboxClick(selectedCustomer)} // Handle checkbox click
+              />
             </th>
             {heading.map((topic, index) => (
               <th key={index} scope="col" className="px-4 py-3 text-[14px] font-semibold text-[#2C2D33]">
@@ -348,33 +354,26 @@ const Table = ({ title, tableContent = [], heading, onSearch, mode, onSortChange
             ))}
           </tr>
         </thead>
-
         <tbody>
-          {filteredContent.length > 0 ? (
-            filteredContent.map((data, index) => (
-              <tr key={index} className="border-b border-gray-300 text-[#6E7079]">
-                <td className="px-4 py-4 inline-flex">
-                  <input type="checkbox" className="w-4 h-4 rounded-sm focus:ring-blue-500" />
-                  {data.icon && <img className="pl-5" src={data.icon} alt="icon" />}
-                </td>
-                {Object.values(data).map((cell, idx) => (
-                  <td key={idx} className="px-4 py-4">{cell}</td>
-                ))}
-              </tr>
-            ))
-          ) : (
-            <tr>
-              <td colSpan={heading.length + 1} className="text-center py-4 text-gray-500">
-                No records found
+          {filteredContent.map((data, index) => (
+            <tr key={index} className="border-b border-gray-300 text-[#6E7079]">
+              <td className="px-4 py-4 inline-flex">
+                <input
+                  type="checkbox"
+                  className="w-4 h-4 rounded-sm focus:ring-blue-500"
+                  checked={selectedCustomer === data} // Highlight selected customer
+                  onChange={() => onCheckboxClick(data)} // Handle checkbox click
+                />
               </td>
+              {Object.values(data).map((cell, idx) => (
+                <td key={idx} className="px-4 py-4">{cell}</td>
+              ))}
             </tr>
-          )}
+          ))}
         </tbody>
       </table>
-
-      
       <nav className="bottom-0">
-        <div className="flex border-t border-[#E1E2E9] pt-[9px] justify-between">
+        <div className="flex border-t border-[#E1E2E9] pt-[9px]">
           <div className="flex">
             <Dropdown
               dropdownButtonStyle="text-gray-600 h-[23px] justify-center pr-8 w-[60px] bg-[#5E636614] text-[15px] rounded-lg"
@@ -384,10 +383,46 @@ const Table = ({ title, tableContent = [], heading, onSearch, mode, onSortChange
             <p className="pl-[10px] text-[#A6A8B1]">Items per page</p>
             <p className="pl-[22px] text-[#666666]">1-10 of 200 items</p>
           </div>
-          <div className="flex gap-4">
-            <p className="text-[#666666]">Page 1 of 44</p>
-            <button>&larr; Prev</button>
-            <button>Next &rarr;</button>
+          <div className="flex absolute right-[30px] pr-[22px]">
+            <Dropdown
+              dropdownButtonStyle="text-gray-600 h-[23px] justify-center w-[60px] pr-8  bg-[#5E636614] text-[15px] rounded-lg"
+              dropdownMenuStyle="bg-white"
+              dropdownButtonText="1"
+            />
+            <p className="pl-[10px] text-[#666666]"> of 44 pages</p>
+            <a href="#">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                width="10"
+                strokeWidth="1.5"
+                stroke="currentColor"
+                className="size-5 mt-1"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M15.75 19.5 8.25 12l7.5-7.5"
+                />
+              </svg>
+            </a>
+            <a href="#">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                strokeWidth="1.5"
+                stroke="currentColor"
+                className="size-5 mt-1"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="m8.25 4.5 7.5 7.5-7.5 7.5"
+                />
+              </svg>
+            </a>
           </div>
         </div>
       </nav>
