@@ -99,7 +99,7 @@
 
 
 import React, { useState, useEffect, useRef } from "react";
-import Dropdown from "./Dropdown"; 
+import Dropdown from "./dropdown"; 
 
 const SortingPopup = ({ mode = "inventory", onSortChange, onClose }) => {
   const [status, setStatus] = useState("All");
