@@ -66,7 +66,9 @@ import  PieChart  from "./components/piechart";
 import SalesSummaryChart from './components/SalesSummaryChart';
 
 import  Email  from './pages/email'
-import CustomersPage from './pages/customer'
+import CustomersPage from './pages/customer';
+import ChatPage from "./pages/ChatPage";
+
 
 function App() {
   return (
@@ -88,6 +90,7 @@ function App() {
         <Route path='/order' element={<Order/>}/>
         <Route path='/piechart' element={<PieChart/>}/>
         <Route path='/SalesSummaryChart' element={<SalesSummaryChart/>}/>
+        <Route path='/chatpage' element={<ChatPage />} />
       </Routes>
     </BrowserRouter>
   );
