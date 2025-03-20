@@ -21,7 +21,7 @@ const DashboardCards = () => {
         <div className="bg-white shadow-lg rounded-xl p-5 w-108 ml-12">
           <div className="flex justify-between items-center mb-2">
             <img src={dsIcon} alt="Sales Icon" className="w-6 h-6" />
-            <span className="text-gray-400 text-sm">This Week ▼</span>
+            <span className="text-gray-400 text-sm">This Week </span>
           </div>
           <div className="flex justify-between items-center">
             <div>

@@ -19,7 +19,7 @@ const navigate = useNavigate();
     
     <div>
       <header className="">
-      <div className="z-1 absolute left-64 bg-white fixed top-0 pt-4 pb-4 flex justify-between items-center ">
+      <div className="z-1 absolute left-64 bg-white fixed top-0 pt-4 pb-2 ml-20 flex justify-between items-center ">
       <h3 className="text-lg pl-3 font-semibold">Dashboard</h3>
       <div className="relative">
         <div className=" flex justify-between pl-235">

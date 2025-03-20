@@ -97,17 +97,19 @@
 
 // export default SortingPopup;
 
+import React, { useState } from "react";
+import Dropdown from "./dropdown";
 
-import React, { useState, useEffect, useRef } from "react";
-import Dropdown from "./dropdown"; 
+const SortingPopup = ({ mode, filters, onSortChange }) => {
+  
+  const defaultFilters = {
+    status: "All",
+    amountFrom: "",
+    amountTo: "",
+    category: [],
+  };
 
-const SortingPopup = ({ mode = "inventory", onSortChange, onClose }) => {
-  const [status, setStatus] = useState("All");
-  const [amountFrom, setAmountFrom] = useState("");
-  const [amountTo, setAmountTo] = useState("");
-  const [selectedCheckboxes, setSelectedCheckboxes] = useState([]);
-  const popupRef = useRef(null);
-
+  
   const statusOptions = {
     inventory: ["Publish", "Unpublish"],
     order: ["Completed", "In-Progress", "Pending"],
@@ -120,19 +122,14 @@ const SortingPopup = ({ mode = "inventory", onSortChange, onClose }) => {
     customer: [],
   };
 
-  
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (popupRef.current && !popupRef.current.contains(event.target)) {
-        onClose();
-      }
-    };
+  const validModes = Object.keys(statusOptions);
+  const currentMode = validModes.includes(mode) ? mode : "customer";
 
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, [onClose]);
+  
+  const [status, setStatus] = useState(filters?.status || defaultFilters.status);
+  const [amountFrom, setAmountFrom] = useState(filters?.amountFrom || defaultFilters.amountFrom);
+  const [amountTo, setAmountTo] = useState(filters?.amountTo || defaultFilters.amountTo);
+  const [selectedCheckboxes, setSelectedCheckboxes] = useState(filters?.category || defaultFilters.category);
 
   const handleCheckboxChange = (option) => {
     setSelectedCheckboxes((prev) =>
@@ -144,37 +141,30 @@ const SortingPopup = ({ mode = "inventory", onSortChange, onClose }) => {
     if (onSortChange) {
       onSortChange({ status, amountFrom, amountTo, selectedCheckboxes });
     }
-    onClose();
   };
 
   return (
-    <div
-      ref={popupRef}
-      className="absolute bg-white p-6 rounded-md z-50 shadow-lg w-[320px] h-auto"
-    >
+    <div className="absolute bg-white p-8 rounded-md z-1 w-[320px] h-auto" onClick={(e) => e.stopPropagation()}>
       <div className="flex flex-col">
-        <div className="flex justify-between items-center">
-          <h3 className="font-bold text-left text-[16px]">Sort By</h3>
-          <button className="text-gray-500 text-lg" onClick={onClose}>✕</button>
-        </div>
+        <h3 className="font-bold text-left text-[16px]">Sort By</h3>
 
-        {checkboxes[mode]?.length > 0 && (
+        {checkboxes[currentMode]?.length > 0 && (
           <>
             <p className="font-semibold text-left pt-2 text-[16px]">Category</p>
             <div className="flex pt-2 justify-between">
-              {checkboxes[mode].map((option) => (
-                <label key={option} className="inline-flex items-center">
+              {checkboxes[currentMode].map((option) => (
+                <div key={option} className="inline-flex">
                   <input
                     type="checkbox"
-                    className="mr-2"
+                    className="large-checkbox"
                     checked={selectedCheckboxes.includes(option)}
                     onChange={() => handleCheckboxChange(option)}
                   />
-                  {option}
-                </label>
+                  <p className="pl-4 text-[15px]">{option}</p>
+                </div>
               ))}
             </div>
-            <hr className="h-[1px] my-4 bg-gray-200 border-0" />
+            <hr className="h-[1px] my-4 bg-gray-200 border-0"></hr>
           </>
         )}
 
@@ -183,7 +173,7 @@ const SortingPopup = ({ mode = "inventory", onSortChange, onClose }) => {
           onSelect={(selectedOption) => setStatus(selectedOption.value)}
           dropdownButtonStyle="text-gray-900 pt-1 w-[258px] h-[30px] pl-5 bg-white border border-gray-400 text-[15px] rounded-md"
           dropdownButtonText={status}
-          dropdownOptions={statusOptions[mode].map((s) => ({ label: s, value: s }))}
+          dropdownOptions={statusOptions[currentMode].map((s) => ({ label: s, value: s }))}
         />
 
         <p className="pt-3 text-left font-semibold text-[16px]">Amount</p>
@@ -211,7 +201,7 @@ const SortingPopup = ({ mode = "inventory", onSortChange, onClose }) => {
         </div>
 
         <button
-          className="bg-[#5570F1] inline-flex w-[258px] h-[36px] justify-center rounded-lg text-white text-[17px] mt-3"
+          className="bg-[#5570F1] inline-flex w-[258px] h-[36px] justify-center rounded-lg text-[14px] mt-3 mr-4 pt-1 text-white text-[17px]"
           onClick={handleSort}
         >
           Sort
@@ -219,6 +209,12 @@ const SortingPopup = ({ mode = "inventory", onSortChange, onClose }) => {
       </div>
     </div>
   );
+};
+
+SortingPopup.defaultProps = {
+  mode: "customer",
+  filters: {},
+  onSortChange: () => {},
 };
 
 export default SortingPopup;
