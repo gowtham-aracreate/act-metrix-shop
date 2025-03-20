@@ -58,12 +58,15 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { NewInventory } from './pages/NewInventory';
 import Customer from "./pages/customer"; 
 import Order from "./pages/order"; 
-import Header from './layout/Header';
 import Recover from './pages/recover';
 import CustOrder from "./pages/custorder"; 
 import PieChart from "./components/piechart";
 import SalesSummaryChart from './components/SalesSummaryChart';
 import Email from './pages/email';
+import  Email  from './pages/email'
+import CustomersPage from './pages/customer'
+import { NewOrder } from './pages/newOrder';
+import CustomersPage from './pages/customer';
 import ChatPage from "./pages/ChatPage";
 
 function App() {
@@ -76,6 +79,8 @@ function App() {
         <Route path="/recover" element={<Recover />} />
         <Route path="/email" element={<Email />} />
         <Route path="/dropdown" element={<Dropdown />} />
+        <Route path="/recover" element={<Recover/>}/>
+        <Route path="/email" element={<Email/>}/>
         <Route path="/inventory" element={<InventoryPage />} />
         <Route path="/table" element={<Table />} />
         <Route path="/newinventory" element={<NewInventory />} />
@@ -88,6 +93,12 @@ function App() {
         <Route path="/SalesSummaryChart" element={<SalesSummaryChart />} />
         <Route path="/chatpage" element={<ChatPage />} />
        
+        <Route path="/dashboard" element={<Dashboard />} />
+        <Route path='/order' element={<Order/>}/>
+        <Route path='/newOrder' element={<NewOrder/>}/>
+        <Route path='/piechart' element={<PieChart/>}/>
+        <Route path='/SalesSummaryChart' element={<SalesSummaryChart/>}/>
+        <Route path='/chatpage' element={<ChatPage />} />
       </Routes>
     </BrowserRouter>
   );

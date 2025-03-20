@@ -6,6 +6,7 @@ import "react-datepicker/dist/react-datepicker.css";
 import { format } from "date-fns";
 import Sidebar from "../layout/Sidebar";
 import axios from "axios";
+import calendar from "../assets/calendar.svg";
 import { useLocation, useNavigate } from "react-router-dom";
 
 
@@ -19,7 +20,7 @@ export const NewInventory = () => {
   const [submittedData, setSubmittedData] = useState(null);
   const location = useLocation();
   const navigate = useNavigate();
-  const onSubmit = location.state?.onSubmit || (() => {});
+  const onSubmit = location.state?.onSubmit || (() => { });
 
   const [formData, setFormData] = useState({
     productName: "",
@@ -35,7 +36,7 @@ export const NewInventory = () => {
     longDescription: "",
     dateAdded: "",
     time: " ",
-    status:" "
+    status: " "
   });
 
   const handleDropdownSelect = (selectedValue, type, event) => {
@@ -83,7 +84,7 @@ export const NewInventory = () => {
     const totalValue = (unitPrice - totalDiscount) * parseInt(formData.quantity, 10);
 
     const submittedData = {
-product: formData.productName,
+      product: formData.productName,
       category: formData.productCategory,
       unit: formData.sellingPrice,
       stock: formData.quantity,
@@ -111,25 +112,25 @@ product: formData.productName,
     };
 
     try {
-        const res = await axios.post("http://localhost:3000/product", productDetail);
-        console.log(res.data);
-        onSubmit(submittedData);
-        setFormData({
-          productName: "",
-          productCategory: "",
-          sellingPrice: "",
-          costPrice: "",
-          quantity: 0,
-          discount: false,
-          discountValue: "",
-          expiryDate: false,
-          returnPolicy: false,
-          shortDescription: "",
-          longDescription: " ",
-          dateAdded: " ",
-          time: " ",
-          status:" "
-        });
+      const res = await axios.post("http://localhost:3000/product", productDetail);
+      console.log(res.data);
+      onSubmit(submittedData);
+      setFormData({
+        productName: "",
+        productCategory: "",
+        sellingPrice: "",
+        costPrice: "",
+        quantity: 0,
+        discount: false,
+        discountValue: "",
+        expiryDate: false,
+        returnPolicy: false,
+        shortDescription: "",
+        longDescription: " ",
+        dateAdded: " ",
+        time: " ",
+        status: " "
+      });
     } catch (error) {
       console.error("Error creating product:", error);
       alert("There was an error creating the product. Please try again.");
@@ -145,7 +146,7 @@ product: formData.productName,
     { label: "Gadgets" },
     { label: "Fashion" },
   ];
-  
+
 
   return (
     <div className="">
@@ -275,7 +276,8 @@ product: formData.productName,
                     </label>
                   </div>
                   {formData.expiryDate && (
-                    <div className="bg-[#EFF1F999] w-[300px] h-[45px] rounded-md pt-3 text-gray-400">
+                    <div className="bg-[#EFF1F999] w-[300px] h-[45px] inline-flex rounded-md pt-3 text-gray-400">
+                      <img src={calendar} alt="calender" className='w-5 pb-2 mx-3' />
                       <DatePicker
                         className="w-[111.5px] bg-transparent outline-none"
                         selected={expiryDate}
@@ -333,6 +335,7 @@ product: formData.productName,
                   <p className="text-gray-900 pt-[13px]">Date Added</p>
                   <div className="flex mt-4">
                     <div className="inline-flex pt-3 bg-[#EFF1F999] w-[172.5px] h-[45px] rounded-md text-gray-400">
+                      <img src={calendar} alt="calender" className='w-5 pb-2 mx-3' />
                       <DatePicker
                         className="w-[111.5px] bg-transparent outline-none"
                         selected={startDate}
@@ -340,7 +343,7 @@ product: formData.productName,
                           setStartDate(date);
                           setFormData((prevFormData) => ({
                             ...prevFormData,
-                            dateAdded: format(date, "dd MMM yyyy"), 
+                            dateAdded: format(date, "dd MMM yyyy"),
                           }));
                         }}
                         dateFormat="yyyy-MM-dd"
@@ -348,7 +351,7 @@ product: formData.productName,
                     </div>
                     <div className="bg-[#EFF1F999] w-[172.5px] mr-3 ml-3 h-[45px] rounded-md rounded-lg focus:ring-blue-500 focus:border-blue-500">
                       <input
-                        className="bg-transparent w-full h-full text-gray-700 outline-none"
+                        className="bg-transparent mx-3 h-full text-gray-700 outline-none"
                         type="time"
                         value={time}
                         onChange={(e) => {
@@ -357,7 +360,7 @@ product: formData.productName,
 
                           setFormData((prevFormData) => ({
                             ...prevFormData,
-                            time: newTime, 
+                            time: newTime,
                           }));
                         }}
                         required
@@ -458,7 +461,7 @@ product: formData.productName,
             </div>
           </form>
         </div>
-      </div> 
+      </div>
     </div>
   )
 }
