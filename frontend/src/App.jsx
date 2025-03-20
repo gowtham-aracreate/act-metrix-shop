@@ -2,6 +2,7 @@ import React from 'react';
 import RegisterPage from './pages/register';
 import LoginPage from './pages/login';
 import InventoryPage from './pages/inventory';
+import Dropdown from './components/dropdown';
 import Table from './components/Table';
 import Dashboard from './pages/dashboard'; 
 import { BrowserRouter,Router, Routes, Route, Navigate } from "react-router-dom";
@@ -9,8 +10,10 @@ import { NewInventory } from './pages/NewInventory';
 import Customer from "./pages/customer"; 
 import Order from "./pages/order"; 
 import CustOrder from "./pages/custorder"; 
-import  PieChart  from "./components/piechart";
+import PieChart from "./components/piechart";
 import SalesSummaryChart from './components/SalesSummaryChart';
+import Email from './pages/email';
+import CustomersPage from './pages/customer'
 import { NewOrder } from './pages/newOrder';
 import CustomersPage from './pages/customer';
 import ChatPage from "./pages/ChatPage";
@@ -20,7 +23,6 @@ import ForgotPassword from './pages/forgotPassword';
 import Verify from './pages/verifyOtp';
 import ResetPassword  from './pages/reset';
 import { OrderDetail } from './pages/orderDetail';
-
 
 function App() {
   return (
@@ -35,21 +37,20 @@ function App() {
         <Route element={<ProtectedRoute />}>
         <Route path="/inventory" element={<InventoryPage />} />
         <Route path="/table" element={<Table />} />
-        <Route path='/newinventory' element={<NewInventory />} />
-        <Route path="/customer" element={<Customer />} />
+        <Route path="/newinventory" element={<NewInventory />} />
+        <Route path="/customer" element={<Customer />} /> 
         <Route path="/custorder" element={<CustOrder />} /> 
+        <Route path="/header" element={<Header />} />
         <Route path="/dashboard" element={<Dashboard />} />
-        <Route path='/order' element={<Order/>}/>
-        <Route path='/newOrder' element={<NewOrder/>}/>
-        <Route path='/piechart' element={<PieChart/>}/>
-        <Route path='/SalesSummaryChart' element={<SalesSummaryChart/>}/>
-        <Route path='/chatpage' element={<ChatPage />} />
-        <Route path='/setting' element={<Setting />} />
+        <Route path="/order" element={<Order />} />
+        <Route path="/piechart" element={<PieChart />} />
+        <Route path="/SalesSummaryChart" element={<SalesSummaryChart />} />
+        <Route path="/chatpage" element={<ChatPage />} />
         <Route path='/orderDetail' element={<OrderDetail />} />
         </Route>
       </Routes>
     </BrowserRouter>
   );
 }
-export default App;
 
+export default App;

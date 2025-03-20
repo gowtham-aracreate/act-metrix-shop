@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import SortingPopup from "./SortingPopup";
-
 import { useNavigate } from "react-router-dom";
 import Filter from "../assets/filter.svg";
 import Calendar from "../assets/calendar.svg";
@@ -16,6 +15,35 @@ const Table = ({ title, tableContent, heading, onSearch, mode, onSortChange, fil
   const handleSortChange = (newFilters) => {
     onFilterChange(newFilters);
   };
+  const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
+
+  const handleSort = (key) => {
+    let direction = 'asc';
+    if (sortConfig.key === key && sortConfig.direction === 'asc') {
+      direction = 'desc';
+    }
+    setSortConfig({ key, direction });
+    if (onSortChange) {
+      onSortChange({ key, direction });
+    }
+  };
+
+  const sortedContent = React.useMemo(() => {
+    let sortableItems = [...tableContent];
+    if (sortConfig.key) {
+      sortableItems.sort((a, b) => {
+        if (a[sortConfig.key] < b[sortConfig.key]) {
+          return sortConfig.direction === 'asc' ? -1 : 1;
+        }
+        if (a[sortConfig.key] > b[sortConfig.key]) {
+          return sortConfig.direction === 'asc' ? 1 : -1;
+        }
+        return 0;
+      });
+    }
+    return sortableItems;
+  }, [tableContent, sortConfig]);
+
   const handleSearch = (event) => {
     const value = event.target.value;
     setSearchQuery(value);
@@ -131,6 +159,7 @@ const Table = ({ title, tableContent, heading, onSearch, mode, onSortChange, fil
                 key={index}
                 scope="col"
                 className="px-4 py-3 text-[14px] font-semibold text-[#2C2D33]"
+                onClick={() => handleSort(topic.toLowerCase())}
               >
                 {topic}
                 <svg
@@ -160,30 +189,28 @@ const Table = ({ title, tableContent, heading, onSearch, mode, onSortChange, fil
               </th>
             ))}
           </tr>
-        </thead>
+        </thead> 
+
         <tbody>
-          
-
-        {filteredContent.length > 0 ? (
-    filteredContent.map((data, index) => (
-      <tr key={index} className="border-b border-gray-300 text-[#6E7079]">
-        <td className="px-4 py-4 inline-flex">
-          <input type="checkbox" className="w-4 h-4 rounded-sm focus:ring-blue-500" />
-          {data.icon && <img className="pl-5" src={data.icon} alt="icon" />}
-        </td>
-        {Object.values(data).map((cell, idx) => (
-          <td key={idx} className="px-4 py-4">{cell}</td>
-        ))}
-      </tr>
-    ))
-  ) : (
-    <tr>
-      <td colSpan={heading.length + 1} className="py-6 text-gray-500 text-center">
-        No Orders Found
-      </td>
-    </tr>
-  )}
-
+          {filteredContent.length > 0 ? (
+            filteredContent.map((data, index) => (
+              <tr key={data.id || index} className="border-b border-gray-300 text-[#6E7079]">
+                <td className="px-4 py-4 inline-flex">
+                  <input type="checkbox" className="w-4 h-4 rounded-sm focus:ring-blue-500" />
+                  {data.icon && <img className="pl-5" src={data.icon} alt="icon" />}
+                </td>
+                {Object.values(data).map((cell, idx) => (
+                  <td key={idx} className="px-4 py-4">{cell}</td>
+                ))}
+              </tr>
+            ))
+          ) : (
+            <tr>
+              <td colSpan={heading.length + 1} className="text-center py-4 text-gray-500">
+                No data found.
+              </td>
+            </tr>
+          )}
         </tbody>
       </table>
       <nav className="bottom-0">
@@ -199,7 +226,7 @@ const Table = ({ title, tableContent, heading, onSearch, mode, onSortChange, fil
           </div>
           <div className="flex absolute right-[30px] pr-[22px]">
             <Dropdown
-              dropdownButtonStyle="text-gray-600 h-[23px] justify-center w-[60px] pr-8  bg-[#5E636614] text-[15px] rounded-lg"
+              dropdownButtonStyle="text-gray-600 h-[23px] justify-center w-[60px] pr-8 bg-[#5E636614] text-[15px] rounded-lg"
               dropdownMenuStyle="bg-white"
               dropdownButtonText="1"
             />
