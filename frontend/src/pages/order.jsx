@@ -11,67 +11,20 @@ import Table from "../components/Table";
 import Dropdown from "../components/dropdown";
 import axios from "axios";
 
+const token = localStorage.getItem("token");
+
+const config = {
+  headers: {
+    Authorization: `Bearer ${token}`, 
+  },
+};
+
 const options = [
     { label: "This Month", href: "#" },
     { label: "Last Month", href: "#" },
     { label: "Last Week", href: "#" },
 ];
 
-const fields = [
-    {
-        icon: order,
-        alt: "order",
-        cardStyle: "bg-white rounded-lg w-[450px] h-[145px]",
-        maintitleStyle: "gap-20 pl-4",
-        dropdownButtonStyle: "text-gray-400 border-none pr-10",
-        dropdownMenuStyle: "bg-white",
-        dropdownButtonText: "This Week",
-        dropdownOptions: options,
-        titleStyle: "text-[#8B8D97]",
-        subtitleStyle: "font-bold text-[#45464E]",
-        title1: "All Orders",
-        subTitle1: "0",
-        title2: "Pending",
-        subTitle2: "0",
-        title3: "Completed",
-        subTitle3: "0",
-        showDropdown: true,
-    },
-    {
-        icon: order,
-        alt: "order",
-        cardStyle: "bg-white rounded-lg w-[450px] h-[145px]",
-        maintitleStyle: "gap-20 pl-4",
-        dropdownButtonStyle: "text-gray-400 border-none pr-10",
-        dropdownMenuStyle: "bg-white",
-        dropdownButtonText: "This Week",
-        dropdownOptions: options,
-        titleStyle: "text-[#8B8D97]",
-        subtitleStyle: "font-bold text-[#45464E]",
-        title1: "Canceled",
-        subTitle1: "0",
-        title2: "Returned",
-        subTitle2: "0",
-        title3: "Damaged",
-        subTitle3: "0",
-        showDropdown: true,
-    },
-    {
-        icon: cart,
-        alt: "Sales",
-        cardStyle: "bg-white rounded-lg w-[300px] h-[145px]",
-        maintitleStyle: "gap-50 pl-4",
-        dropdownButtonStyle: "text-gray-400 border-none pr-10",
-        dropdownMenuStyle: "bg-white",
-        dropdownButtonText: "This Week",
-        dropdownOptions: options,
-        titleStyle: "text-[#8B8D97]",
-        subtitleStyle: "font-bold text-[#45464E]",
-        title1: "Customer",
-        subTitle1: "23",
-        showDropdown: true,
-    }
-];
 const tableTitle = [
     "Customer Name",
     "Order Date",
@@ -88,11 +41,83 @@ const Order = () => {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [originalOrders, setOriginalOrders] = useState([]);
     const [searchQuery, setSearchQuery] = useState("");
+    const [filters, setFilters] = useState({
+        status: 'All',
+        category: [],
+      });
+
+      const [salesData, setSalesData] = useState({
+        totalOrders: 0,
+        inProgress: 0,
+        completed: 0,
+        totalCustomers: 0,
+        abandonedCart: 0,
+      });
+    
+      useEffect(() => {
+        const fetchData = async () => {
+          try {
+            const salesRes = await fetch("http://localhost:3000/api/sales", config);
+            const salesJson = await salesRes.json();
+    
+            setSalesData({
+              totalOrders: salesJson.totalOrders || 0,
+              inProgress: salesJson.inProgress || 0,
+              completed: salesJson.completed || 0,
+              totalCustomers: salesJson.totalCustomers || 0,
+              abandonedCart: salesJson.abandonedCart || 0,
+            });
+          } catch (error) {
+            console.error("Error fetching sales data:", error);
+          }
+        };
+    
+        fetchData();
+      }, []);
+
+      const fields = [
+        {
+            icon: order,
+            alt: "order",
+            cardStyle: "bg-white rounded-lg w-[605px] h-[145px]",
+            maintitleStyle: "gap-40 pl-4",
+            dropdownButtonStyle: "text-gray-400 border-none pr-10",
+            dropdownMenuStyle: "bg-white",
+            dropdownButtonText: "This Week",
+            dropdownOptions: options,
+            titleStyle: "text-[#8B8D97]",
+            subtitleStyle: "font-bold text-[#45464E]",
+            title1: "All Orders",
+            subTitle1: salesData.totalOrders,
+            title2: "Pending",
+            subTitle2:salesData.inProgress,
+            title3: "Completed",
+            subTitle3: salesData.completed,
+            showDropdown: true,
+        },
+        {
+            icon: cart,
+            alt: "Sales",
+            cardStyle: "bg-white rounded-lg w-[605px] h-[145px]",
+            maintitleStyle: "pl-3 justify-between",
+            dropdownButtonStyle: "text-gray-400 border-none pr-10",
+            dropdownMenuStyle: "bg-white",
+            dropdownButtonText: "This Week",
+            dropdownOptions: options,
+            titleStyle: "text-[#8B8D97]",
+            subtitleStyle: "font-bold text-[#45464E]",
+            title1: "Customer",
+            subTitle1: salesData.totalCustomers,
+            title2:"Abandoned Cart",
+            subTitle2:  salesData.abandonedCart,
+            showDropdown: true,
+        }
+    ];
 
     useEffect(() => {
         const fetchOrders = async () => {
             try {
-                const res = await axios.get("http://localhost:3000/orders");
+                const res = await axios.get("http://localhost:3000/orders", config);
                 console.log("Fetched orders:", res.data); 
                 setOriginalOrders(res.data);
                 setOrders(res.data);
@@ -106,7 +131,7 @@ const Order = () => {
     const handleActionChange = async (orderId, selectedOption) => {
         try {
             const newStatus = selectedOption.label;
-            await axios.patch(`http://localhost:3000/orders/${orderId}`, {
+            await axios.patch(`http://localhost:3000/orders/${orderId}`, config,{
                 status: newStatus,
             });
 
@@ -120,7 +145,56 @@ const Order = () => {
         }
     };
 
-    const formatDate = (dateString) => {
+    const handleSortChange = (newFilters) => {
+        console.log("Applied Filters:", newFilters);
+        setFilters(newFilters);
+    
+        let updatedOrders = [...originalOrders];
+    
+        if (newFilters.status && newFilters.status !== "All") {
+            updatedOrders = updatedOrders.filter(
+                order => order.status?.toLowerCase() === newFilters.status.toLowerCase()
+            );
+        }
+    
+        if (newFilters.selectedCheckboxes?.length) {
+            updatedOrders = updatedOrders.filter(order =>
+                newFilters.selectedCheckboxes.includes(order.orderType)
+            );
+        }
+    
+        if (newFilters.amountFrom) {
+            updatedOrders = updatedOrders.filter(
+                order => parseFloat(order.totalAmount) >= parseFloat(newFilters.amountFrom)
+            );
+        }
+    
+        if (newFilters.amountTo) {
+            updatedOrders = updatedOrders.filter(
+                order => parseFloat(order.totalAmount) <= parseFloat(newFilters.amountTo)
+            );
+        }
+    
+        let searchedOrders = [...originalOrders].filter(
+            order => (order.customer || "").toLowerCase().includes(searchQuery.toLowerCase())
+        );
+    
+        let finalFilteredOrders = updatedOrders.filter(order =>
+            searchedOrders.some(searchOrder => searchOrder.id === order.id)
+        );
+    
+        setOrders(finalFilteredOrders);
+    };
+    
+
+    const filteredOrders = orders.filter(
+        (order) =>
+          (order.customer || "").toLowerCase().includes(searchQuery.toLowerCase()) &&
+        (!filters.orderType || filters.orderType.length === 0 || filters.orderType.includes(order.orderType)) &&
+          (filters.status === "All" || order.status === filters.status)
+      );
+
+      const formatDate = (dateString) => {
         const date = new Date(dateString);
         return date.toLocaleString("en-GB", {
             day: "2-digit",
@@ -132,10 +206,6 @@ const Order = () => {
         });
     };
 
-    const filteredOrders = orders.filter((order) =>
-        (order.customerName || "").toLowerCase().includes(searchQuery.toLowerCase())
-    );        
-    
     const OrderData = filteredOrders.map((order) => ({
         customerName: order.customer || "-",
         orderDate: order.orderDate ? formatDate(order.orderDate) : "-",
@@ -144,7 +214,7 @@ const Order = () => {
         orderTotal: order.totalAmount ? `₦ ${order.totalAmount.toFixed(2)}` : "-",
         action: (
             <Dropdown
-                dropdownButtonStyle="text-gray-600 h-[23px] justify-center w-[120px] pr-10 bg-[#5E636614] text-[15px] rounded-md"
+                dropdownButtonStyle="text-gray-600 h-[23px] justify-center w-[130px] pr-10 bg-[#5E636614] text-[15px] rounded-md"
                 dropdownButtonText={order.status}
                 dropdownOptions={[
                     { label: "Pending" },
@@ -198,7 +268,7 @@ const Order = () => {
                     </div>
                     <div>
                         <Cards fields={fields} cardplace="flex flex-row gap-4" />
-                        {orders.length === 0 ? (
+                        {originalOrders.length === 0  ? (
                             <div className="bg-white mt-[22px] rounded-md mr-4">
                                 <div className="flex justify-center py-12">
                                     <div className="w-[282px] h-[324px]">
@@ -240,10 +310,12 @@ const Order = () => {
                                 </div>
                             </div>
                         ) : (
-                            <div className="bg-white mt-[22px] rounded-md mr-4 p-4">
+                            <div className="bg-white mt-[12px] rounded-md mr-4">
                                 <Table
                                     title="Orders"
-                                    mode="orders"
+                                mode="order"
+                                    onSortChange={handleSortChange}
+                                    filters={filters}
                                     heading={tableTitle}
                                     tableContent={OrderData.length > 0 ? OrderData.map((order) => [
                                         order.customerName,

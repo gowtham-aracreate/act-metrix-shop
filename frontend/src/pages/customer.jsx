@@ -477,7 +477,7 @@ const CustomersPage = () => {
 
   return (
     <div className="flex relative">
-      <Sidebar className="h-screen fixed" />
+      <Sidebar  />
       <div className={`w-full ml-[15%] p-6 pt-20 bg-gray-100 pr-10 transition-all ${isModalOpen ? "blur-sm" : ""}`}>
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-2xl font-semibold">Customers</h2>
@@ -491,7 +491,9 @@ const CustomersPage = () => {
         <div className="bg-white p-6 shadow-md rounded-lg">
           <Table
             title="Customers"
-            heading={["Name", "Email", "Phone", "Orders", "Total", "Since", "Status"]} // Removed "Select" column
+            mode="customer"
+            heading={["Name", "Email", "Phone", "Orders", "Total", "Since", "Status"]}
+            // Removed "Select" column
             tableContent={customers.map((cust) => ({
               name: cust.name || "N/A",
               email: cust.email || "N/A",
@@ -508,7 +510,7 @@ const CustomersPage = () => {
       </div>
 
       {isModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div className="fixed inset-0 bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white p-6 rounded-lg shadow-lg w-[400px] relative z-20">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-xl font-semibold">Add Customer</h2>

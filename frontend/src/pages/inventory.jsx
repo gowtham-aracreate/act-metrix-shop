@@ -9,43 +9,21 @@ import Sidebar from "../layout/Sidebar";
 import { useState, useEffect } from "react";
 import axios from "axios";
 
+const token = localStorage.getItem("token");
+
+const config = () => {
+  const token = localStorage.getItem("token");
+  return {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  };
+};
+
 const options = [
   { label: "This Month", href: "#" },
   { label: "Last Month", href: "#" },
   { label: "Last Week", href: "#" },
-];
-
-const fields = [
-  {
-    icon: inventory,
-    alt: "Sales",
-    cardStyle: "bg-[#5570F1] rounded-lg w-[605px] h-[145px]",
-    maintitleStyle: "gap-64 pl-4",
-    titleStyle: "text-white",
-    subtitleStyle: "font-bold text-gray-500 text-white",
-    title1: "Sales",
-    subTitle1: "₦0.00",
-    title2: "Volume",
-    subTitle2: "0",
-    showDropdown: false,
-  },
-  {
-    icon: sales,
-    alt: "Sales",
-    cardStyle: "bg-white rounded-lg w-[605px] h-[145px]",
-    maintitleStyle: "gap-50 pl-4",
-    dropdownButtonStyle: "text-gray-400 border-none pr-10",
-    dropdownMenuStyle: "bg-white",
-    dropdownButtonText: "This Week",
-    dropdownOptions: options,
-    titleStyle: "text-[#8B8D97]",
-    subtitleStyle: "font-bold text-[#45464E]",
-    title1: "Low Stock Alert",
-    subTitle1: "23",
-    title2: "Expired",
-    subTitle2: "3",
-    showDropdown: true,
-  },
 ];
 
 const tableTitle = [
@@ -63,12 +41,7 @@ const actionOption = [
   { label: "Publish", href: "#" },
   { label: "Unpublish", href: "#" },
 ];
-// const newFilters = {
-//   status: 'Publish',
-//   amountFrom: '',
-//   amountTo: '',
-//   selectedCheckboxes: ['Fashion', 'Gadgets'], 
-// };
+
 
 const InventoryPage = () => {
   const navigate = useNavigate();
@@ -79,11 +52,80 @@ const InventoryPage = () => {
     status: 'All',
     category: [],
   });
+  const [salesData, setSalesData] = useState({ totalSales: 0, totalVolume: 0 });
+  const [inventoryData, setInventoryData] = useState({
+    lowStockCount: 0,
+    expiredCount: 0,
+  });
+
+  // Fetch Sales Data
+  useEffect(() => {
+    const fetchSalesData = async () => {
+      try {
+        const response = await axios.get("http://localhost:3000/api/sales", config()); // Adjust API endpoint
+        setSalesData({
+          totalSales: response.data.totalSales,
+          totalVolume: response.data.totalVolume,
+        });
+      } catch (error) {
+        console.error("Error fetching sales data:",error.response?.data || error.message);
+      }
+    };
+
+    // Fetch Inventory Data
+    const fetchInventoryData = async () => {
+      try {
+        const response = await axios.get("http://localhost:3000/api/inventory", config()); // Adjust API endpoint
+        setInventoryData({
+          lowStockCount: response.data.lowStockCount,
+          expiredCount: response.data.expiredCount,
+        });
+      } catch (error) {
+        console.error("Error fetching inventory data:",error.response?.data || error.message);
+      }
+    };
+
+    fetchSalesData();
+    fetchInventoryData();
+  }, []);
+
+const fields = [
+  {
+    icon: inventory,
+    alt: "Sales",
+    cardStyle: "bg-[#5570F1] rounded-lg w-[605px] h-[145px]",
+    maintitleStyle: "gap-64 pl-4",
+    titleStyle: "text-white",
+    subtitleStyle: "font-bold text-gray-500 text-white",
+    title1: "Sales",
+    subTitle1: `₦${(salesData.totalSales || 0).toFixed(1)}`,
+    title2: "Volume",
+    subTitle2: `${salesData.totalVolume || 0}`,
+    showDropdown: false,
+  },
+  {
+    icon: sales,
+    alt: "Sales",
+    cardStyle: "bg-white rounded-lg w-[605px] h-[145px]",
+    maintitleStyle: "gap-50 pl-4",
+    dropdownButtonStyle: "text-gray-400 border-none pr-10",
+    dropdownMenuStyle: "bg-white",
+    dropdownButtonText: "This Week",
+    dropdownOptions: options,
+    titleStyle: "text-[#8B8D97]",
+    subtitleStyle: "font-bold text-[#45464E]",
+    title1: "Low Stock Alert",
+    subTitle1: `${inventoryData.lowStockCount || 0}`,
+    title2: "Expired",
+    subTitle2: `${inventoryData.expiredCount || 0}`,
+    showDropdown: true,
+  },
+];
 
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const res = await axios.get("http://localhost:3000/products");
+        const res = await axios.get("http://localhost:3000/products", config());
         setOriginalProducts(res.data);
         setProducts(res.data);
       } catch (error) {
@@ -103,41 +145,49 @@ const InventoryPage = () => {
 
   const filteredProducts = products.filter((item) =>
     item.productName.toLowerCase().includes(searchQuery.toLowerCase()) &&
-    (filters.category.length === 0 || filters.category.includes(item.productCategory)) &&
-    (filters.status === 'All' || item.status === filters.status)
+  (!filters.orderType || filters.orderType.length === 0 || filters.orderType.includes(order.orderType)) &&
+  (filters.status === 'All' || item.status === filters.status)
   );
 
   const handleSortChange = (newFilters) => {
     console.log("newFilters:", newFilters);
     
+    setFilters(newFilters); // Update state
+  
     let sortedProducts = [...originalProducts];
-      if (newFilters.status && newFilters.status !== "All") {
-      sortedProducts = sortedProducts.filter(product => product.status?.toLowerCase() === newFilters.status.toLowerCase());
-    }
-      if (newFilters.selectedCheckboxes?.length) {
-      sortedProducts = sortedProducts.filter(product => newFilters.selectedCheckboxes.includes(product.productCategory));
+  
+    if (newFilters.status && newFilters.status !== "All") {
+      sortedProducts = sortedProducts.filter(product => 
+        product.status?.toLowerCase() === newFilters.status.toLowerCase()
+      );
     }
   
-    if (newFilters.category?.length) {
-      sortedProducts = sortedProducts.filter(product => newFilters.category.includes(product.productCategory));
+    if (newFilters.selectedCheckboxes?.length) {
+      sortedProducts = sortedProducts.filter(product => 
+        newFilters.selectedCheckboxes.includes(product.productCategory)
+      );
     }
+  
     if (newFilters.amountFrom) {
-      sortedProducts = sortedProducts.filter(product => parseFloat(product.sellingPrice) >= parseFloat(newFilters.amountFrom));
+      sortedProducts = sortedProducts.filter(product => 
+        parseFloat(product.sellingPrice) >= parseFloat(newFilters.amountFrom)
+      );
     }
   
     if (newFilters.amountTo) {
-      sortedProducts = sortedProducts.filter(product => parseFloat(product.sellingPrice) <= parseFloat(newFilters.amountTo));
+      sortedProducts = sortedProducts.filter(product => 
+        parseFloat(product.sellingPrice) <= parseFloat(newFilters.amountTo)
+      );
     }
   
     console.log("Final sortedProducts:", sortedProducts);
     setProducts(sortedProducts);
   };
   
-
   const handleActionChange = async (productId, selectedOption) => {
     try {
       const newStatus = selectedOption.label;
-      await axios.patch(`http://localhost:3000/products/${productId}`, { status: newStatus });
+      await axios.patch(`http://localhost:3000/products/${productId}`, { status: newStatus }, config());
 
       setProducts((prevProducts) =>
         prevProducts.map((product) =>

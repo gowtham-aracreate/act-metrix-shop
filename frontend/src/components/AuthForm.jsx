@@ -14,7 +14,7 @@ export const AuthForm = ({
   linkText,
   linkPath,
   recover,
-  password,
+  forgot,
 }) => {
   const navigate = useNavigate();
   const [formValues, setFormValues] = useState({
@@ -44,20 +44,29 @@ export const AuthForm = ({
       let res;
       if (mode === "register") {
         res = await axios.post("http://localhost:3000/create", userDetail);
+        navigate("/login");
       } else if (mode === "login") {
         res = await axios.post("http://localhost:3000/login", {
           email: formValues.email,
           password: formValues.password,
-        });
-        if (res.data.redirectUrl) {
-          navigate(res.data.redirectUrl);
+        })
+        if (res.data.token) {
+          console.log("New Token:", res.data.token);
+          localStorage.setItem("token", res.data.token); 
+          navigate("/dashboard"); 
+        } else {
+          setError("Invalid credentials or missing token!");
         }
       }
-      setFormValues({ name: "", email: "", password: "" });
+        setFormValues({ name: "", email: "", password: "" });
       console.log(res);
     } catch (error) {
       console.error(`Error ${mode} user`, error);
-      setError(error.response?.data || `Error ${mode} user`);
+      if (error.response?.status === 500) {
+        setError("Internal Server Error. Please try again later.");
+      } else {
+        setError(error.response?.data?.error || "Error logging in");
+      }
     }
   };
 
@@ -104,7 +113,7 @@ export const AuthForm = ({
           ))}
           {error && <div className="text-red-500 text-center mt-4">{error}</div>}
           <div className="pt-3 pl-[229px]">
-            <a className="text-blue-600 right-0 cursor-pointer" onClick={() =>navigate(password)}>
+            <a className="text-blue-600 right-0 cursor-pointer" onClick={() =>navigate(forgot)}>
             {recover}
           </a>
       </div>
