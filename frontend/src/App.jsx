@@ -1,52 +1,3 @@
-
-// import React from 'react';
-// import RegisterPage from './pages/register';
-// import LoginPage from './pages/login';
-// import InventoryPage from './pages/inventory';
-// import Dropdown from './components/dropdown';
-// import Table from './components/Table';
-// import Dashboard from './layout/dashboard';
-// import Dashboard from './pages/dashboard';
-
-// import { BrowserRouter, Routes, Route } from "react-router-dom";
-// import { NewInventory } from './pages/NewInventory';
-// import Customer from "./pages/customer"; 
-// import Order from "./pages/order"; 
-// import Header from './layout/Header';
-// import Recover from './pages/recover';
-// import { Email } from './pages/email';
-// import custOrder from "./pages/custorder"; 
-
-
-// function App() {
-//   return (
-//     <BrowserRouter>
-//       <Routes>
-//         <Route path="/" element={<Dashboard />} />
-//         <Route path="/login" element={<LoginPage />} />
-//         <Route path="/register" element={<RegisterPage />} />
-//         <Route path="/recover" element={<Recover/>}/>
-//       <Route path="/email" element={<Email/>}/>
-//         <Route path='/dropdown' element={<Dropdown />} />
-//         <Route path="/inventory" element={<InventoryPage />} />
-//         <Route path="/table" element={<Table />} />
-//         <Route path='/newinventory' element={<NewInventory />} />
-//         <Route path="/customer" element={<Customer />} />
-//         <Route path="/custorder" element={<custOrder />} />
-//         <Route path='/header' element={<Header />} />
-//         <Route path="/dashboard" element={<Dashboard />} />
-//         <Route path='/order' element={<Order/>}/>
-//         <Route path='/dashboard' element={<dashboard/>}/>
-//       </Routes>
-//     </BrowserRouter>
-//   );
-// }
-
-// export default App;
-
-
-
-
 import React from 'react';
 import RegisterPage from './pages/register';
 import LoginPage from './pages/login';
@@ -54,33 +5,36 @@ import InventoryPage from './pages/inventory';
 import Dropdown from './components/dropdown';
 import Table from './components/Table';
 import Dashboard from './pages/dashboard'; 
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter,Router, Routes, Route, Navigate } from "react-router-dom";
 import { NewInventory } from './pages/NewInventory';
 import Customer from "./pages/customer"; 
 import Order from "./pages/order"; 
-import Recover from './pages/recover';
 import CustOrder from "./pages/custorder"; 
 import PieChart from "./components/piechart";
 import SalesSummaryChart from './components/SalesSummaryChart';
 import Email from './pages/email';
-import  Email  from './pages/email'
 import CustomersPage from './pages/customer'
 import { NewOrder } from './pages/newOrder';
 import CustomersPage from './pages/customer';
 import ChatPage from "./pages/ChatPage";
+import { Setting } from './pages/setting';
+import ProtectedRoute from "./components/ProtectedRoute";
+import ForgotPassword from './pages/forgotPassword';
+import Verify from './pages/verifyOtp';
+import ResetPassword  from './pages/reset';
+import { OrderDetail } from './pages/orderDetail';
 
 function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<Dashboard />} />
+        <Route path="/" element={<Navigate to="/login" />}  />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
-        <Route path="/recover" element={<Recover />} />
-        <Route path="/email" element={<Email />} />
-        <Route path="/dropdown" element={<Dropdown />} />
-        <Route path="/recover" element={<Recover/>}/>
-        <Route path="/email" element={<Email/>}/>
+        <Route path="/forgotPassword" element={<ForgotPassword />} />
+        <Route path="/verify" element={<Verify />} />
+        <Route path="/reset" element={<ResetPassword />} />
+        <Route element={<ProtectedRoute />}>
         <Route path="/inventory" element={<InventoryPage />} />
         <Route path="/table" element={<Table />} />
         <Route path="/newinventory" element={<NewInventory />} />
@@ -92,13 +46,8 @@ function App() {
         <Route path="/piechart" element={<PieChart />} />
         <Route path="/SalesSummaryChart" element={<SalesSummaryChart />} />
         <Route path="/chatpage" element={<ChatPage />} />
-       
-        <Route path="/dashboard" element={<Dashboard />} />
-        <Route path='/order' element={<Order/>}/>
-        <Route path='/newOrder' element={<NewOrder/>}/>
-        <Route path='/piechart' element={<PieChart/>}/>
-        <Route path='/SalesSummaryChart' element={<SalesSummaryChart/>}/>
-        <Route path='/chatpage' element={<ChatPage />} />
+        <Route path='/orderDetail' element={<OrderDetail />} />
+        </Route>
       </Routes>
     </BrowserRouter>
   );

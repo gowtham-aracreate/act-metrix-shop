@@ -8,6 +8,13 @@ import "react-datepicker/dist/react-datepicker.css";
 import calendar from "../assets/calendar.svg";
 import container from "../assets/iconContainer.svg";
 
+const token = localStorage.getItem("token");
+
+const config = {
+  headers: {
+    Authorization: `Bearer ${token}`, 
+  },
+};
 
 const orderType = [
     { label: "Home Delivery" },
@@ -34,6 +41,8 @@ export const NewOrder = ({ isOpen, onClose }) => {
     const [cartVisible, setCartVisible] = useState(false);
     const [cart, setCart] = useState([]);
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [customers, setCustomers] = useState([]);
+    const [selectedCustomer, setSelectedCustomer] = useState("");
 
     const [formData, setFormData] = useState({
         customerName: "",
@@ -43,18 +52,27 @@ export const NewOrder = ({ isOpen, onClose }) => {
         shortDescription: "",
     });
     useEffect(() => {
-        const fetchProducts = async () => {
+        const fetchData = async () => {
             try {
-                const res = await axios.get("http://localhost:3000/products");
-                console.log("Fetched Products:", res.data);
-                setOriginalProducts(res.data);
-                setProducts([]);
+                const [productsRes, customersRes] = await Promise.all([
+                    axios.get("http://localhost:3000/products", config),
+                    axios.get("http://localhost:3000/customers", config),
+                ]);
+
+                console.log("Fetched Products:", productsRes.data);
+                setOriginalProducts(productsRes.data);
+                setProducts([]); // Make sure this is intentional
+
+                console.log("Fetched Customers:", customersRes.data);
+                setCustomers(customersRes.data);
             } catch (error) {
-                console.error("Error fetching products:", error);
+                console.error("Error fetching data:", error);
             }
         };
-        fetchProducts();
+
+        fetchData();
     }, []);
+
 
     const handleDropdownSelect = (selectedValue, type, event) => {
         event?.preventDefault();
@@ -62,6 +80,11 @@ export const NewOrder = ({ isOpen, onClose }) => {
             ...prevFormData,
             [type]: selectedValue.label,
         }));
+    };
+
+    const handleSelect = (selectedOption) => {
+        console.log("Selected Customer:", selectedOption);
+        setSelectedCustomer(selectedOption.label); // Update state with customer name
     };
 
     const handleChange = (event) => {
@@ -105,11 +128,11 @@ export const NewOrder = ({ isOpen, onClose }) => {
             })),
             totalAmount: cart.reduce((sum, item) => sum + item.total, 0),
         };
-        
+
         console.log("Final Order Payload:", orderDetails);
         try {
             setIsSubmitting(true);
-            const res = await axios.post("http://localhost:3000/orders", orderDetails);
+            const res = await axios.post("http://localhost:3000/orders", orderDetails, config);
             console.log(res.data);
             setFormData({
                 customerName: "",
@@ -159,7 +182,7 @@ export const NewOrder = ({ isOpen, onClose }) => {
         } else {
             setCart([...cart, { ...product, quantity: 1, total: product.sellingPrice }]);
         }
-        console.log("Cart Updated:", cart); 
+        console.log("Cart Updated:", cart);
     };
 
     const handleQuantityChange = (productId, change) => {
@@ -214,20 +237,17 @@ export const NewOrder = ({ isOpen, onClose }) => {
                                         />
                                     </div>
                                 </div>
-                                {/* <Dropdown
-                            dropdownButtonStyle="pl-3 text-gray-900 pt-2 mb-4 border-none bg-[#EFF1F999] w-[358px] h-[42px] rounded-md"
-                            dropdownMenuStyle="bg-white"
-                            dropdownButtonText="Select Customer"
-                        /> */}
-                                <input
-                                    type="text"
-                                    name="customerName"
-                                    value={formData.customerName}
-                                    onChange={handleChange}
-                                    placeholder="Customer Name"
-                                    className="pl-3 mb-4 bg-[#EFF1F999] w-[358px] h-[42px] rounded-md"
-                                    required
-                                />
+                                <Dropdown
+                                    dropdownButtonStyle="pl-3 text-gray-900 pt-2 mb-4 border-none bg-[#EFF1F999] w-[358px] h-[42px] rounded-md"
+                                    dropdownMenuStyle="bg-white"
+                                    dropdownButtonText={formData.customerName || "Select Customer"}
+                                    dropdownOptions={customers.map((customer) => ({
+                                        label: customer.name,
+                                        value: customer._id,
+                                    }))}
+                                    onSelect={(selectedValue) => handleDropdownSelect(selectedValue, "customerName")}
+                                    />
+
                                 <div className='flex'>
                                     <Dropdown
                                         dropdownButtonStyle="pl-3 text-gray-900 pt-2 border-none bg-[#EFF1F999]  w-[172.5px] h-[42px] rounded-md"
@@ -268,9 +288,9 @@ export const NewOrder = ({ isOpen, onClose }) => {
                                 <Dropdown
                                     dropdownButtonStyle="pl-3 text-gray-900 pt-2 border-none bg-[#EFF1F999] mb-3 w-[358px] h-[42px] rounded-md"
                                     dropdownMenuStyle="bg-white"
-                                    dropdownButtonText={formData.status ||"Status"}
+                                    dropdownButtonText={formData.status || "Status"}
                                     dropdownOptions={status}
-                                        onSelect={(selectedValue, event) => handleDropdownSelect(selectedValue, "status", event)}  
+                                    onSelect={(selectedValue, event) => handleDropdownSelect(selectedValue, "status", event)}
                                 />
                                 <div>
                                     <input
@@ -323,7 +343,7 @@ export const NewOrder = ({ isOpen, onClose }) => {
                                                 </div>
                                                 <div>
                                                     <button
-                                                    type="button"
+                                                        type="button"
                                                         onClick={() => handleAddToCart(product)}
                                                         className="cursor-pointer pt-3 text-[#5570F1] font-semibold"
                                                     >
@@ -339,7 +359,7 @@ export const NewOrder = ({ isOpen, onClose }) => {
 
                                 {cart.length > 0 && (
                                     <button
-                                    type="button"
+                                        type="button"
                                         onClick={() => {
                                             setCartVisible(!cartVisible);
                                             setSearchQuery("");
@@ -365,7 +385,7 @@ export const NewOrder = ({ isOpen, onClose }) => {
                                                     </div>
                                                     <div className='pb-3'>
                                                         <button
-                                                        type="button"
+                                                            type="button"
                                                             onClick={() => handleRemoveFromCart(item._id)}
                                                             className="text-red-500 font-semibold pb-1 pl-5"
                                                         >
@@ -374,7 +394,7 @@ export const NewOrder = ({ isOpen, onClose }) => {
                                                         <div className="flex items-center pr-5">
 
                                                             <button
-                                                            type="button"
+                                                                type="button"
                                                                 onClick={() => handleQuantityChange(item._id, -1)}
                                                                 className="px-2 bg-gray-300 rounded-md"
                                                             >
@@ -382,7 +402,7 @@ export const NewOrder = ({ isOpen, onClose }) => {
                                                             </button>
                                                             <span className="px-3">{item.quantity}</span>
                                                             <button
-                                                            type="button"
+                                                                type="button"
                                                                 onClick={() => handleQuantityChange(item._id, 1)}
                                                                 className="px-2 bg-gray-300 rounded-md"
                                                             >
@@ -413,12 +433,12 @@ export const NewOrder = ({ isOpen, onClose }) => {
                         </div>
                         <div className="justify-center flex">
                             <button className='cursor-pointer bg-white inline-flex w-[140px] h-[36px] justify-center rounded-lg text-[14px] mr-4 pt-2 text-[#5570F1] border-2 border-[#5570F1]'
-                               type="button"
-                               onClick={onClose}>
+                                type="button"
+                                onClick={onClose}>
                                 Cancel
                             </button>
                             <button className='cursor-pointer bg-[#5570F1] inline-flex w-[140px] h-[36px] justify-center rounded-lg text-[14px] mr-4 pt-2 text-white'
-                            type='submit'>
+                                type='submit'>
                                 Create Order
                             </button>
                         </div>

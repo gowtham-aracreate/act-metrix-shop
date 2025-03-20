@@ -54,7 +54,7 @@ const Dropdown = ({ dropdownButtonStyle, dropdownMenuStyle, dropdownButtonText, 
                 key={index}
                 // href={option.href}
                 onClick={() => handleOptionClick(option)}
-                className="block py-2 text-sm  text-gray-700"
+                className="block py-2 text-sm  text-gray-700 w-full text-left"
                 role="menuitem"
               >
                 {option.label}

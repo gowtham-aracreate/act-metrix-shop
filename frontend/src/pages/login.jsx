@@ -35,7 +35,7 @@ const LoginPage = () => {
             linkText="Sign Up"
             linkPath="/register"
             recover="Recover Password"
-            password="/recover"
+            forgot="/forgotPassword"
           />
     </Auth>
   )

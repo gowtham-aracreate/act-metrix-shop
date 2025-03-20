@@ -8,7 +8,14 @@ import Sidebar from "../layout/Sidebar";
 import axios from "axios";
 import calendar from "../assets/calendar.svg";
 import { useLocation, useNavigate } from "react-router-dom";
+ 
+const token = localStorage.getItem("token");
 
+const config = {
+  headers: {
+    Authorization: `Bearer ${token}`, 
+  },
+};
 
 export const NewInventory = () => {
   const [html, setHtml] = useState("");
@@ -112,7 +119,7 @@ export const NewInventory = () => {
     };
 
     try {
-      const res = await axios.post("http://localhost:3000/product", productDetail);
+      const res = await axios.post("http://localhost:3000/product", productDetail, config);
       console.log(res.data);
       onSubmit(submittedData);
       setFormData({
@@ -156,14 +163,16 @@ export const NewInventory = () => {
           <form onSubmit={(event) => handleSubmit(event, formData.status)}>
             <div className="pt-3 pb-3 flex text-[18px]">
               <h1>New Inventory Item</h1>
-              <div className="pl-180 text-[16px]">
+              <div className="ml-auto flex text-[16px]">
                 <button type="button" onClick={(event) => handleSubmit(event, "unpublish")} className="bg-black text-white w-[171px] h-[36px] rounded-md mr-[24px]">
                   Save as Draft
                 </button>
                 <button type="button" onClick={(event) => handleSubmit(event, "publish")} className="bg-[#5570F1] text-white w-[161px] h-[36px] rounded-md">
                   Save & Publish
                 </button>
-              </div>
+                <button type="button" onClick={() => navigate("/inventory")}
+                  className="bg-red-500 text-white w-[171px] h-[36px] rounded-md mx-[24px]">Cancel</button>   
+                           </div>
             </div>
             <div className="flex">
               <div className="flex">

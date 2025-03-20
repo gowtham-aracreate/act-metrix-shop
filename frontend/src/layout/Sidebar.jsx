@@ -15,9 +15,13 @@ const Sidebar = ({ children }) => {
     navigate(path);
   };
   const navigate = useNavigate();
+  const handleLogout = () => {
+    localStorage.removeItem("token"); // Remove the token
+    navigate("/login"); // Redirect to login page
+  };
   return (
     <div>
-        <div className="absolute left-64 bg-white fixed top-0 pt-4 pb-4 flex justify-between items-center ">
+        <div className="absolute left-64 bg-white z-1 fixed top-0 pt-4 pb-4 flex justify-between items-center ">
           <h3 className="text-lg pl-3 font-semibold">Dashboard</h3>
           <div className="relative">
             <div className=" flex justify-between pl-235">
@@ -409,10 +413,12 @@ const Sidebar = ({ children }) => {
             </a>
 
             <div className="mt-6">
-              <div className="p-3 flex items-center text-red-500 hover:bg-red-100 rounded-md cursor-pointer">
+              <button
+              onClick={handleLogout} 
+              className="p-3 w-full flex items-center text-red-500 hover:bg-red-100 rounded-md cursor-pointer">
                 <IoLogOut className="h-5 w-5 mr-2" />
                 Logout
-              </div>
+              </button>
             </div>
           </ul>
         </div>

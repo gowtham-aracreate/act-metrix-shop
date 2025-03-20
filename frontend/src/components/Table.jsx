@@ -4,17 +4,20 @@ import { useNavigate } from "react-router-dom";
 import Filter from "../assets/filter.svg";
 import Calendar from "../assets/calendar.svg";
 import Send from "../assets/send.svg";
-import Dropdown from "./dropdown";
+import Dropdown  from "./dropdown";
 import { CalendarPopup } from "./CalendarPopup";
 
-const Table = ({ title, tableContent = [], heading, onSearch, mode, onSortChange, filters }) => {
+const Table = ({ title, tableContent, heading, onSearch, mode, onSortChange, filters }) => {
   const [isSortingOpen, setIsSortingOpen] = useState(false);
-  const [isCalendar, setIsCalendar] = useState(false);
+  const [isCalendar, setIsCalendar] =useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
   const navigate = useNavigate();
+  const handleSortChange = (newFilters) => {
+    onFilterChange(newFilters);
+  };
+  const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
 
-  const handleSortChange = (key) => {
+  const handleSort = (key) => {
     let direction = 'asc';
     if (sortConfig.key === key && sortConfig.direction === 'asc') {
       direction = 'desc';
@@ -49,14 +52,13 @@ const Table = ({ title, tableContent = [], heading, onSearch, mode, onSortChange
     }
   };
 
-  const filteredContent = sortedContent.filter((item) =>
-    Object.values(item).some((data) =>
-      data?.toString().toLowerCase().includes(searchQuery.toLowerCase())
-    )
+  const filteredContent = tableContent.filter((item) =>
+    item.some((data) => data.toString().toLowerCase().includes(searchQuery.toLowerCase()))
   );
 
   return (
     <div className="bg-white rounded-lg h-auto mt-[20px] pl-[21px] mr-[22px] py-[22px] text-[14px]">
+
       <table className="w-full">
         <caption className="pb-[25px]">
           <div className="flex">
@@ -85,14 +87,14 @@ const Table = ({ title, tableContent = [], heading, onSearch, mode, onSortChange
                       />
                     </svg>
                   </div>
-                  <input
-                    type="text"
-                    className="block ps-10 w-[220px] h-[29px] border border-gray-300 rounded-lg"
-                    placeholder="Search"
-                    value={searchQuery}
-                    onChange={handleSearch}
-                  />
                 </div>
+                <input
+                  type="text"
+                  className="block ps-10 w-[220px] h-[29px] border border-gray-300 rounded-lg "
+                  placeholder="Search"
+                  value={searchQuery}
+                  onChange={handleSearch}
+                />
               </div>
               <div className="flex gap-[12px]">
                 <div>
@@ -107,12 +109,14 @@ const Table = ({ title, tableContent = [], heading, onSearch, mode, onSortChange
                     />
                     Sort
                   </button>
-                  {isSortingOpen && <SortingPopup mode={mode} onSortChange={onSortChange} filters={filters} />}
+                  {isSortingOpen && <SortingPopup mode={mode} onSortChange={onSortChange} filters={filters}
+                      onClose={() => setIsSortingOpen(false)} // Close function
+/>
+                  }
                 </div>
                 <div>
-                  <button
-                    className="flex w-[67px] pt-1 h-[30px] justify-center text-gray-600 border border-gray-600 rounded-lg"
-                    onClick={() => setIsCalendar(!isCalendar)}
+                  <button className="flex w-[67px] pt-1 h-[30px] justify-center text-gray-600 border border-gray-600 rounded-lg"
+                  onClick={() => setIsCalendar(!isCalendar)}
                   >
                     <img
                       className="w-[16px] h-[16px] mt-1 mr-1"
@@ -121,7 +125,8 @@ const Table = ({ title, tableContent = [], heading, onSearch, mode, onSortChange
                     />
                     Filter
                   </button>
-                  {isCalendar && <CalendarPopup />}
+                  {isCalendar && <CalendarPopup />
+                  }
                 </div>
                 <div>
                   <button className="flex w-[67px] pt-1 h-[30px] justify-center text-gray-600 border border-gray-600 rounded-lg">
@@ -154,7 +159,7 @@ const Table = ({ title, tableContent = [], heading, onSearch, mode, onSortChange
                 key={index}
                 scope="col"
                 className="px-4 py-3 text-[14px] font-semibold text-[#2C2D33]"
-                onClick={() => handleSortChange(topic.toLowerCase())}
+                onClick={() => handleSort(topic.toLowerCase())}
               >
                 {topic}
                 <svg
@@ -265,5 +270,4 @@ const Table = ({ title, tableContent = [], heading, onSearch, mode, onSortChange
     </div>
   );
 };
-
 export default Table;
