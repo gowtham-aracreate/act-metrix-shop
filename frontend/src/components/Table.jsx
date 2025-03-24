@@ -4,39 +4,30 @@ import { useNavigate } from "react-router-dom";
 import Filter from "../assets/filter.svg";
 import Calendar from "../assets/calendar.svg";
 import Send from "../assets/send.svg";
-import Dropdown  from "./dropdown";
+import Dropdown from "./dropdown";
 import { CalendarPopup } from "./CalendarPopup";
 
 const Table = ({ title, tableContent, heading, onSearch, mode, onSortChange, filters }) => {
   const [isSortingOpen, setIsSortingOpen] = useState(false);
-  const [isCalendar, setIsCalendar] =useState(false);
+  const [isCalendar, setIsCalendar] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [sortConfig, setSortConfig] = useState({ key: null, direction: "asc" });
+  const [selectedRows, setSelectedRows] = useState(new Set());
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+
   const navigate = useNavigate();
-  const handleSortChange = (newFilters) => {
-    onFilterChange(newFilters);
-  };
-  const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
 
-  const handleSort = (key) => {
-    let direction = 'asc';
-    if (sortConfig.key === key && sortConfig.direction === 'asc') {
-      direction = 'desc';
-    }
-    setSortConfig({ key, direction });
-    if (onSortChange) {
-      onSortChange({ key, direction });
-    }
-  };
-
+  // Sorting logic
   const sortedContent = React.useMemo(() => {
     let sortableItems = [...tableContent];
     if (sortConfig.key) {
       sortableItems.sort((a, b) => {
         if (a[sortConfig.key] < b[sortConfig.key]) {
-          return sortConfig.direction === 'asc' ? -1 : 1;
+          return sortConfig.direction === "asc" ? -1 : 1;
         }
         if (a[sortConfig.key] > b[sortConfig.key]) {
-          return sortConfig.direction === 'asc' ? 1 : -1;
+          return sortConfig.direction === "asc" ? 1 : -1;
         }
         return 0;
       });
@@ -44,28 +35,60 @@ const Table = ({ title, tableContent, heading, onSearch, mode, onSortChange, fil
     return sortableItems;
   }, [tableContent, sortConfig]);
 
-  const handleSearch = (event) => {
-    const value = event.target.value;
-    setSearchQuery(value);
-    if (onSearch) {
-      onSearch(value);
+  // Filtering logic
+  const filteredContent = React.useMemo(() => {
+    return sortedContent.filter((item) =>
+      Object.values(item).some((value) =>
+        value.toString().toLowerCase().includes(searchQuery.toLowerCase())
+      )
+    );
+  }, [sortedContent, searchQuery]);
+
+  // Pagination logic
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentItems = filteredContent.slice(indexOfFirstItem, indexOfLastItem);
+
+  const totalPages = Math.ceil(filteredContent.length / itemsPerPage);
+
+  // Handle row selection
+  const handleRowSelect = (id) => {
+    const newSelectedRows = new Set(selectedRows);
+    if (newSelectedRows.has(id)) {
+      newSelectedRows.delete(id);
+    } else {
+      newSelectedRows.add(id);
+    }
+    setSelectedRows(newSelectedRows);
+  };
+
+  // Handle select all rows
+  const handleSelectAll = () => {
+    if (selectedRows.size === currentItems.length) {
+      setSelectedRows(new Set());
+    } else {
+      setSelectedRows(new Set(currentItems.map((item) => item.id)));
     }
   };
 
-  const filteredContent = tableContent.filter((item) =>
-    item.some((data) => data.toString().toLowerCase().includes(searchQuery.toLowerCase()))
-  );
+  // Handle page change
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
+  };
+
+  // Handle items per page change
+  const handleItemsPerPageChange = (value) => {
+    setItemsPerPage(value);
+    setCurrentPage(1); // Reset to the first page
+  };
 
   return (
     <div className="bg-white rounded-lg h-auto mt-[20px] pl-[21px] mr-[22px] py-[22px] text-[14px]">
-
       <table className="w-full">
         <caption className="pb-[25px]">
           <div className="flex">
             <div>
-              <h1 className="text-[16px] text-[#45464E] font-semibold">
-                {title}
-              </h1>
+              <h1 className="text-[16px] text-[#45464E] font-semibold">{title}</h1>
             </div>
             <div className="absolute flex right-[42px] gap-[12px]">
               <div>
@@ -87,14 +110,14 @@ const Table = ({ title, tableContent, heading, onSearch, mode, onSortChange, fil
                       />
                     </svg>
                   </div>
+                  <input
+                    type="text"
+                    className="block ps-10 w-[220px] h-[29px] border border-gray-300 rounded-lg"
+                    placeholder="Search"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                  />
                 </div>
-                <input
-                  type="text"
-                  className="block ps-10 w-[220px] h-[29px] border border-gray-300 rounded-lg "
-                  placeholder="Search"
-                  value={searchQuery}
-                  onChange={handleSearch}
-                />
               </div>
               <div className="flex gap-[12px]">
                 <div>
@@ -102,39 +125,31 @@ const Table = ({ title, tableContent, heading, onSearch, mode, onSortChange, fil
                     className="flex w-[67px] pt-1 h-[30px] justify-center text-gray-600 border border-gray-600 rounded-lg"
                     onClick={() => setIsSortingOpen(!isSortingOpen)}
                   >
-                    <img
-                      className="w-[16px] h-[16px] mt-1 mr-1"
-                      src={Filter}
-                      alt="filter"
-                    />
+                    <img className="w-[16px] h-[16px] mt-1 mr-1" src={Filter} alt="filter" />
                     Sort
                   </button>
-                  {isSortingOpen && <SortingPopup mode={mode} onSortChange={onSortChange} filters={filters}
-                      onClose={() => setIsSortingOpen(false)} // Close function
-/>
-                  }
+                  {isSortingOpen && (
+                    <SortingPopup
+                      mode={mode}
+                      onSortChange={onSortChange}
+                      filters={filters}
+                      onClose={() => setIsSortingOpen(false)}
+                    />
+                  )}
                 </div>
                 <div>
-                  <button className="flex w-[67px] pt-1 h-[30px] justify-center text-gray-600 border border-gray-600 rounded-lg"
-                  onClick={() => setIsCalendar(!isCalendar)}
+                  <button
+                    className="flex w-[67px] pt-1 h-[30px] justify-center text-gray-600 border border-gray-600 rounded-lg"
+                    onClick={() => setIsCalendar(!isCalendar)}
                   >
-                    <img
-                      className="w-[16px] h-[16px] mt-1 mr-1"
-                      src={Calendar}
-                      alt="calendar"
-                    />
+                    <img className="w-[16px] h-[16px] mt-1 mr-1" src={Calendar} alt="calendar" />
                     Filter
                   </button>
-                  {isCalendar && <CalendarPopup />
-                  }
+                  {isCalendar && <CalendarPopup />}
                 </div>
                 <div>
                   <button className="flex w-[67px] pt-1 h-[30px] justify-center text-gray-600 border border-gray-600 rounded-lg">
-                    <img
-                      className="w-[16px] h-[16px] mt-1 mr-1"
-                      src={Send}
-                      alt="send"
-                    />
+                    <img className="w-[16px] h-[16px] mt-1 mr-1" src={Send} alt="send" />
                     Share
                   </button>
                 </div>
@@ -152,7 +167,12 @@ const Table = ({ title, tableContent, heading, onSearch, mode, onSortChange, fil
         <thead className="border-y border-gray-300 w-full text-left">
           <tr>
             <th scope="col" className="p-4">
-              <input type="checkbox" className="w-4 h-4 rounded-sm focus:ring-blue-500" />
+              <input
+                type="checkbox"
+                className="w-4 h-4 rounded-sm focus:ring-blue-500"
+                checked={selectedRows.size === currentItems.length}
+                onChange={handleSelectAll}
+              />
             </th>
             {heading.map((topic, index) => (
               <th
@@ -189,18 +209,24 @@ const Table = ({ title, tableContent, heading, onSearch, mode, onSortChange, fil
               </th>
             ))}
           </tr>
-        </thead> 
-
+        </thead>
         <tbody>
-          {filteredContent.length > 0 ? (
-            filteredContent.map((data, index) => (
+          {currentItems.length > 0 ? (
+            currentItems.map((data, index) => (
               <tr key={data.id || index} className="border-b border-gray-300 text-[#6E7079]">
                 <td className="px-4 py-4 inline-flex">
-                  <input type="checkbox" className="w-4 h-4 rounded-sm focus:ring-blue-500" />
+                  <input
+                    type="checkbox"
+                    className="w-4 h-4 rounded-sm focus:ring-blue-500"
+                    checked={selectedRows.has(data.id)}
+                    onChange={() => handleRowSelect(data.id)}
+                  />
                   {data.icon && <img className="pl-5" src={data.icon} alt="icon" />}
                 </td>
                 {Object.values(data).map((cell, idx) => (
-                  <td key={idx} className="px-4 py-4">{cell}</td>
+                  <td key={idx} className="px-4 py-4">
+                    {cell}
+                  </td>
                 ))}
               </tr>
             ))
@@ -219,19 +245,27 @@ const Table = ({ title, tableContent, heading, onSearch, mode, onSortChange, fil
             <Dropdown
               dropdownButtonStyle="text-gray-600 h-[23px] justify-center pr-8 w-[60px] bg-[#5E636614] text-[15px] rounded-lg"
               dropdownMenuStyle="bg-white"
-              dropdownButtonText="10"
+              dropdownButtonText={itemsPerPage.toString()}
+              onSelect={handleItemsPerPageChange}
             />
             <p className="pl-[10px] text-[#A6A8B1]">Items per page</p>
-            <p className="pl-[22px] text-[#666666]">1-10 of 200 items</p>
+            <p className="pl-[22px] text-[#666666]">
+              {indexOfFirstItem + 1}-{Math.min(indexOfLastItem, filteredContent.length)} of {filteredContent.length} items
+            </p>
           </div>
           <div className="flex absolute right-[30px] pr-[22px]">
             <Dropdown
               dropdownButtonStyle="text-gray-600 h-[23px] justify-center w-[60px] pr-8 bg-[#5E636614] text-[15px] rounded-lg"
               dropdownMenuStyle="bg-white"
-              dropdownButtonText="1"
+              dropdownButtonText={currentPage.toString()}
+              onSelect={handlePageChange}
             />
-            <p className="pl-[10px] text-[#666666]"> of 44 pages</p>
-            <a href="#">
+            <p className="pl-[10px] text-[#666666]">of {totalPages} pages</p>
+            <button
+              onClick={() => handlePageChange(currentPage - 1)}
+              disabled={currentPage === 1}
+              className="disabled:opacity-50"
+            >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 fill="none"
@@ -247,8 +281,12 @@ const Table = ({ title, tableContent, heading, onSearch, mode, onSortChange, fil
                   d="M15.75 19.5 8.25 12l7.5-7.5"
                 />
               </svg>
-            </a>
-            <a href="#">
+            </button>
+            <button
+              onClick={() => handlePageChange(currentPage + 1)}
+              disabled={currentPage === totalPages}
+              className="disabled:opacity-50"
+            >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 fill="none"
@@ -263,11 +301,12 @@ const Table = ({ title, tableContent, heading, onSearch, mode, onSortChange, fil
                   d="m8.25 4.5 7.5 7.5-7.5 7.5"
                 />
               </svg>
-            </a>
+            </button>
           </div>
         </div>
       </nav>
     </div>
   );
 };
+
 export default Table;
