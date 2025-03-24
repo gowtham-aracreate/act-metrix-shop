@@ -1,10 +1,10 @@
 import React from 'react';
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import RegisterPage from './pages/register';
 import LoginPage from './pages/login';
 import InventoryPage from './pages/inventory';
 import Table from './components/Table';
 import Dashboard from './pages/dashboard'; 
-import { BrowserRouter,Router, Routes, Route, Navigate } from "react-router-dom";
 import { NewInventory } from './pages/NewInventory';
 import Customer from "./pages/customer"; 
 import Order from "./pages/order"; 
@@ -20,11 +20,12 @@ import Verify from './pages/verifyOtp';
 import ResetPassword  from './pages/reset';
 import ProductDetail  from './pages/productDetail';
 
+
 function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<Navigate to="/login" />}  />
+        <Route path="/" element={<Navigate to="/login" />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/forgotPassword" element={<ForgotPassword />} />

@@ -199,7 +199,7 @@ app.post("/resend-otp", async (req, res) => {
     }
 
     const newOTP = Math.floor(100000 + Math.random() * 900000).toString();
-    const otpExpires = new Date(Date.now() + 15 * 60 * 1000); // 15 mins expiry
+    const otpExpires = new Date(Date.now() + 15 * 60 * 1000); 
 
     user.resetOTP = newOTP;
     user.otpExpires = otpExpires;
@@ -541,3 +541,5 @@ app.get('/orders/product/:id', authMiddleware, async (req, res) => {
 app.listen(port, () => {
   console.log(`Server running on http://localhost:${port}`);
 });
+
+
