@@ -7,7 +7,7 @@ import profile from "../assets/profile.svg";
 import { useNavigate } from "react-router-dom";
 
 
-const Sidebar = ({ children }) => {
+const Sidebar = ({ children,title }) => {
   const [activeLink, setActiveLink] = React.useState("");
 
   const handleLinkClick = (link, path) => {
@@ -22,7 +22,7 @@ const Sidebar = ({ children }) => {
   return (
     <div>
         <div className="absolute left-64 bg-white z-1 fixed top-0 pt-4 pb-4 flex justify-between items-center ">
-          <h3 className="text-lg pl-3 font-semibold">Dashboard</h3>
+          <h3 className="text-lg pl-3 font-semibold">{title}</h3>
           <div className="relative">
             <div className=" flex justify-between pl-235">
               <Dropdown
@@ -265,7 +265,7 @@ const Sidebar = ({ children }) => {
             </a>
             <a
               href="#"
-              onClick={() => handleLinkClick("Settings")}
+              onClick={() => handleLinkClick("Settings", "/setting")}	
               className={`p-3 flex items-center rounded-md ${activeLink === "Settings"
                   ? "bg-[#5570F1] text-white"
                   : "hover:bg-gray-200"

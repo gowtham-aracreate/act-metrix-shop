@@ -4,17 +4,14 @@ import { useNavigate } from "react-router-dom";
 import Filter from "../assets/filter.svg";
 import Calendar from "../assets/calendar.svg";
 import Send from "../assets/send.svg";
-import Dropdown  from "./dropdown";
+import Dropdown from "./dropdown";
 import { CalendarPopup } from "./CalendarPopup";
 
-const Table = ({ title, tableContent, heading, onSearch, mode, onSortChange, filters }) => {
+const Table = ({ title, tableContent, heading, onSearch, mode, onSortChange, filters, onFilterChange }) => {
   const [isSortingOpen, setIsSortingOpen] = useState(false);
-  const [isCalendar, setIsCalendar] =useState(false);
+  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const navigate = useNavigate();
-  const handleSortChange = (newFilters) => {
-    onFilterChange(newFilters);
-  };
   const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
 
   const handleSort = (key) => {
@@ -52,13 +49,21 @@ const Table = ({ title, tableContent, heading, onSearch, mode, onSortChange, fil
     }
   };
 
+  const handleDateFilter = (newFilters) => {
+    if (onFilterChange) {
+      onFilterChange(newFilters);
+    } else {
+      console.error("onFilterChange is not defined!");
+    }
+  };
+  
+
   const filteredContent = tableContent.filter((item) =>
     item.some((data) => data.toString().toLowerCase().includes(searchQuery.toLowerCase()))
   );
 
   return (
     <div className="bg-white rounded-lg h-auto mt-[20px] pl-[21px] mr-[22px] py-[22px] text-[14px]">
-
       <table className="w-full">
         <caption className="pb-[25px]">
           <div className="flex">
@@ -107,16 +112,16 @@ const Table = ({ title, tableContent, heading, onSearch, mode, onSortChange, fil
                       src={Filter}
                       alt="filter"
                     />
-                    Sort
+                    Filter
                   </button>
                   {isSortingOpen && <SortingPopup mode={mode} onSortChange={onSortChange} filters={filters}
-                      onClose={() => setIsSortingOpen(false)} // Close function
-/>
+                    onClose={() => setIsSortingOpen(false)} // Close function
+                  />
                   }
                 </div>
                 <div>
                   <button className="flex w-[67px] pt-1 h-[30px] justify-center text-gray-600 border border-gray-600 rounded-lg"
-                  onClick={() => setIsCalendar(!isCalendar)}
+                    onClick={() => setIsCalendarOpen(true)}
                   >
                     <img
                       className="w-[16px] h-[16px] mt-1 mr-1"
@@ -125,8 +130,12 @@ const Table = ({ title, tableContent, heading, onSearch, mode, onSortChange, fil
                     />
                     Filter
                   </button>
-                  {isCalendar && <CalendarPopup />
-                  }
+                  {isCalendarOpen && (
+                    <CalendarPopup
+                      onFilterChange={handleDateFilter}
+                      onClose={() => setIsCalendarOpen(false)}
+                    />
+                  )}
                 </div>
                 <div>
                   <button className="flex w-[67px] pt-1 h-[30px] justify-center text-gray-600 border border-gray-600 rounded-lg">
@@ -159,10 +168,11 @@ const Table = ({ title, tableContent, heading, onSearch, mode, onSortChange, fil
                 key={index}
                 scope="col"
                 className="px-4 py-3 text-[14px] font-semibold text-[#2C2D33]"
-                onClick={() => handleSort(topic.toLowerCase())}
+                // onClick={() => handleSort(topic.toLowerCase())}
               >
                 {topic}
                 <svg
+                onClick={() => sortedContent}
                   className="ml-2 inline-flex"
                   xmlns="http://www.w3.org/2000/svg"
                   width="18"
@@ -189,7 +199,7 @@ const Table = ({ title, tableContent, heading, onSearch, mode, onSortChange, fil
               </th>
             ))}
           </tr>
-        </thead> 
+        </thead>
 
         <tbody>
           {filteredContent.length > 0 ? (

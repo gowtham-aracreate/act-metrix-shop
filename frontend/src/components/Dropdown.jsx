@@ -1,8 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 const Dropdown = ({ dropdownButtonStyle, dropdownMenuStyle, dropdownButtonText, dropdownOptions, onSelect }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [selectedOption, setSelectedOption] = useState(dropdownButtonText);
+
+  useEffect(() => {
+    setSelectedOption(dropdownButtonText);
+  }, [dropdownButtonText]);
 
   const toggleDropdown = () => {
     setIsOpen(!isOpen);

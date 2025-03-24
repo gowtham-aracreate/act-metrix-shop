@@ -158,16 +158,16 @@ export const NewInventory = () => {
   return (
     <div className="">
       <Sidebar />
-      <div className="ml-64 mt-15 bg-[#5E636614] md:h-screen ">
+      <div className="ml-64 mt-15 bg-[#5E636614] h-screen ">
         <div className="ml-6">
           <form onSubmit={(event) => handleSubmit(event, formData.status)}>
             <div className="pt-3 pb-3 flex text-[18px]">
               <h1>New Inventory Item</h1>
               <div className="ml-auto flex text-[16px]">
-                <button type="button" onClick={(event) => handleSubmit(event, "unpublish")} className="bg-black text-white w-[171px] h-[36px] rounded-md mr-[24px]">
+                <button type="button" onClick={(event) => handleSubmit(event, "Unpublish")} className="bg-black text-white w-[171px] h-[36px] rounded-md mr-[24px]">
                   Save as Draft
                 </button>
-                <button type="button" onClick={(event) => handleSubmit(event, "publish")} className="bg-[#5570F1] text-white w-[161px] h-[36px] rounded-md">
+                <button type="button" onClick={(event) => handleSubmit(event, "Publish")} className="bg-[#5570F1] text-white w-[161px] h-[36px] rounded-md">
                   Save & Publish
                 </button>
                 <button type="button" onClick={() => navigate("/inventory")}
@@ -265,7 +265,7 @@ export const NewInventory = () => {
                         name="discountValue"
                         value={formData.discountValue}
                         onChange={handleChange}
-                        placeholder="Value"
+                        placeholder="Discount Percentage %"
                         className="pl-3 bg-[#EFF1F999] w-[300px] h-[42px] rounded-md"
                       />
                     </div>
@@ -309,7 +309,7 @@ export const NewInventory = () => {
                     value={formData.shortDescription}
                     onChange={handleChange}
                     placeholder="Short Description"
-                    className="pb-28 w-[360px] mb-[14px] h-[140px] pl-3 bg-[#EFF1F999] rounded-md"
+                    className="pb-28 w-[360px] mb-[14px] h-[140px] pl-3 bg-[#EFF1F999] rounded-md overflow-y-scroll"
                   />
                   <p className="text-[#5E6366] pb-1">Product Long Description</p>
                   <div className="w-[360px] bg-[#EFF1F999]">
