@@ -7,9 +7,9 @@ import Send from "../assets/send.svg";
 import Dropdown from "./dropdown";
 import { CalendarPopup } from "./CalendarPopup";
 
-const Table = ({ title, tableContent, heading, onSearch, mode, onSortChange, filters }) => {
+const Table = ({ title, tableContent, heading, onSearch, mode, onSortChange, filters, onFilterChange }) => {
   const [isSortingOpen, setIsSortingOpen] = useState(false);
-  const [isCalendar, setIsCalendar] = useState(false);
+  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [sortConfig, setSortConfig] = useState({ key: null, direction: "asc" });
   const [selectedRows, setSelectedRows] = useState(new Set());
@@ -17,6 +17,18 @@ const Table = ({ title, tableContent, heading, onSearch, mode, onSortChange, fil
   const [itemsPerPage, setItemsPerPage] = useState(10);
 
   const navigate = useNavigate();
+  
+
+  const handleSort = (key) => {
+    let direction = 'asc';
+    if (sortConfig.key === key && sortConfig.direction === 'asc') {
+      direction = 'desc';
+    }
+    setSortConfig({ key, direction });
+    if (onSortChange) {
+      onSortChange({ key, direction });
+    }
+  };
 
   // Sorting logic
   const sortedContent = React.useMemo(() => {
@@ -36,13 +48,13 @@ const Table = ({ title, tableContent, heading, onSearch, mode, onSortChange, fil
   }, [tableContent, sortConfig]);
 
   // Filtering logic
-  const filteredContent = React.useMemo(() => {
-    return sortedContent.filter((item) =>
-      Object.values(item).some((value) =>
-        value.toString().toLowerCase().includes(searchQuery.toLowerCase())
-      )
-    );
-  }, [sortedContent, searchQuery]);
+  // const filteredContent = React.useMemo(() => {
+  //   return sortedContent.filter((item) =>
+  //     Object.values(item).some((value) =>
+  //       value.toString().toLowerCase().includes(searchQuery.toLowerCase())
+  //     )
+  //   );
+  // }, [sortedContent, searchQuery]);
 
   // Pagination logic
   const indexOfLastItem = currentPage * itemsPerPage;
@@ -81,6 +93,18 @@ const Table = ({ title, tableContent, heading, onSearch, mode, onSortChange, fil
     setItemsPerPage(value);
     setCurrentPage(1); // Reset to the first page
   };
+  const handleDateFilter = (newFilters) => {
+    if (onFilterChange) {
+      onFilterChange(newFilters);
+    } else {
+      console.error("onFilterChange is not defined!");
+    }
+  };
+  
+
+  const filteredContent = tableContent.filter((item) =>
+    item.some((data) => data.toString().toLowerCase().includes(searchQuery.toLowerCase()))
+  );
 
   return (
     <div className="bg-white rounded-lg h-auto mt-[20px] pl-[21px] mr-[22px] py-[22px] text-[14px]">
@@ -125,27 +149,31 @@ const Table = ({ title, tableContent, heading, onSearch, mode, onSortChange, fil
                     className="flex w-[67px] pt-1 h-[30px] justify-center text-gray-600 border border-gray-600 rounded-lg"
                     onClick={() => setIsSortingOpen(!isSortingOpen)}
                   >
-                    <img className="w-[16px] h-[16px] mt-1 mr-1" src={Filter} alt="filter" />
-                    Sort
-                  </button>
-                  {isSortingOpen && (
-                    <SortingPopup
-                      mode={mode}
-                      onSortChange={onSortChange}
-                      filters={filters}
-                      onClose={() => setIsSortingOpen(false)}
+                    <img
+                      className="w-[16px] h-[16px] mt-1 mr-1"
+                      src={Filter}
+                      alt="filter"
                     />
-                  )}
+                    Filter
+                  </button>
+                  {isSortingOpen && <SortingPopup mode={mode} onSortChange={onSortChange} filters={filters}
+                    onClose={() => setIsSortingOpen(false)} // Close function
+                  />
+                  }
                 </div>
                 <div>
-                  <button
-                    className="flex w-[67px] pt-1 h-[30px] justify-center text-gray-600 border border-gray-600 rounded-lg"
-                    onClick={() => setIsCalendar(!isCalendar)}
+                  <button className="flex w-[67px] pt-1 h-[30px] justify-center text-gray-600 border border-gray-600 rounded-lg"
+                    onClick={() => setIsCalendarOpen(true)}
                   >
                     <img className="w-[16px] h-[16px] mt-1 mr-1" src={Calendar} alt="calendar" />
                     Filter
                   </button>
-                  {isCalendar && <CalendarPopup />}
+                  {isCalendarOpen && (
+                    <CalendarPopup
+                      onFilterChange={handleDateFilter}
+                      onClose={() => setIsCalendarOpen(false)}
+                    />
+                  )}
                 </div>
                 <div>
                   <button className="flex w-[67px] pt-1 h-[30px] justify-center text-gray-600 border border-gray-600 rounded-lg">
@@ -179,10 +207,11 @@ const Table = ({ title, tableContent, heading, onSearch, mode, onSortChange, fil
                 key={index}
                 scope="col"
                 className="px-4 py-3 text-[14px] font-semibold text-[#2C2D33]"
-                onClick={() => handleSort(topic.toLowerCase())}
+                // onClick={() => handleSort(topic.toLowerCase())}
               >
                 {topic}
                 <svg
+                onClick={() => sortedContent}
                   className="ml-2 inline-flex"
                   xmlns="http://www.w3.org/2000/svg"
                   width="18"
@@ -210,6 +239,7 @@ const Table = ({ title, tableContent, heading, onSearch, mode, onSortChange, fil
             ))}
           </tr>
         </thead>
+
         <tbody>
           {currentItems.length > 0 ? (
             currentItems.map((data, index) => (

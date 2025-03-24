@@ -10,11 +10,10 @@ import SalesSummaryChart from "../components/SalesSummaryChart";
 const DashboardCards = () => {
   return (
     <div className="flex">
-      
-        <Sidebar />
+        <Sidebar 
+        title={"Dashboard"}
+        />
 
-   
-     
       <div className="flex flex-wrap gap-4 p-20 pl-60 w-full ">
         
         {/* Sales Card */}

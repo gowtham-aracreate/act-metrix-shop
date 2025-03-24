@@ -7,6 +7,15 @@ import Sidebar from "../layout/Sidebar";
 import Cust from "../assets/cust.svg";
 import Order from "../assets/order.svg";
 
+const config = () => {
+  const token = localStorage.getItem("token");
+  return {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  };
+};
+
 const CustomerSummary = ({ customers }) => {
   const totalCustomers = customers.length;
   const activeCustomers = customers.filter((customer) => customer.status === "Active").length;
@@ -253,7 +262,7 @@ const CustomersPage = () => {
   
       {/* Modal rendered outside the blurred container */}
       {isModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div className="fixed inset-0 bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white p-4 rounded-lg shadow-lg w-full md:w-[400px] mx-4 relative z-20">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-xl font-semibold">
@@ -301,7 +310,7 @@ const CustomersPage = () => {
                   <option>+91</option>
                 </select>
                 <input
-                  type="text"
+                  type="tel"
                   placeholder="Phone"
                   className="flex-1 border rounded-lg p-2"
                   value={newCustomer.phone}

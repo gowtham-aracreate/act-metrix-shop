@@ -33,8 +33,12 @@ const UserSchema = new mongoose.Schema({
   name: String,
   email: String,
   password: String,
-  resetOTP: String,
-  otpExpires: Date,
+  phone: { type: String, default: "" },
+  address: { type: String, default: "" },
+  city: { type: String, default: "" },
+  country: { type: String, default: "" },
+  state: { type: String, default: "" },
+  // profileImage: { type: String, default: "" },
 });
 
 const ProductSchema = new mongoose.Schema({
@@ -243,39 +247,87 @@ app.post("/login", async (req, res) => {
   const { email, password } = req.body;
   try {
     const user = await UserDetail.findOne({ email });
+
     if (!user) {
       return res.status(401).json({ error: "Invalid email or password" });
     }
+
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
       return res.status(401).json({ error: "Invalid email or password" });
     }
+
     const secretKey = process.env.JWT_SECRET;
     if (!secretKey) {
       throw new Error("JWT_SECRET is not defined in .env file");
     }
+
     const token = jwt.sign({ userId: user._id, email: user.email }, secretKey, {
       expiresIn: "1h",
     });
 
-    res.json({ token, message: "Login successful" });
+    res.json({
+      token,
+      message: "Login successful",
+      user: {
+        name: user.name,
+        email: user.email,
+        phone: user.phone,
+        address: user.address,
+        city: user.city,
+        country: user.country,
+        state: user.state,
+        // profileImage: user.profileImage,
+      },
+    });
   } catch (error) {
     console.error("Login Error:", error);
-    console.error("Error Details:", {
-      message: error.message,
-      stack: error.stack,
-      name: error.name,
-      config: error.config,
-      request: error.request,
-      response: error.response,
-    });
     res.status(500).send({ error: "Error logging in", details: error.message });
   }
 });
 
 const authMiddleware = require("./authMiddleware");
-// Fetch Customers
 
+app.get('/me', authMiddleware, async (req, res) => {
+  try {
+    const user = await UserDetail.findById(req.user.userId).select("-password"); 
+    if (!user) {
+      return res.status(404).json({ success: false, message: "User not found" });
+    }
+    res.json({ success: true, user });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ success: false, message: "Server Error" });
+  }
+});
+
+app.put("/update-profile", authMiddleware, async (req, res) => {
+  try {
+    const { name, phone, address, city, country, state } = req.body;
+
+    const user = await UserDetail.findById(req.user.userId);
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+    if (name) user.name = name;
+    if (phone) user.phone = phone;
+    if (address) user.address = address;
+    if (city) user.city = city;
+    if (country) user.country = country;
+    if (state) user.state = state;
+    // if (profileImage) user.profileImage = profileImage;
+
+    await user.save();
+
+    res.json({ message: "Profile updated successfully", user });
+  } catch (error) {
+    res.status(500).json({ error: "Error updating profile", details: error.message });
+  }
+});
+
+
+
+// Fetch Customers
 app.get("/customers", authMiddleware, async (req, res) => {
   try {
     const customers = await Customer.find();
@@ -332,7 +384,7 @@ app.post("/orders", authMiddleware, async (req, res) => {
 app.patch("/orders/:id", authMiddleware, async (req, res) => {
   try {
     const { id } = req.params;
-    const updateData = req.body; // Allow updating multiple fields if needed
+    const updateData = req.body; 
 
     const updatedOrder = await Order.findByIdAndUpdate(id, updateData, { new: true });
 
@@ -436,6 +488,7 @@ app.get('/product/:id', authMiddleware, async (req, res) => {
   }
 });
 
+
 app.put('/product/:id', authMiddleware, async (req, res) => {
   try {
     const product = await Product.findByIdAndUpdate(req.params.id, req.body, { new: true });
@@ -462,7 +515,7 @@ app.delete('/product/:id', authMiddleware, async (req, res) => {
 
 app.get("/api/inventory", authMiddleware, async (req, res) => {
   try {
-    const lowStockCount = await Product.countDocuments({ quantity: { $lt: 5 } });
+    const lowStockCount = await Product.countDocuments({ quantity: { $lt: 20 } });
     const expiredCount = await Product.countDocuments({
       expiryDate: { $lt: new Date().toISOString() },
     });
@@ -474,6 +527,16 @@ app.get("/api/inventory", authMiddleware, async (req, res) => {
   }
 });
 
+app.get('/orders/product/:id', authMiddleware, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const orders = await Order.find({ 'items.productId': id });
+
+    res.json(orders);
+  } catch (error) {
+    res.status(500).json({ error: "Error fetching orders for the product" });
+  }
+});
 
 app.listen(port, () => {
   console.log(`Server running on http://localhost:${port}`);

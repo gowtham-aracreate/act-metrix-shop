@@ -93,7 +93,7 @@ export const AuthForm = ({
                       ? "text"
                       : field.type
                   }
-                  className="bg-gray-100 border border-gray-100 text-black text-sm rounded-lg py-[15px] pr-[150px] pl-[50px]"
+                  className="bg-gray-100 border border-gray-100 text-black text-sm rounded-lg py-[15px]  pl-[50px] w-full w-[250px]"
                   placeholder={field.placeholder}
                   required={field.required}
                   name={field.name}

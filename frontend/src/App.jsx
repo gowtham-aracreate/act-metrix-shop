@@ -3,7 +3,6 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import RegisterPage from './pages/register';
 import LoginPage from './pages/login';
 import InventoryPage from './pages/inventory';
-import Dropdown from './components/dropdown';
 import Table from './components/Table';
 import Dashboard from './pages/dashboard'; 
 import { NewInventory } from './pages/NewInventory';
@@ -19,7 +18,7 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import ForgotPassword from './pages/forgotPassword';
 import Verify from './pages/verifyOtp';
 import ResetPassword  from './pages/reset';
-import { OrderDetail } from './pages/orderDetail';
+import ProductDetail  from './pages/productDetail';
 
 
 function App() {
@@ -33,17 +32,19 @@ function App() {
         <Route path="/verify" element={<Verify />} />
         <Route path="/reset" element={<ResetPassword />} />
         <Route element={<ProtectedRoute />}>
-          <Route path="/inventory" element={<InventoryPage />} />
-          <Route path="/table" element={<Table />} />
-          <Route path="/newinventory" element={<NewInventory />} />
-          <Route path="/customer" element={<Customer />} /> 
-          <Route path="/custorder" element={<CustOrder />} /> 
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/order" element={<Order />} />
-          <Route path="/piechart" element={<PieChart />} />
-          <Route path="/sales-summary-chart" element={<SalesSummaryChart />} />
-          <Route path="/chatpage" element={<ChatPage />} />
-          <Route path='/orderDetail' element={<OrderDetail />} />
+        <Route path="/inventory" element={<InventoryPage />} />
+        <Route path="/table" element={<Table />} />
+        <Route path="/newinventory" element={<NewInventory />} />
+        <Route path="/customer" element={<Customer />} /> 
+        <Route path="/custorder" element={<CustOrder />} /> 
+        <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/order" element={<Order />} />
+        <Route path="/neworder" element={<NewOrder />} />
+        <Route path="/setting" element={<Setting />} />
+        <Route path="/piechart" element={<PieChart />} />
+        <Route path="/SalesSummaryChart" element={<SalesSummaryChart />} />
+        <Route path="/chatpage" element={<ChatPage />} />
+        <Route path="/product/:productId" element={<ProductDetail />} />
         </Route>
       </Routes>
     </BrowserRouter>
