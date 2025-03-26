@@ -11,7 +11,7 @@ import Order from "./pages/order";
 import CustOrder from "./pages/custorder"; 
 import PieChart from "./components/piechart";
 import SalesSummaryChart from './components/SalesSummaryChart';
-import { NewOrder } from './pages/newOrder';
+import { NewOrder } from './pages/NewOrder';
 import ChatPage from "./pages/ChatPage";
 import { Setting } from './pages/setting';
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -19,7 +19,7 @@ import ForgotPassword from './pages/forgotPassword';
 import Verify from './pages/verifyOtp';
 import ResetPassword  from './pages/reset';
 import ProductDetail  from './pages/productDetail';
-
+import OrderDetail from './pages/orderDetail';
 
 function App() {
   return (
@@ -45,6 +45,7 @@ function App() {
         <Route path="/SalesSummaryChart" element={<SalesSummaryChart />} />
         <Route path="/chatpage" element={<ChatPage />} />
         <Route path="/product/:productId" element={<ProductDetail />} />
+        <Route path="/orders/:orderId" element={<OrderDetail />} />
         </Route>
       </Routes>
     </BrowserRouter>

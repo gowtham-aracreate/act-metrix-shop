@@ -72,8 +72,16 @@ const CustomerSchema = new mongoose.Schema({
   status: String,
 });
 const OrderSchema = new mongoose.Schema({
+ customerId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true }, 
   customer: { type: String, required: true },
-  items: { type: Array, required: true },
+  items: [{
+    productId: { type: mongoose.Schema.Types.ObjectId, ref: 'Product', required: true },
+    productName: { type: String, required: true },
+    quantity: { type: Number, required: true },
+    price: { type: Number, required: true },
+    discount: { type: Number, required: true },
+    total: { type: Number, required: true }
+  }],
   orderDate: { type: String, required: true },
   orderTime: { type: String, required: true },
   orderType: { type: String, required: true },
@@ -328,12 +336,44 @@ app.put("/update-profile", authMiddleware, async (req, res) => {
 
 
 // Fetch Customers
-app.get("/customers", authMiddleware, async (req, res) => {
+app.get("/customers", async (req, res) => {
   try {
-    const customers = await Customer.find();
-    res.json(customers);
+    const customers = await Customer.find(); // Fetch all customers
+
+    const customersWithOrders = await Promise.all(
+      customers.map(async (customer) => {
+        const orders = await Order.find({ customerId: customer._id }); // Fetch orders for each customer
+
+        const totalOrders = orders.length;
+        const totalAmount = orders.reduce((sum, order) => sum + order.totalAmount, 0);
+
+        return {
+          ...customer.toObject(),
+          orders: orders, // Store orders as an array
+          total: `$${totalAmount.toFixed(2)}`,
+        };
+      })
+    );
+
+    res.status(200).json(customersWithOrders);
   } catch (error) {
-    res.status(500).send("Error fetching customers");
+    console.error("Error fetching customers:", error);
+    res.status(500).json({ message: "Error fetching customers", error });
+  }
+});
+
+app.get("/customers/:id", authMiddleware, async (req, res) => {
+  try {
+    // Check if the ID is valid
+    if (!req.params.id || req.params.id === 'undefined') {
+      return res.status(400).json({ message: "Invalid customer ID" });
+    }
+
+    const customer = await Customer.findById(req.params.id);
+    if (!customer) return res.status(404).send("Customer not found");
+    res.json(customer);
+  } catch (error) {
+    res.status(500).send("Error fetching customer");
   }
 });
 
@@ -347,6 +387,7 @@ app.post("/customers", authMiddleware, async (req, res) => {
     res.status(500).send("Error adding customer");
   }
 });
+
 
 // Fetch All Orders
 app.get("/orders", authMiddleware, async (req, res) => {
@@ -407,6 +448,39 @@ app.delete("/orders/:id", authMiddleware, async (req, res) => {
   }
 });
 
+app.get("/orders/:orderId", async (req, res) => {
+  try {
+    const order = await Order.findById(req.params.orderId).populate("customer");
+    if (!order) {
+      return res.status(404).json({ message: "Order not found" });
+    }
+    res.json(order);
+  } catch (error) {
+    res.status(500).json({ message: "Server error", error });
+  }
+});
+
+app.patch("/orders/:orderId/items/:itemId", async (req, res) => {
+  try {
+    const { orderId, itemId } = req.params;
+    const { status } = req.body;
+
+    const order = await Order.findById(orderId);
+    if (!order) return res.status(404).json({ message: "Order not found" });
+
+    const item = order.items.find((item) => item._id.toString() === itemId);
+    if (!item) return res.status(404).json({ message: "Item not found" });
+
+    item.status = status;
+    await order.save();
+    
+    res.json({ message: "Item status updated", order });
+  } catch (error) {
+    res.status(500).json({ message: "Error updating item status", error });
+  }
+});
+
+
 app.get("/api/sales", authMiddleware, async (req, res) => {
   try {
     const orders = await Order.find();
@@ -438,6 +512,8 @@ app.get("/api/sales", authMiddleware, async (req, res) => {
     res.status(500).json({ message: "Server Error" });
   }
 });
+
+
 
 
 // Fetch Products

@@ -4,9 +4,12 @@ import axios from "axios";
 import Table from "../components/Table";
 import { AiOutlineClose } from "react-icons/ai";
 import Sidebar from "../layout/Sidebar";
-import Cust from "../assets/cust.svg";
+import Cust from "../assets/customer2.svg";
 import Order from "../assets/order.svg";
-
+import Cards from "../components/Cards";
+import PhoneInput from "react-phone-input-2";
+import "react-phone-input-2/lib/style.css";
+import Dropdown from "../components/dropdown";
 const config = () => {
   const token = localStorage.getItem("token");
   return {
@@ -16,107 +19,49 @@ const config = () => {
   };
 };
 
-const CustomerSummary = ({ customers }) => {
-  const totalCustomers = customers.length;
-  const activeCustomers = customers.filter((customer) => customer.status === "Active").length;
-  const inactiveCustomers = customers.filter((customer) => customer.status === "Inactive").length;
-  const newCustomers = customers.filter((customer) => {
-    const customerDate = new Date(customer.since);
-    const oneWeekAgo = new Date();
-    oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
-    return customerDate >= oneWeekAgo;
-  }).length;
-
-  const totalOrders = customers.reduce((sum, customer) => sum + (customer.orders || 0), 0);
-  const abandonedCarts = customers.filter((customer) => customer.abandonedCarts > 0).length;
-
-  return (
-    <div className="flex flex-wrap gap-6 mb-6">
-      {[
-        {
-          img: Cust,
-          title: "Customers",
-          stats: [
-            { label: "All Customers", value: totalCustomers, change: "+15.30%", color: "text-green-500" },
-            { label: "Active", value: activeCustomers, change: "+8%", color: "text-green-500" },
-            { label: "Inactive", value: inactiveCustomers, change: "-10%", color: "text-red-500" },
-          ],
-        },
-        {
-          img: Order,
-          title: "Orders",
-          stats: [
-            { label: "New Customers", value: newCustomers, change: "-20%", color: "text-red-500" },
-            { label: "Purchasing", value: totalOrders },
-            { label: "Abandoned Carts", value: abandonedCarts },
-          ],
-        },
-      ].map(({ img, title, stats }, index) => (
-        <div key={index} className="bg-white shadow-lg rounded-xl p-6 w-full md:w-[calc(50%-12px)] lg:w-[calc(50%-12px)]">
-          <div className="flex items-center gap-2 mb-4">
-            <img src={img} alt={`${title} icon`} className="w-8 h-8" />
-            <span className="text-gray-400 text-sm ml-auto">This Week</span>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {stats.map(({ label, value, change, color }, i) => (
-              <div key={i}>
-                <p className="text-gray-500 text-sm">{label}</p>
-                <p className="text-xl font-semibold">{value}</p>
-                {change && <p className={`${color} text-xs`}>{change}</p>}
-              </div>
-            ))}
-          </div>
-        </div>
-      ))}
-    </div>
-  );
-};
 
 const CustomersPage = () => {
   const [customers, setCustomers] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [addAddress, setAddAddress] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const navigate = useNavigate();
+  const location = useLocation();
+
   const [newCustomer, setNewCustomer] = useState({
     id: "",
     name: "",
     email: "",
-    phoneCode: "+234",
     phone: "",
     address: "",
     city: "",
     state: "",
     country: "",
   });
-  const [searchQuery, setSearchQuery] = useState("");
+  const [customerStats, setCustomerStats] = useState({
+    totalCustomers: 0,
+    activeCustomers: 0,
+    inactiveCustomers: 0,
+    totalOrders: 0,
+    pendingOrders: 0,
 
-  const navigate = useNavigate();
-  const location = useLocation();
+  });
+  
 
   useEffect(() => {
     fetchCustomers();
-
     if (location.state?.customer) {
       setNewCustomer(location.state.customer);
       setIsModalOpen(true);
       setIsEditing(true);
     }
-  }, [location.state]);
+  }, [location.state?.customer]);
 
   const fetchCustomers = async () => {
     try {
-      const token = localStorage.getItem("token");
-      if (!token) {
-        throw new Error("No authentication token found.");
-      }
-
-      const response = await axios.get("http://localhost:3000/customers", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      if (response.status === 200 && Array.isArray(response.data)) {
+      const response = await axios.get("http://localhost:3000/customers", config());
+      if (response.status === 200) {
         setCustomers(response.data);
       } else {
         console.error("Unexpected response format:", response);
@@ -124,25 +69,16 @@ const CustomersPage = () => {
       }
     } catch (error) {
       console.error("Error fetching customers:", error);
-      if (error.response) {
-        console.error("Response data:", error.response.data);
-        console.error("Response status:", error.response.status);
-        console.error("Response headers:", error.response.headers);
-      } else if (error.request) {
-        console.error("No response received:", error.request);
-      } else {
-        console.error("Error setting up the request:", error.message);
-      }
       setCustomers([]);
     }
   };
+
 
   const resetForm = () => {
     setNewCustomer({
       id: "",
       name: "",
       email: "",
-      phoneCode: "+234",
       phone: "",
       address: "",
       city: "",
@@ -161,54 +97,31 @@ const CustomersPage = () => {
     customer.country.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const handleAddCustomer = async () => {
+  const handleAddOrUpdateCustomer = async () => {
     try {
-      const token = localStorage.getItem("token");
-      if (!token) {
-        throw new Error("No authentication token found.");
-      }
-  
-      const response = await axios.post("http://localhost:3000/customers", newCustomer, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-  
-      if (response.status === 201) {
-        // Fetch updated customer data
-        await fetchCustomers();
-  
-        // Close the modal
+       
+      const url = newCustomer._id
+        ? `http://localhost:3000/customers/${newCustomer._id}`
+        : "http://localhost:3000/customers";
+      const method = newCustomer._id ? "put" : "post";
+      const response = await axios[method](url, newCustomer, config());
+      if (response.status === 200 || response.status === 201) {
+        fetchCustomers();
         setIsModalOpen(false);
-  
-        // Reset the form
-        resetForm();
+        setNewCustomer({
+          name: "",
+          email: "",
+          phone: "",
+          address: "",
+          city: "",
+          state: "",
+          country: "",
+        });
+        setIsEditing(false);
+        setAddAddress(false);
       }
     } catch (error) {
-      console.error("Error adding customer:", error);
-    }
-  };
-
-  const handleUpdateCustomer = async () => {
-    try {
-      const token = localStorage.getItem("token");
-      if (!token) {
-        throw new Error("No authentication token found.");
-      }
-
-      const response = await axios.put(`http://localhost:3000/customers/${newCustomer.id}`, newCustomer, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      if (response.status === 200) {
-        await fetchCustomers();
-        setIsModalOpen(false);
-        resetForm();
-      }
-    } catch (error) {
-      console.error("Error updating customer:", error);
+      console.error("Error saving customer:", error);
     }
   };
 
@@ -216,188 +129,275 @@ const CustomersPage = () => {
     navigate("/custorder", { state: { customer } });
   };
 
+  const calculateCustomerStats = (customerList) => {
+    const today = new Date();
+
+    let totalOrders = 0;
+    let pendingOrders = 0;
+
+    const activeCustomers = customerList.filter((cust) => {
+      const customerOrders = cust.orders || [];
+      totalOrders += customerOrders.length;
+
+      const recentOrders = customerOrders.filter((order) => {
+        const orderDate = new Date(order.orderDate);
+        return (today - orderDate) / (1000 * 60 * 60 * 24) <= 5;
+      });
+
+      const pending = customerOrders.filter((order) => order.status === "Pending");
+      pendingOrders += pending.length;
+
+      return recentOrders.length > 0;
+    }).length;
+
+    const inactiveCustomers = customerList.length - activeCustomers;
+
+
+    setCustomerStats({
+      totalCustomers: customerList.length,
+      activeCustomers,
+      inactiveCustomers,
+      totalOrders,
+      pendingOrders,
+    });
+  };
+
+  const fields = [
+    {
+      icon: Cust,
+      alt: "order",
+      cardStyle: "bg-white rounded-lg w-[605px] h-[145px]",
+      maintitleStyle: "gap-40 pl-4",
+      dropdownButtonStyle: "text-gray-400 border-none pr-10",
+      dropdownMenuStyle: "bg-white",
+      dropdownButtonText: "This Week",
+      titleStyle: "text-[#8B8D97]",
+      subtitleStyle: "font-bold text-[#45464E]",
+      title1: "All Customers",
+      subTitle1: customerStats.totalCustomers,
+      title2: "Active",
+      subTitle2: customerStats.activeCustomers,
+      title3: "Inactive",
+      subTitle3: customerStats.inactiveCustomers,
+      showDropdown: true,
+    },
+    {
+      icon: Order,
+      alt: "Sales",
+      cardStyle: "bg-white rounded-lg w-[605px] h-[145px]",
+      maintitleStyle: "justify-between pl-4",
+      dropdownButtonStyle: "text-gray-400 border-none pr-10",
+      dropdownMenuStyle: "bg-white",
+      dropdownButtonText: "This Week",
+      titleStyle: "text-[#8B8D97]",
+      subtitleStyle: "font-bold text-[#45464E]",
+      title1: "Purchasing",
+      subTitle1: customerStats.totalOrders, 
+      title2: "Abandoned Cart",
+      subTitle2: customerStats.pendingOrders, 
+      showDropdown: true,
+    }
+  ];
+
+  const Customertable = customers.map((cust) => {
+    let createdDate = cust.customerSince ? new Date(cust.customerSince) : null;
+
+    if (!createdDate || isNaN(createdDate.getTime())) {
+      createdDate = new Date();
+    }
+
+    const today = new Date();
+
+    const customerOrders = Array.isArray(cust.orders) ? cust.orders : []; 
+
+    const recentOrders = customerOrders.filter(order => {
+      const orderDate = new Date(order.orderDate);
+      const orderDiffDays = (today - orderDate) / (1000 * 60 * 60 * 24);
+      return orderDiffDays <= 5;
+    });
+
+    const totalOrders = customerOrders.length;
+    const totalCost = customerOrders.reduce((sum, order) => sum + (order.totalAmount || 0), 0);
+
+    const status = recentOrders.length > 0 ? "Active" : "Inactive";
+
+    return {
+      name: (
+        <span
+          onDoubleClick={() => handleCustomerClick(cust)}
+          className="cursor-pointer font-semibold"
+        >
+          {cust.name || "N/A"}
+        </span>
+      ),
+      email: cust.email || "N/A",
+      phone: cust.phone || "N/A",
+      orders: totalOrders, 
+      total: totalCost ? `$${totalCost.toFixed(2)}` : "$0.00", 
+      status: status,
+    };
+  });
+
+
   return (
-    <div className="relative">
+    <div className="">
       {/* Main content with blur effect */}
-      <div className={`flex ${isModalOpen ? "blur-sm" : ""} transition-all`}>
-        <Sidebar className="h-screen fixed" />
-        <div className="w-full ml-0 md:ml-[15%] p-4 pt-20 bg-gray-100">
-          <div className="flex justify-between items-center mb-6">
-            <h2 className="text-2xl font-semibold">Customers</h2>
+
+      <Sidebar
+        title={"Customer"} />
+      <div className="ml-64 mt-15 bg-[#5E636614] h-screen">
+        <div className="ml-4">
+          <div className="flex mb-[20px] pt-4 justify-between">
+            <h2 className="text-[16px] pt-4">Customers Summary</h2>
             <button
               onClick={() => setIsModalOpen(true)}
-              className="bg-blue-500 text-white flex items-center px-4 py-2 rounded-lg hover:bg-blue-600"
+              className=" cursor-pointer bg-[#5570F1] inline-flex w-[190px] h-[36px] justify-center rounded-lg text-[14px] mt-3 mr-4 pt-2 text-white"
             >
               + Add Customer
             </button>
           </div>
-  
-          <CustomerSummary customers={customers} />
-  
-          <div className="bg-white p-2 shadow-md rounded-lg overflow-x-auto">
+          <div>
+            <Cards fields={fields} cardplace="flex flex-row gap-4" />
             <Table
               title="Customers"
-              heading={["Name", "Email", "Phone", "Orders", "Total", "Since", "Status"]}
-              tableContent={filteredCustomers.map((cust) => ({
-                name: (
-                  <button
-                    onClick={() => handleCustomerClick(cust)}
-                    className="text-blue-500 hover:underline"
-                  >
-                    {cust.name || "N/A"}
-                  </button>
-                ),
-                email: cust.email || "N/A",
-                phone: cust.phone || "N/A",
-                orders: cust.orders || 0,
-                total: cust.total || "$0.00",
-                since: cust.since || "12 Aug 2022 - 12:25 am",
-                status: cust.status || "Inactive",
-              }))}
-              compact
+              mode="customer"
+              heading={["Name", "Email", "Phone", "Orders", "Total", "Status"]}
+              tableContent={Customertable}
             />
           </div>
         </div>
       </div>
-  
-      {/* Modal rendered outside the blurred container */}
-      {isModalOpen && (
-        <div className="fixed inset-0 bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white p-4 rounded-lg shadow-lg w-full md:w-[400px] mx-4 relative z-20">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-semibold">
-                {isEditing ? "Edit Customer" : "Add Customer"}
-              </h2>
-              <button
-                onClick={() => {
-                  setIsModalOpen(false);
-                  resetForm();
-                }}
-                className="text-gray-500 hover:text-black"
-              >
-                <AiOutlineClose size={24} />
-              </button>
-            </div>
-  
-            <div className="space-y-2">
-              <input
-                type="text"
-                placeholder="Name"
-                className="w-full border rounded-lg p-2"
-                value={newCustomer.name}
-                onChange={(e) =>
-                  setNewCustomer((prev) => ({ ...prev, name: e.target.value }))
-                }
-              />
-              <input
-                type="email"
-                placeholder="Email"
-                className="w-full border rounded-lg p-2"
-                value={newCustomer.email}
-                onChange={(e) =>
-                  setNewCustomer((prev) => ({ ...prev, email: e.target.value }))
-                }
-              />
-              <div className="flex items-center gap-2">
-                <select
-                  className="border rounded-lg p-2"
-                  value={newCustomer.phoneCode}
-                  onChange={(e) =>
-                    setNewCustomer((prev) => ({ ...prev, phoneCode: e.target.value }))
-                  }
-                >
-                  <option>+234</option>
-                  <option>+91</option>
-                </select>
-                <input
-                  type="tel"
-                  placeholder="Phone"
-                  className="flex-1 border rounded-lg p-2"
-                  value={newCustomer.phone}
-                  onChange={(e) =>
-                    setNewCustomer((prev) => ({ ...prev, phone: e.target.value }))
-                  }
-                />
-              </div>
-  
-              <div className="flex items-center justify-between">
-                <label className="text-gray-600">Add Address</label>
+      <div>
+        {/* Modal rendered outside the blurred container */}
+        {isModalOpen && (
+          <div className="fixed inset-0 flex items-center justify-center bg-opacity-50 backdrop-blur-lg" >
+            <div className="bg-white p-4 rounded-lg shadow-lg w-[400px] mx-4 relative z-1">
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-xl font-semibold">
+                  {isEditing ? "Edit Customer" : "Add Customer"}
+                </h2>
                 <button
-                  onClick={() => setAddAddress(!addAddress)}
-                  className={`w-12 h-6 flex items-center rounded-full p-1 transition-all ${
-                    addAddress ? "bg-blue-500" : "bg-gray-300"
-                  }`}
+                  onClick={() => {
+                    setIsModalOpen(false);
+                    resetForm();
+                  }}
+                  className="text-gray-500 hover:text-black"
                 >
-                  <div
-                    className={`w-5 h-5 bg-white rounded-full shadow-md transform transition-transform ${
-                      addAddress ? "translate-x-6" : "translate-x-0"
-                    }`}
-                  ></div>
+                  <AiOutlineClose size={24} />
                 </button>
               </div>
-  
-              {addAddress && (
-                <>
-                  <input
-                    type="text"
-                    placeholder="Address"
-                    className="w-full border rounded-lg p-2"
-                    value={newCustomer.address}
-                    onChange={(e) =>
-                      setNewCustomer((prev) => ({ ...prev, address: e.target.value }))
+
+              <div className="space-y-2">
+                <input
+                  type="text"
+                  placeholder="Name"
+                  className="w-full h-12 bg-[#EFF1F999] rounded-lg p-2"
+                  value={newCustomer.name}
+                  onChange={(e) =>
+                    setNewCustomer((prev) => ({ ...prev, name: e.target.value }))
+                  }
+                />
+                <input
+                  type="email"
+                  placeholder="Email"
+                  className="w-full  h-12 bg-[#EFF1F999] rounded-lg p-2"
+                  value={newCustomer.email}
+                  onChange={(e) =>
+                    setNewCustomer((prev) => ({ ...prev, email: e.target.value }))
+                  }
+                />
+                <div className="flex items-center gap-2">
+                  <PhoneInput
+                    country={"in"}
+                    enableSearch={true}
+                    value={newCustomer.phone}
+                    onChange={(value) =>
+                      setNewCustomer((prev) => ({ ...prev, phone: value }))
                     }
+                    containerClass="w-full"
+                    inputClass="w-full h-12 bg-[#EFF1F999] rounded-lg p-2 pl-14" // Adjust padding for flag space
+                    buttonClass="bg-[#EFF1F999] border-none"
+                    dropdownClass="bg-white border-none"
                   />
-                  <input
-                    type="text"
-                    placeholder="City"
-                    className="w-full border rounded-lg p-2"
-                    value={newCustomer.city}
-                    onChange={(e) =>
-                      setNewCustomer((prev) => ({ ...prev, city: e.target.value }))
-                    }
-                  />
-                  <input
-                    type="text"
-                    placeholder="State"
-                    className="w-full border rounded-lg p-2"
-                    value={newCustomer.state}
-                    onChange={(e) =>
-                      setNewCustomer((prev) => ({ ...prev, state: e.target.value }))
-                    }
-                  />
-                  <input
-                    type="text"
-                    placeholder="Country"
-                    className="w-full border rounded-lg p-2"
-                    value={newCustomer.country}
-                    onChange={(e) =>
-                      setNewCustomer((prev) => ({ ...prev, country: e.target.value }))
-                    }
-                  />
-                </>
-              )}
-            </div>
-  
-            <div className="flex justify-between mt-4">
-              <button
-                onClick={() => {
-                  setIsModalOpen(false);
-                  resetForm();
-                }}
-                className="px-4 py-2 rounded-lg border text-gray-600 hover:bg-gray-200"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={isEditing ? handleUpdateCustomer : handleAddCustomer}
-                className="px-6 py-2 rounded-lg bg-blue-500 text-white hover:bg-blue-600"
-              >
-                {isEditing ? "Update" : "Add"}
-              </button>
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <label className="text-gray-600">Add Address</label>
+                  <button
+                    onClick={() => setAddAddress(!addAddress)}
+                    className={`w-12 h-6 flex items-center rounded-full p-1 transition-all ${addAddress ? "bg-blue-500" : "bg-gray-300"
+                      }`}
+                  >
+                    <div
+                      className={`w-5 h-5 bg-white rounded-full shadow-md transform transition-transform ${addAddress ? "translate-x-6" : "translate-x-0"
+                        }`}
+                    ></div>
+                  </button>
+                </div>
+
+                {addAddress && (
+                  <>
+                    <input
+                      type="text"
+                      placeholder="Address"
+                      className="w-full  h-12 bg-[#EFF1F999] p-2"
+                      value={newCustomer.address}
+                      onChange={(e) =>
+                        setNewCustomer((prev) => ({ ...prev, address: e.target.value }))
+                      }
+                    />
+                    <input
+                      type="text"
+                      placeholder="City"
+                      className="w-full  h-12 bg-[#EFF1F999] p-2"
+                      value={newCustomer.city}
+                      onChange={(e) =>
+                        setNewCustomer((prev) => ({ ...prev, city: e.target.value }))
+                      }
+                    />
+                    <input
+                      type="text"
+                      placeholder="State"
+                      className="w-full  h-12 bg-[#EFF1F999] rounded-lg p-2"
+                      value={newCustomer.state}
+                      onChange={(e) =>
+                        setNewCustomer((prev) => ({ ...prev, state: e.target.value }))
+                      }
+                    />
+                    <input
+                      type="text"
+                      placeholder="Country"
+                      className="w-full h-12 bg-[#EFF1F999] rounded-lg p-2"
+                      value={newCustomer.country}
+                      onChange={(e) =>
+                        setNewCustomer((prev) => ({ ...prev, country: e.target.value }))
+                      }
+                    />
+                  </>
+                )}
+              </div>
+
+              <div className="flex justify-between mt-4">
+                <button
+                  onClick={() => {
+                    setIsModalOpen(false);
+                    resetForm();
+                  }}
+                  className="px-4 py-2 rounded-lg border text-gray-600 hover:bg-gray-200"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleAddOrUpdateCustomer}
+                  className="px-6 py-2 rounded-lg bg-blue-500 text-white hover:bg-blue-600"
+                >
+                  {isEditing ? "Update" : "Add"}
+                </button>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 };

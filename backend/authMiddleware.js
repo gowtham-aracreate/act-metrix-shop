@@ -7,13 +7,12 @@ const authMiddleware = (req, res, next) => {
     return res.status(401).json({ success: false, message: "Access Denied. No token provided." });
   }
 
-  if (!token) {
-    return res.status(401).json({ error: "No authentication token found." });
-  }
+  // Extract token from the header
+  const token = authHeader.split(" ")[1]; 
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    req.user = decoded; // Attach the full decoded token (contains userId and email)
+    req.user = decoded; // Attach the decoded token (contains userId and email)
     next();
   } catch (err) {
     console.error("JWT Verification Error:", err.message);

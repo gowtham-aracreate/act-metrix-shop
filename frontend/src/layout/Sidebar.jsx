@@ -21,12 +21,12 @@ const Sidebar = ({ children,title }) => {
   };
   return (
     <div>
-        <div className="absolute left-64 bg-white z-1 fixed top-0 pt-4 pb-4 flex justify-between items-center ">
+        <div className="absolute left-64 bg-white fixed top-0 pt-4 pb-4 flex justify-between items-center ">
           <h3 className="text-lg pl-3 font-semibold">{title}</h3>
           <div className="relative">
             <div className=" flex justify-between pl-235">
               <Dropdown
-                dropdownButtonStyle="bg-[#FFCC9133] border-none justify-center pr-5 w-[173px] h-[32px] rounded-md "
+                dropdownButtonStyle="bg-[#FFCC9133] border-none justify-center pr-5 w-[200px] h-[32px] rounded-md "
                 dropdownMenuStyle="bg-white"
                 dropdownButtonText="Nanny's Shop"
               />
@@ -215,7 +215,7 @@ const Sidebar = ({ children,title }) => {
             </a>
             <a
               href="#"
-              onClick={() => handleLinkClick("Conversations")}
+              onClick={() => handleLinkClick("Conversations","/chatpage")}
               className={`p-3 flex items-center rounded-md ${activeLink === "Conversations"
                   ? "bg-[#5570F1] text-white"
                   : "hover:bg-gray-200"
