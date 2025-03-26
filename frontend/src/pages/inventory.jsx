@@ -87,11 +87,11 @@ const InventoryPage = () => {
       icon: inventory,
       alt: "Sales",
       cardStyle: "bg-[#5570F1] rounded-lg w-[605px] h-[145px]",
-      maintitleStyle: "gap-64 pl-4",
+      maintitleStyle: " pl-4 justify-between",
       titleStyle: "text-white",
       subtitleStyle: "font-bold text-gray-500 text-white",
       title1: "Sales",
-      subTitle1: `₦${(salesData.totalSales || 0).toFixed(1)}`,
+      subTitle1: `₦ ${(salesData.totalSales || 0).toFixed(1)}`,
       title2: "Volume",
       subTitle2: `${salesData.totalVolume || 0}`,
       showDropdown: false,
@@ -143,7 +143,6 @@ const InventoryPage = () => {
   );
 
   const handleSortChange = (newFilters) => {
-    console.log("newFilters:", newFilters);
 
     setFilters(newFilters); // Update state
 

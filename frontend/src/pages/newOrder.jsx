@@ -11,9 +11,9 @@ import container from "../assets/iconContainer.svg";
 const token = localStorage.getItem("token");
 
 const config = {
-  headers: {
-    Authorization: `Bearer ${token}`, 
-  },
+    headers: {
+        Authorization: `Bearer ${token}`,
+    },
 };
 
 const orderType = [
@@ -31,7 +31,7 @@ const paymentType = [
     { label: "Master Card" },
     { label: "Bank Account" },
 ];
-export const NewOrder = ({ isOpen, onClose }) => {
+export const NewOrder = ({ isOpen, onClose, onOrderAdded }) => {
     const navigate = useNavigate();
     const [startDate, setStartDate] = useState(new Date());
     const [time, setTime] = useState(() => format(new Date(), "HH:mm"));
@@ -43,6 +43,9 @@ export const NewOrder = ({ isOpen, onClose }) => {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [customers, setCustomers] = useState([]);
     const [selectedCustomer, setSelectedCustomer] = useState("");
+    const [isNewCustomer, setIsNewCustomer] = useState(false);
+const [newCustomerCount, setNewCustomerCount] = useState(0);
+
 
     const [formData, setFormData] = useState({
         customerName: "",
@@ -80,11 +83,17 @@ export const NewOrder = ({ isOpen, onClose }) => {
             ...prevFormData,
             [type]: selectedValue.label,
         }));
+        if (type === "customerName") {
+            setSelectedCustomer(selectedValue);
+        }
     };
 
     const handleSelect = (selectedOption) => {
         console.log("Selected Customer:", selectedOption);
-        setSelectedCustomer(selectedOption.label); // Update state with customer name
+        setSelectedCustomer({
+            name: selectedOption.label,
+            id: selectedOption.value, 
+        });
     };
 
     const handleChange = (event) => {
@@ -103,6 +112,15 @@ export const NewOrder = ({ isOpen, onClose }) => {
         }
         return trackingID;
     };
+    const handleNewCustomerChange = (e) => {
+        const checked = e.target.checked;
+        setIsNewCustomer(checked);
+      
+        if (checked) {
+          setNewCustomerCount((prevCount) => prevCount + 1);
+          navigate("/customer");
+        }
+      };
 
     const handleSubmit = async (event, action) => {
         event.preventDefault();
@@ -110,8 +128,11 @@ export const NewOrder = ({ isOpen, onClose }) => {
             alert("Please fill in all required fields and add at least one product.");
             return;
         }
+        console.log("Selected Customer:", selectedCustomer);
+        console.log("Form Data:", formData);
         const orderDetails = {
-            customer: formData.customerName,
+            customerId: selectedCustomer?.id || formData.customerId,  
+            customer: selectedCustomer?.label || formData.customerName,
             paymentType: formData.paymentType,
             orderType: formData.orderType,
             status: formData.status,
@@ -119,17 +140,35 @@ export const NewOrder = ({ isOpen, onClose }) => {
             trackingID: generateTrackingID(),
             orderDate: startDate.toISOString().split("T")[0], // Format as YYYY-MM-DD
             orderTime: time || "00:00",
-            items: cart.map((item) => ({
-                productId: item._id,
-                productName: item.productName,
-                quantity: item.quantity,
-                price: item.sellingPrice,
-                total: item.total,
-            })),
-            totalAmount: cart.reduce((sum, item) => sum + item.total, 0),
+            items: cart.map((item) => {
+                const unitPrice = parseFloat(item.sellingPrice) || 0;
+                const quantity = parseInt(item.quantity) || 0;
+                const discount = parseFloat(item.discountValue) || 0; // Use discountValue, NOT discount
+                const discountAmount = (unitPrice * discount) / 100;
+                const total = ((unitPrice - discountAmount) * quantity).toFixed(2);
+            
+                return {
+                    productId: item._id,
+                    productName: item.productName,
+                    quantity: quantity,
+                    price: unitPrice.toFixed(2), // Ensure price is formatted
+                    discount: discountAmount, // Store the actual discount percentage
+                    total: parseFloat(total), // Convert total back to float
+                };
+            }),
+            
+            totalAmount: parseFloat(
+                cart.reduce((sum, item) => {
+                    const unitPrice = parseFloat(item.sellingPrice) || 0;
+                    const quantity = parseInt(item.quantity) || 0;
+                    const discount = parseFloat(item.discount) || 0;
+                    const discountAmount = (unitPrice * discount) / 100;
+                    return sum + (unitPrice - discountAmount) * quantity;
+                }, 0).toFixed(2) 
+            ),
         };
-
-        console.log("Final Order Payload:", orderDetails);
+        
+        console.log(orderDetails);
         try {
             setIsSubmitting(true);
             const res = await axios.post("http://localhost:3000/orders", orderDetails, config);
@@ -142,7 +181,12 @@ export const NewOrder = ({ isOpen, onClose }) => {
                 shortDescription: "",
             });
             setCart([]);
-            navigate("/order");
+            setSearchQuery("");
+            setProducts([]);
+            if (onOrderAdded) {
+                onOrderAdded();
+            }
+            onClose();
         } catch (error) {
             console.error("Error creating order:", error);
             alert("There was an error creating the order. Please try again.");
@@ -204,7 +248,7 @@ export const NewOrder = ({ isOpen, onClose }) => {
     };
 
     const getTotal = () => {
-        return cart.reduce((sum, item) => sum + item.total, 0);
+        return cart.reduce((sum, item) => sum + calculateTotal(item), 0);
     };
 
     if (!isOpen) return null;
@@ -219,7 +263,7 @@ export const NewOrder = ({ isOpen, onClose }) => {
     };
 
     return (
-        <div className="fixed inset-0 flex items-center justify-center bg-opacity-50 backdrop-blur-lg">
+        <div className="fixed inset-0 flex z-1 items-center justify-center bg-opacity-50 backdrop-blur-lg">
             <div className="bg-white p-8 rounded-xl shadow-lg w-[800px] h-[620px]">
                 <h1 className="mb-4 font-bold text-[18px]">Create New Order</h1>
                 <form onSubmit={handleSubmit}>
@@ -233,7 +277,7 @@ export const NewOrder = ({ isOpen, onClose }) => {
                                         <input
                                             type="checkbox"
                                             className="large-checkbox mt-1"
-                                            onChange={() => navigate("/customer")}
+                                            onChange={handleNewCustomerChange}
                                         />
                                     </div>
                                 </div>
@@ -245,8 +289,11 @@ export const NewOrder = ({ isOpen, onClose }) => {
                                         label: customer.name,
                                         value: customer._id,
                                     }))}
-                                    onSelect={(selectedValue) => handleDropdownSelect(selectedValue, "customerName")}
-                                    />
+                                    onSelect={(selectedValue) => {
+                                        handleDropdownSelect(selectedValue, "customerName");
+                                        handleSelect(selectedValue);
+                                    }}
+                                />
 
                                 <div className='flex'>
                                     <Dropdown

@@ -14,8 +14,7 @@ const Table = ({ title, tableContent, heading, onSearch, mode, onSortChange, fil
   const [sortConfig, setSortConfig] = useState({ key: null, direction: "asc" });
   const [selectedRows, setSelectedRows] = useState(new Set());
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(10);
-
+  const itemsPerPage = 5;
   const navigate = useNavigate();
   
 
@@ -48,20 +47,13 @@ const Table = ({ title, tableContent, heading, onSearch, mode, onSortChange, fil
   }, [tableContent, sortConfig]);
 
   // Filtering logic
-  // const filteredContent = React.useMemo(() => {
-  //   return sortedContent.filter((item) =>
-  //     Object.values(item).some((value) =>
-  //       value.toString().toLowerCase().includes(searchQuery.toLowerCase())
-  //     )
-  //   );
-  // }, [sortedContent, searchQuery]);
-
-  // Pagination logic
-  const indexOfLastItem = currentPage * itemsPerPage;
-  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentItems = filteredContent.slice(indexOfFirstItem, indexOfLastItem);
-
-  const totalPages = Math.ceil(filteredContent.length / itemsPerPage);
+  const filteredContent = React.useMemo(() => {
+    return sortedContent.filter((item) =>
+      Object.values(item).some((value) =>
+        value.toString().toLowerCase().includes(searchQuery.toLowerCase())
+      )
+    );
+  }, [sortedContent, searchQuery]);
 
   // Handle row selection
   const handleRowSelect = (id) => {
@@ -83,16 +75,6 @@ const Table = ({ title, tableContent, heading, onSearch, mode, onSortChange, fil
     }
   };
 
-  // Handle page change
-  const handlePageChange = (page) => {
-    setCurrentPage(page);
-  };
-
-  // Handle items per page change
-  const handleItemsPerPageChange = (value) => {
-    setItemsPerPage(value);
-    setCurrentPage(1); // Reset to the first page
-  };
   const handleDateFilter = (newFilters) => {
     if (onFilterChange) {
       onFilterChange(newFilters);
@@ -101,10 +83,19 @@ const Table = ({ title, tableContent, heading, onSearch, mode, onSortChange, fil
     }
   };
   
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentItems = filteredContent.slice(indexOfFirstItem, indexOfLastItem);
+  const totalPages = Math.ceil(filteredContent.length / itemsPerPage);
 
-  const filteredContent = tableContent.filter((item) =>
-    item.some((data) => data.toString().toLowerCase().includes(searchQuery.toLowerCase()))
-  );
+  const handlePageChange = (page) => {
+    if (page >= 1 && page <= totalPages) {
+      setCurrentPage(page);
+    }
+  };
+  // const filteredContent = tableContent.filter((item) =>
+  //   item.some((data) => data.toString().toLowerCase().includes(searchQuery.toLowerCase()))
+  // );
 
   return (
     <div className="bg-white rounded-lg h-auto mt-[20px] pl-[21px] mr-[22px] py-[22px] text-[14px]">
@@ -269,72 +260,45 @@ const Table = ({ title, tableContent, heading, onSearch, mode, onSortChange, fil
           )}
         </tbody>
       </table>
-      <nav className="bottom-0">
-        <div className="flex border-t border-[#E1E2E9] pt-[9px]">
-          <div className="flex">
-            <Dropdown
-              dropdownButtonStyle="text-gray-600 h-[23px] justify-center pr-8 w-[60px] bg-[#5E636614] text-[15px] rounded-lg"
-              dropdownMenuStyle="bg-white"
-              dropdownButtonText={itemsPerPage.toString()}
-              onSelect={handleItemsPerPageChange}
-            />
-            <p className="pl-[10px] text-[#A6A8B1]">Items per page</p>
-            <p className="pl-[22px] text-[#666666]">
-              {indexOfFirstItem + 1}-{Math.min(indexOfLastItem, filteredContent.length)} of {filteredContent.length} items
-            </p>
-          </div>
-          <div className="flex absolute right-[30px] pr-[22px]">
-            <Dropdown
-              dropdownButtonStyle="text-gray-600 h-[23px] justify-center w-[60px] pr-8 bg-[#5E636614] text-[15px] rounded-lg"
-              dropdownMenuStyle="bg-white"
-              dropdownButtonText={currentPage.toString()}
-              onSelect={handlePageChange}
-            />
-            <p className="pl-[10px] text-[#666666]">of {totalPages} pages</p>
-            <button
-              onClick={() => handlePageChange(currentPage - 1)}
-              disabled={currentPage === 1}
-              className="disabled:opacity-50"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-                width="10"
-                strokeWidth="1.5"
-                stroke="currentColor"
-                className="size-5 mt-1"
+      <div className="flex justify-center items-center pt-3 mt-3">
+
+        <nav aria-label="Page navigation example">
+          <ul className="inline-flex pr-10 -space-x-px text-sm">
+            <li>
+              <button
+                onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                disabled={currentPage === 1}
+                className="flex items-center justify-center px-3 h-8 ms-0 leading-tight text-gray-500 bg-white border border-e-0 border-gray-300 rounded-s-lg hover:bg-gray-100 hover:text-gray-700 disabled:opacity-50"
               >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M15.75 19.5 8.25 12l7.5-7.5"
-                />
-              </svg>
-            </button>
-            <button
-              onClick={() => handlePageChange(currentPage + 1)}
-              disabled={currentPage === totalPages}
-              className="disabled:opacity-50"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-                strokeWidth="1.5"
-                stroke="currentColor"
-                className="size-5 mt-1"
+                Previous
+              </button>
+            </li>
+            {[...Array(totalPages)].map((_, i) => (
+              <li key={i}>
+                <button
+                  onClick={() => setCurrentPage(i + 1)}
+                  className={`flex items-center justify-center px-3 h-8 leading-tight border border-gray-300 hover:bg-gray-100 hover:text-gray-700 dark:border-gray-700 ${
+                    currentPage === i + 1
+                      ? "text-blue-600 bg-blue-50"
+                      : "text-gray-500 bg-white"
+                  }`}
+                >
+                  {i + 1}
+                </button>
+              </li>
+            ))}
+            <li>
+              <button
+                onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+                disabled={currentPage === totalPages}
+                className="flex items-center justify-center px-3 h-8 leading-tight text-gray-500 bg-white border border-gray-300 rounded-e-lg hover:bg-gray-100 hover:text-gray-700 disabled:opacity-50"
               >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="m8.25 4.5 7.5 7.5-7.5 7.5"
-                />
-              </svg>
-            </button>
-          </div>
-        </div>
-      </nav>
+                Next
+              </button>
+            </li>
+          </ul>
+        </nav>
+      </div>
     </div>
   );
 };

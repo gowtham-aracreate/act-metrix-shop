@@ -22,7 +22,7 @@ export const Card = ({ icon, alt, cardStyle, dropdownButtonStyle, dropdownMenuSt
             <div className={` pt-[55px] mb-[10px] ${maintitleStyle}`}>
                 <div className={`flex ${maintitleStyle}`}>
                 {Array.isArray(titles) && titles.map((title, index) => (
-                    <div key={index} className="pt-[30px] flex flex-col">
+                    <div key={index} className="pt-[25px] flex flex-col">
                         <p className={` ${titleStyle} ${title.title === "Abandoned Cart" ? "text-red-500" : ""}`}>
                             {title.title}
                         </p>
