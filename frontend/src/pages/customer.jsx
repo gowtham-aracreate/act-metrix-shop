@@ -4,12 +4,12 @@ import axios from "axios";
 import Table from "../components/Table";
 import { AiOutlineClose } from "react-icons/ai";
 import Sidebar from "../layout/Sidebar";
-import Cust from "../assets/cust.svg";
+import Cust from "../assets/customer2.svg";
 import Order from "../assets/order.svg";
 import Cards from "../components/Cards";
 import PhoneInput from "react-phone-input-2";
 import "react-phone-input-2/lib/style.css";
-
+import Dropdown from "../components/dropdown";
 const config = () => {
   const token = localStorage.getItem("token");
   return {
@@ -19,6 +19,7 @@ const config = () => {
   };
 };
 
+
 const CustomersPage = () => {
   const [customers, setCustomers] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -27,6 +28,7 @@ const CustomersPage = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const navigate = useNavigate();
   const location = useLocation();
+
   const [newCustomer, setNewCustomer] = useState({
     id: "",
     name: "",
@@ -37,6 +39,15 @@ const CustomersPage = () => {
     state: "",
     country: "",
   });
+  const [customerStats, setCustomerStats] = useState({
+    totalCustomers: 0,
+    activeCustomers: 0,
+    inactiveCustomers: 0,
+    totalOrders: 0,
+    pendingOrders: 0,
+
+  });
+  
 
   useEffect(() => {
     fetchCustomers();
@@ -62,6 +73,7 @@ const CustomersPage = () => {
     }
   };
 
+
   const resetForm = () => {
     setNewCustomer({
       id: "",
@@ -76,18 +88,36 @@ const CustomersPage = () => {
     setIsEditing(false);
   };
 
+  const filteredCustomers = customers.filter((customer) =>
+    customer.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    customer.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    customer.phone.includes(searchQuery) ||
+    customer.city.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    customer.state.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    customer.country.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   const handleAddOrUpdateCustomer = async () => {
     try {
-      const url = newCustomer.id
-        ? `http://localhost:3000/customers/${newCustomer.id}`
+       
+      const url = newCustomer._id
+        ? `http://localhost:3000/customers/${newCustomer._id}`
         : "http://localhost:3000/customers";
-      const method = newCustomer.id ? "put" : "post";
-
+      const method = newCustomer._id ? "put" : "post";
       const response = await axios[method](url, newCustomer, config());
       if (response.status === 200 || response.status === 201) {
         fetchCustomers();
         setIsModalOpen(false);
-        resetForm();
+        setNewCustomer({
+          name: "",
+          email: "",
+          phone: "",
+          address: "",
+          city: "",
+          state: "",
+          country: "",
+        });
+        setIsEditing(false);
         setAddAddress(false);
       }
     } catch (error) {
@@ -99,14 +129,75 @@ const CustomersPage = () => {
     navigate("/custorder", { state: { customer } });
   };
 
-  const filteredCustomers = customers.filter((customer) =>
-    customer.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    customer.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    customer.phone.includes(searchQuery) ||
-    customer.city.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    customer.state.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    customer.country.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const calculateCustomerStats = (customerList) => {
+    const today = new Date();
+
+    let totalOrders = 0;
+    let pendingOrders = 0;
+
+    const activeCustomers = customerList.filter((cust) => {
+      const customerOrders = cust.orders || [];
+      totalOrders += customerOrders.length;
+
+      const recentOrders = customerOrders.filter((order) => {
+        const orderDate = new Date(order.orderDate);
+        return (today - orderDate) / (1000 * 60 * 60 * 24) <= 5;
+      });
+
+      const pending = customerOrders.filter((order) => order.status === "Pending");
+      pendingOrders += pending.length;
+
+      return recentOrders.length > 0;
+    }).length;
+
+    const inactiveCustomers = customerList.length - activeCustomers;
+
+
+    setCustomerStats({
+      totalCustomers: customerList.length,
+      activeCustomers,
+      inactiveCustomers,
+      totalOrders,
+      pendingOrders,
+    });
+  };
+
+  const fields = [
+    {
+      icon: Cust,
+      alt: "order",
+      cardStyle: "bg-white rounded-lg w-[605px] h-[145px]",
+      maintitleStyle: "gap-40 pl-4",
+      dropdownButtonStyle: "text-gray-400 border-none pr-10",
+      dropdownMenuStyle: "bg-white",
+      dropdownButtonText: "This Week",
+      titleStyle: "text-[#8B8D97]",
+      subtitleStyle: "font-bold text-[#45464E]",
+      title1: "All Customers",
+      subTitle1: customerStats.totalCustomers,
+      title2: "Active",
+      subTitle2: customerStats.activeCustomers,
+      title3: "Inactive",
+      subTitle3: customerStats.inactiveCustomers,
+      showDropdown: true,
+    },
+    {
+      icon: Order,
+      alt: "Sales",
+      cardStyle: "bg-white rounded-lg w-[605px] h-[145px]",
+      maintitleStyle: "justify-between pl-4",
+      dropdownButtonStyle: "text-gray-400 border-none pr-10",
+      dropdownMenuStyle: "bg-white",
+      dropdownButtonText: "This Week",
+      titleStyle: "text-[#8B8D97]",
+      subtitleStyle: "font-bold text-[#45464E]",
+      title1: "Purchasing",
+      subTitle1: customerStats.totalOrders, 
+      title2: "Abandoned Cart",
+      subTitle2: customerStats.pendingOrders, 
+      showDropdown: true,
+    }
+  ];
 
   const Customertable = customers.map((cust) => {
     let createdDate = cust.customerSince ? new Date(cust.customerSince) : null;
@@ -116,11 +207,10 @@ const CustomersPage = () => {
     }
 
     const today = new Date();
-    const diffTime = today.getTime() - createdDate.getTime();
-    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
 
-    const customerOrders = Array.isArray(cust.orders) ? cust.orders : [];
-    const recentOrders = customerOrders.filter((order) => {
+    const customerOrders = Array.isArray(cust.orders) ? cust.orders : []; 
+
+    const recentOrders = customerOrders.filter(order => {
       const orderDate = new Date(order.orderDate);
       const orderDiffDays = (today - orderDate) / (1000 * 60 * 60 * 24);
       return orderDiffDays <= 5;
@@ -142,55 +232,26 @@ const CustomersPage = () => {
       ),
       email: cust.email || "N/A",
       phone: cust.phone || "N/A",
-      orders: totalOrders,
-      total: totalCost ? `$${totalCost.toFixed(2)}` : "$0.00",
+      orders: totalOrders, 
+      total: totalCost ? `$${totalCost.toFixed(2)}` : "$0.00", 
       status: status,
     };
   });
 
-  const fields = [
-    {
-      icon: Cust,
-      alt: "order",
-      cardStyle: "bg-white rounded-lg w-[605px] h-[145px]",
-      maintitleStyle: "gap-40 pl-4",
-      dropdownButtonStyle: "text-gray-400 border-none pr-10",
-      dropdownMenuStyle: "bg-white",
-      dropdownButtonText: "This Week",
-      titleStyle: "text-[#8B8D97]",
-      subtitleStyle: "font-bold text-[#45464E]",
-      title1: "All Customers",
-      title2: "Active",
-      title3: "In-Active",
-      showDropdown: true,
-    },
-    {
-      icon: Order,
-      alt: "Sales",
-      cardStyle: "bg-white rounded-lg w-[605px] h-[145px]",
-      maintitleStyle: "gap-30 pl-4",
-      dropdownButtonStyle: "text-gray-400 border-none pr-10",
-      dropdownMenuStyle: "bg-white",
-      dropdownButtonText: "This Week",
-      titleStyle: "text-[#8B8D97]",
-      subtitleStyle: "font-bold text-[#45464E]",
-      title1: "New Customers",
-      title2: "Purchasing",
-      title3: "Abandoned Cart",
-      showDropdown: true,
-    },
-  ];
 
   return (
     <div className="">
-      <Sidebar title={"Customer"} />
+      {/* Main content with blur effect */}
+
+      <Sidebar
+        title={"Customer"} />
       <div className="ml-64 mt-15 bg-[#5E636614] h-screen">
         <div className="ml-4">
           <div className="flex mb-[20px] pt-4 justify-between">
             <h2 className="text-[16px] pt-4">Customers Summary</h2>
             <button
               onClick={() => setIsModalOpen(true)}
-              className="cursor-pointer bg-[#5570F1] inline-flex w-[190px] h-[36px] justify-center rounded-lg text-[14px] mt-3 mr-4 pt-2 text-white"
+              className=" cursor-pointer bg-[#5570F1] inline-flex w-[190px] h-[36px] justify-center rounded-lg text-[14px] mt-3 mr-4 pt-2 text-white"
             >
               + Add Customer
             </button>
@@ -207,8 +268,9 @@ const CustomersPage = () => {
         </div>
       </div>
       <div>
+        {/* Modal rendered outside the blurred container */}
         {isModalOpen && (
-          <div className="fixed inset-0 flex items-center justify-center bg-opacity-50 backdrop-blur-lg">
+          <div className="fixed inset-0 flex items-center justify-center bg-opacity-50 backdrop-blur-lg" >
             <div className="bg-white p-4 rounded-lg shadow-lg w-[400px] mx-4 relative z-1">
               <div className="flex justify-between items-center mb-4">
                 <h2 className="text-xl font-semibold">
@@ -238,7 +300,7 @@ const CustomersPage = () => {
                 <input
                   type="email"
                   placeholder="Email"
-                  className="w-full h-12 bg-[#EFF1F999] rounded-lg p-2"
+                  className="w-full  h-12 bg-[#EFF1F999] rounded-lg p-2"
                   value={newCustomer.email}
                   onChange={(e) =>
                     setNewCustomer((prev) => ({ ...prev, email: e.target.value }))
@@ -253,7 +315,7 @@ const CustomersPage = () => {
                       setNewCustomer((prev) => ({ ...prev, phone: value }))
                     }
                     containerClass="w-full"
-                    inputClass="w-full h-12 bg-[#EFF1F999] rounded-lg p-2 pl-14"
+                    inputClass="w-full h-12 bg-[#EFF1F999] rounded-lg p-2 pl-14" // Adjust padding for flag space
                     buttonClass="bg-[#EFF1F999] border-none"
                     dropdownClass="bg-white border-none"
                   />
@@ -263,14 +325,12 @@ const CustomersPage = () => {
                   <label className="text-gray-600">Add Address</label>
                   <button
                     onClick={() => setAddAddress(!addAddress)}
-                    className={`w-12 h-6 flex items-center rounded-full p-1 transition-all ${
-                      addAddress ? "bg-blue-500" : "bg-gray-300"
-                    }`}
+                    className={`w-12 h-6 flex items-center rounded-full p-1 transition-all ${addAddress ? "bg-blue-500" : "bg-gray-300"
+                      }`}
                   >
                     <div
-                      className={`w-5 h-5 bg-white rounded-full shadow-md transform transition-transform ${
-                        addAddress ? "translate-x-6" : "translate-x-0"
-                      }`}
+                      className={`w-5 h-5 bg-white rounded-full shadow-md transform transition-transform ${addAddress ? "translate-x-6" : "translate-x-0"
+                        }`}
                     ></div>
                   </button>
                 </div>
@@ -280,7 +340,7 @@ const CustomersPage = () => {
                     <input
                       type="text"
                       placeholder="Address"
-                      className="w-full h-12 bg-[#EFF1F999] p-2"
+                      className="w-full  h-12 bg-[#EFF1F999] p-2"
                       value={newCustomer.address}
                       onChange={(e) =>
                         setNewCustomer((prev) => ({ ...prev, address: e.target.value }))
@@ -289,7 +349,7 @@ const CustomersPage = () => {
                     <input
                       type="text"
                       placeholder="City"
-                      className="w-full h-12 bg-[#EFF1F999] p-2"
+                      className="w-full  h-12 bg-[#EFF1F999] p-2"
                       value={newCustomer.city}
                       onChange={(e) =>
                         setNewCustomer((prev) => ({ ...prev, city: e.target.value }))
@@ -298,7 +358,7 @@ const CustomersPage = () => {
                     <input
                       type="text"
                       placeholder="State"
-                      className="w-full h-12 bg-[#EFF1F999] rounded-lg p-2"
+                      className="w-full  h-12 bg-[#EFF1F999] rounded-lg p-2"
                       value={newCustomer.state}
                       onChange={(e) =>
                         setNewCustomer((prev) => ({ ...prev, state: e.target.value }))

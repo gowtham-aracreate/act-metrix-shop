@@ -103,7 +103,7 @@ const DashboardCards = () => {
       
       <div className="flex flex-wrap gap-4 p-20 pl-60 w-full">
         {/* Sales Card */}
-        <div className="bg-white shadow-lg rounded-xl p-5 w-108 ml-12">
+      <div className=" shadow-lg rounded-xl p-5 w-93 ml-12">
           <div className="flex justify-between items-center mb-2">
             <img src={dsIcon} alt="Sales Icon" className="w-6 h-6" />
             <span className="text-gray-400 text-sm">This Week</span>
@@ -122,7 +122,7 @@ const DashboardCards = () => {
         </div>
 
         {/* Customers Card */}
-        <div className="bg-white shadow-lg rounded-xl p-5 w-110">
+        <div className="bg-white shadow-lg rounded-xl p-5 w-93">
           <div className="flex justify-between items-center mb-2">
             <img src={custIcon} alt="Customers Icon" className="w-6 h-6" />
             <span className="text-gray-400 text-sm">This Week ▼</span>
@@ -142,7 +142,7 @@ const DashboardCards = () => {
         </div>
 
         {/* Orders Card */}
-        <div className="bg-white shadow-lg rounded-xl p-5 w-100">
+        <div className="bg-white shadow-lg rounded-xl p-5 w-93">
           <div className="flex justify-between items-center mb-2">
             <img src={orderIcon} alt="Orders Icon" className="w-6 h-6" />
             <span className="text-gray-400 text-sm">This Week ▼</span>
@@ -199,7 +199,7 @@ const DashboardCards = () => {
 </div>
 
             {/* Abandoned Cart Card */}
-            <div className="bg-white shadow-md rounded-xl p-5 w-100 h-43 ml-3">
+            <div className="bg-white shadow-md rounded-xl p-5 w-70 h-43 ml-3">
               <div className="flex justify-between items-center mb-2">
                 <img src={custIcon} alt="Cart Icon" className="w-6 h-6" />
                 <span className="text-gray-400 text-sm">This Week ▼</span>
@@ -220,7 +220,7 @@ const DashboardCards = () => {
         </div>
 
         {/* Recent Orders Card */}
-        <div className="bg-white shadow-md rounded-xl p-9 w-100 h-170 ml-10 flex flex-col items-center justify-center">
+        <div className="bg-white shadow-md rounded-xl p-9 w-92 h-170 ml-10 flex flex-col items-center justify-center">
           <p className="text-gray-500 text-lg font-semibold">Recent Orders</p>
           <img src={orderIcon} alt="No Orders" className="w-20 h-20" />
           <h4 className="text-gray-400 mt-2">No Orders Yet?</h4>
