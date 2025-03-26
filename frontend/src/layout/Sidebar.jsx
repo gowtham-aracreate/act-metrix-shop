@@ -21,7 +21,7 @@ const Sidebar = ({ children,title }) => {
   };
   return (
     <div>
-        <div className="absolute left-64 bg-white z-1 fixed top-0 pt-4 pb-4 flex justify-between items-center ">
+        <div className="absolute left-64 bg-white fixed top-0 pt-4 pb-4 flex justify-between items-center ">
           <h3 className="text-lg pl-3 font-semibold">{title}</h3>
           <div className="relative">
             <div className=" flex justify-between pl-235">

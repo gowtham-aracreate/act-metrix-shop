@@ -19,6 +19,7 @@ import ForgotPassword from './pages/forgotPassword';
 import Verify from './pages/verifyOtp';
 import ResetPassword  from './pages/reset';
 import ProductDetail  from './pages/productDetail';
+import ErrorBoundary from './components/ErrorBoundary';
 
 
 function App() {
@@ -45,6 +46,7 @@ function App() {
         <Route path="/SalesSummaryChart" element={<SalesSummaryChart />} />
         <Route path="/chatpage" element={<ChatPage />} />
         <Route path="/product/:productId" element={<ProductDetail />} />
+        
         </Route>
       </Routes>
     </BrowserRouter>

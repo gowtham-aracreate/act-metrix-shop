@@ -9,8 +9,7 @@ import Sidebar from "../layout/Sidebar";
 import { useState, useEffect } from "react";
 import axios from "axios";
 import dayjs from "dayjs";
-
-
+import { Label } from "recharts";
 const config = () => {
   const token = localStorage.getItem("token");
   return {
@@ -20,11 +19,12 @@ const config = () => {
   };
 };
 
+
 const options = [
-  { label: "This Month", href: "#" },
-  { label: "Last Month", href: "#" },
-  { label: "Last Week", href: "#" },
-];
+  {label1: "This Month", href: "#"},
+  {label1: "This Month", href: "#"},
+  {Label1: "This Month", href:"#"}
+]
 
 const tableTitle = [
   "Product name",
@@ -377,3 +377,5 @@ const InventoryPage = () => {
 };
 
 export default InventoryPage;
+
+
