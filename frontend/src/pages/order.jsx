@@ -155,97 +155,79 @@ const Order = () => {
             console.error("Error updating order status:", error);
         }
     };
+    const handleSearch = (searchTerm) => {
+        setSearchQuery(searchTerm);
+
+        if (searchTerm) {
+            const filteredOrders = originalOrders.filter((order) =>
+                order.customer?.toLowerCase().startsWith(searchTerm.toLowerCase()) 
+            );
+            setOrders(filteredOrders);
+        } else {
+            setOrders(originalOrders);
+        }
+    };
 
     const handleSortChange = (newFilters) => {
         setFilters(newFilters);
 
-        let updatedOrders = [...originalOrders];
+        let sortedOrders = [...originalOrders];
 
         if (newFilters.status && newFilters.status !== "All") {
-            updatedOrders = updatedOrders.filter(
-                order => order.status?.toLowerCase() === newFilters.status.toLowerCase()
+            sortedOrders = sortedOrders.filter(
+                (order) => order.status?.toLowerCase() === newFilters.status.toLowerCase()
             );
         }
 
         if (newFilters.selectedCheckboxes?.length) {
-            updatedOrders = updatedOrders.filter(order =>
+            sortedOrders = sortedOrders.filter((order) =>
                 newFilters.selectedCheckboxes.includes(order.orderType)
             );
         }
 
         if (newFilters.amountFrom) {
-            updatedOrders = updatedOrders.filter(
-                order => parseFloat(order.totalAmount) >= parseFloat(newFilters.amountFrom)
+            sortedOrders = sortedOrders.filter((order) =>
+                parseFloat(order.totalAmount) >= parseFloat(newFilters.amountFrom)
             );
         }
 
         if (newFilters.amountTo) {
-            updatedOrders = updatedOrders.filter(
-                order => parseFloat(order.totalAmount) <= parseFloat(newFilters.amountTo)
+            sortedOrders = sortedOrders.filter((order) =>
+                parseFloat(order.totalAmount) <= parseFloat(newFilters.amountTo)
             );
         }
 
-        let searchedOrders = [...originalOrders].filter(
-            order => (order.customer || "").toLowerCase().includes(searchQuery.toLowerCase())
-        );
-
-        let finalFilteredOrders = updatedOrders.filter(order =>
-            searchedOrders.some(searchOrder => searchOrder.id === order.id)
-        );
-
-        setOrders(finalFilteredOrders);
+        setOrders(sortedOrders);
     };
 
-
-    const filteredOrders = orders.filter(
-        (order) =>
-            (order.customer || "").toLowerCase().includes(searchQuery.toLowerCase()) &&
-            (!filters.orderType || filters.orderType.length === 0 || filters.orderType.includes(order.orderType)) &&
-            (filters.status === "All" || order.status === filters.status)
-    );
-
-    const formatDate = (dateString) => {
-        const date = new Date(dateString);
-        return date.toLocaleString("en-GB", {
-            day: "2-digit",
-            month: "short",
-            year: "numeric",
-            hour: "2-digit",
-            minute: "2-digit",
-            hour12: true,
-        });
-    };
     const handleDateFilter = (filters) => {
-        let filteredProducts = [...originalProducts]; // Fix: Use originalProducts
+        let filteredOrders = [...originalOrders];
 
-        // Filter by time period
         if (filters.timePeriod.length > 0) {
-            filteredProducts = filteredProducts.filter((order) => {
-                const productDate = dayjs(product.
-                    orderDate
-                );
+            filteredOrders = filteredOrders.filter((order) => {
+                const orderDate = dayjs(order.orderDate);
                 return filters.timePeriod.some((period) => {
                     switch (period) {
                         case "This Week":
-                            return productDate.isAfter(dayjs().startOf("week"));
+                            return orderDate.isAfter(dayjs().startOf("week"));
                         case "Last Week":
                             return (
-                                productDate.isAfter(dayjs().subtract(1, "week").startOf("week")) &&
-                                productDate.isBefore(dayjs().startOf("week"))
+                                orderDate.isAfter(dayjs().subtract(1, "week").startOf("week")) &&
+                                orderDate.isBefore(dayjs().startOf("week"))
                             );
                         case "This Month":
-                            return productDate.isAfter(dayjs().startOf("month"));
+                            return orderDate.isAfter(dayjs().startOf("month"));
                         case "Last Month":
                             return (
-                                productDate.isAfter(dayjs().subtract(1, "month").startOf("month")) &&
-                                productDate.isBefore(dayjs().startOf("month"))
+                                orderDate.isAfter(dayjs().subtract(1, "month").startOf("month")) &&
+                                orderDate.isBefore(dayjs().startOf("month"))
                             );
                         case "This Year":
-                            return productDate.isAfter(dayjs().startOf("year"));
+                            return orderDate.isAfter(dayjs().startOf("year"));
                         case "Last Year":
                             return (
-                                productDate.isAfter(dayjs().subtract(1, "year").startOf("year")) &&
-                                productDate.isBefore(dayjs().startOf("year"))
+                                orderDate.isAfter(dayjs().subtract(1, "year").startOf("year")) &&
+                                orderDate.isBefore(dayjs().startOf("year"))
                             );
                         default:
                             return true;
@@ -254,27 +236,33 @@ const Order = () => {
             });
         }
 
-        // Filter by custom date range
         if (filters.dateRange && filters.dateRange.length === 2) {
-            const [startDate, endDate] = filters.dateRange.map((date) => dayjs(date).startOf("day"));
-            filteredProducts = filteredProducts.filter((order) => {
-                const productDate = dayjs(product.
-                    orderDate
-                ).startOf("day");
-                return productDate.isAfter(startDate.subtract(1, "day")) && productDate.isBefore(endDate.add(1, "day"));
+            const [startDate, endDate] = filters.dateRange.map((date) =>
+                dayjs(date).startOf("day")
+            );
+            filteredOrders = filteredOrders.filter((order) => {
+                const orderDate = dayjs(order.orderDate).startOf("day");
+                return (
+                    orderDate.isAfter(startDate.subtract(1, "day")) &&
+                    orderDate.isBefore(endDate.add(1, "day"))
+                );
             });
         }
 
-        // Update the state with the filtered data
-        setProducts(filteredProducts);
+        setOrders(filteredOrders);
+    };
+    const formatDate = (dateString) => {
+        if (!dateString) return "-";
+        return dayjs(dateString).format("MMM D, YYYY");
     };
 
-    const OrderData = filteredOrders.map((order) => ({
+
+    const OrderData = orders.map((order) => ({
         customerName: (
             <span
                 className="text-gray-600 font-semibold cursor-pointer"
 
-                onClick={() => navigate(`/orders/${order._id}`, console.log("Navigating to order:", order._id), { state: { OrderId: order._id } })}
+                onDoubleClick={() => navigate(`/orders/${order._id}`, console.log("Navigating to order:", order._id), { state: { OrderId: order._id } })}
             >
                 {order.customer || "-"}
             </span>
@@ -386,6 +374,8 @@ const Order = () => {
                                     mode="order"
                                     onSortChange={handleSortChange}
                                     onFilterChange={handleDateFilter}
+                                    onSearch={handleSearch}
+
                                     filters={filters}
                                     heading={tableTitle}
                                     tableContent={OrderData.length > 0 ? OrderData.map((order) => [

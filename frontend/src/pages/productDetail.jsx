@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useLocation } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import axios from "axios";
 import Sidebar from "../layout/Sidebar";
 import Cards from "../components/Cards";
@@ -9,6 +9,7 @@ import sales from "../assets/sales.svg";
 import orderIcon from "../assets/order.svg";
 
 const ProductDetail = ({ productId }) => {
+  const navigate = useNavigate();
   const location = useLocation();
   const id = productId || location.state?.productId;
 
@@ -73,6 +74,11 @@ const ProductDetail = ({ productId }) => {
 
     fetchData();
   }, [id]);
+
+  const handleEditProduct = () => {
+    
+    navigate("/NewInventory", { state: { product } });
+  };
 
   // Table Data Formatting
   const tableTitle = ["Order Date", "Order Type", "Unit Price", "Quantity", "Discount", " Order Total", "Status"];
@@ -145,6 +151,14 @@ const ProductDetail = ({ productId }) => {
                 }
               </p>
             </div>
+            <div className="flex items-end">
+            <button onClick={handleEditProduct} className="px-6 py-3 bg-black text-white rounded-lg ">
+              Edit Product
+            </button>
+            <button className="px-6 py-3 bg-red-500 text-white rounded-lg ml-2">
+              Unpublish Product
+            </button>
+          </div>
           </div>
           <div className="flex justify-between mt-4">
             <img src={upload} alt="Product" />

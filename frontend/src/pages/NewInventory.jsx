@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Dropdown from "../components/dropdown";
 import Editor from "react-simple-wysiwyg";
 import DatePicker from "react-datepicker";
@@ -25,9 +25,12 @@ export const NewInventory = () => {
   const [startDate, setStartDate] = useState(new Date());
   const [time, setTime] = useState(() => format(new Date(), "HH:mm"));
   const [submittedData, setSubmittedData] = useState(null);
-  const location = useLocation();
   const navigate = useNavigate();
-  const onSubmit = location.state?.onSubmit || (() => { });
+  const location = useLocation();
+  const [inventory, setInventory] = useState([]);
+  const [isEditing, setIsEditing] = useState(false);
+
+
 
   const [formData, setFormData] = useState({
     productName: "",
@@ -45,6 +48,60 @@ export const NewInventory = () => {
     time: " ",
     status: " "
   });
+
+  useEffect(() => {
+    if (location.state?.product) {
+      const product = location.state.product;
+      setFormData({
+        _id: product._id || "",
+        productName: product.productName || "",
+        productCategory: product.productCategory || "",
+        sellingPrice: product.sellingPrice?.toString() || "",
+        costPrice: product.costPrice?.toString() || "",
+        quantity: product.quantity?.toString() || "",
+        discount: product.discount || false,
+        discountValue: product.discountValue?.toString() || "",
+        expiryDate: product.expiryDate  || false,
+        returnPolicy: product.returnPolicy || false,
+        shortDescription: product.shortDescription || "",
+        longDescription: product.longDescription || "",
+        dateAdded: product.dateAdded || format(new Date(), "dd MMM yyyy"),
+        time: product.time || format(new Date(), "HH:mm"),
+        status: product.status || "Unpublish"
+      });
+      
+      setIsEditing(true);
+    } else {
+      // Set default values for new product
+      setFormData({
+        productName: "",
+        productCategory: "",
+        sellingPrice: "",
+        costPrice: "",
+        quantity: "",
+        discount: false,
+        discountValue: "",
+        expiryDate: false,
+        returnPolicy: false,
+        shortDescription: "",
+        longDescription: "",
+        dateAdded: format(new Date(), "dd MMM yyyy"),
+        time: format(new Date(), "HH:mm"),
+        status: "Unpublish"
+      });
+      setIsEditing(false);
+    }
+  }, [location.state?.product]);
+  const fetchInventory = async () => {
+    try {
+      const response = await axios.get("http://localhost:3000/products", config);
+      if (response.status === 200) {
+        setInventory(response.data);
+      }
+    } catch (error) {
+      console.error("Error fetching inventory:", error);
+    }
+  };
 
   const handleDropdownSelect = (selectedValue, type, event) => {
     event?.preventDefault();
@@ -74,78 +131,94 @@ export const NewInventory = () => {
     }));
   };
 
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = async (event, action) => {
-    event.preventDefault();
-    if (!formData.productName || !formData.productCategory || !formData.sellingPrice || !formData.costPrice || !formData.quantity) {
-      alert("Please fill in all required fields.");
-      return;
-    }
-
-    if (isSubmitting) return;
-
-    const unitPrice = parseFloat(formData.sellingPrice);
-    const discountPercentage = formData.discount ? parseFloat(formData.discountValue) : 0;
-    const totalDiscount = unitPrice * (discountPercentage / 100);
-    const totalValue = (unitPrice - totalDiscount) * parseInt(formData.quantity, 10);
-
-    const submittedData = {
-      product: formData.productName,
-      category: formData.productCategory,
-      unit: formData.sellingPrice,
-      stock: formData.quantity,
-      discount: formData.discount,
-      total: totalValue,
-      action: action,
-    };
-
-    setIsSubmitting(true);
-    const productDetail = {
-      productName: formData.productName,
-      productCategory: formData.productCategory,
-      sellingPrice: parseFloat(formData.sellingPrice),
-      costPrice: parseFloat(formData.costPrice),
-      quantity: parseInt(formData.quantity, 10),
-      discount: formData.discount,
-      discountValue: formData.discount ? parseFloat(formData.discountValue) : null,
-      expiryDate: expiryDate ? format(expiryDate, "dd MMM yyyy") : null,
-      returnPolicy: formData.returnPolicy,
-      shortDescription: formData.shortDescription,
-      longDescription: formData.longDescription,
-      dateAdded: formData.dateAdded || format(new Date(), "dd MMM yyyy"),
-      time: time || "00:00",
-      status: action,
-    };
-
-    try {
-      const res = await axios.post("http://localhost:3000/product", productDetail, config);
-      console.log(res.data);
-      onSubmit(submittedData);
+  useEffect(() => {
+  
+    const product = location.state?.product;
+    if (product) {  
       setFormData({
-        productName: "",
-        productCategory: "",
-        sellingPrice: "",
-        costPrice: "",
-        quantity: 0,
-        discount: false,
-        discountValue: "",
-        expiryDate: false,
-        returnPolicy: false,
-        shortDescription: "",
-        longDescription: " ",
-        dateAdded: " ",
-        time: " ",
-        status: " "
+        _id: product._id || "",
+        productName: product.productName || "",
+        productCategory: product.productCategory || "",
+        sellingPrice: product.sellingPrice?.toString() || "0",
+        costPrice: product.costPrice?.toString() || "0",
+        quantity: product.quantity?.toString() || "0",
+        discount: product.discount || false,
+        discountValue: product.discountValue?.toString() || "0",
+        expiryDate: product.expiryDate|| false,
+        returnPolicy: product.returnPolicy || false,
+        shortDescription: product.shortDescription || "",
+        longDescription: product.longDescription || "",
+        dateAdded: product.dateAdded || format(new Date(), "dd MMM yyyy"),
+        time: product.time || "09:00",
+        status: product.status || "Unpublish",
       });
+  
+      setIsEditing(true);
+    } else {
+      console.log("No inventory found in location.state");
+    }
+  }, [location.state]);
+  
+
+  const handleSubmit = async (e, status) => {
+    e.preventDefault();
+    try {
+      const itemData = {
+        productName: formData.productName,
+        productCategory: formData.productCategory,
+        sellingPrice: formData.sellingPrice,
+        costPrice: formData.costPrice,
+        quantity: formData.quantity,
+        discount: formData.discount,
+        discountValue: formData.discountValue,
+        expiryDate: formData.expiryDate,
+        returnPolicy: formData.returnPolicy,
+        shortDescription: formData.shortDescription,
+        longDescription: formData.longDescription,
+        dateAdded: formData.dateAdded,
+        time: formData.time,
+        status: status || formData.status,
+      };
+  
+      const url = formData._id
+        ? `http://localhost:3000/product/${formData._id}`
+        : "http://localhost:3000/product";
+      const method = formData._id ? "put" : "post";
+  
+      const response = await axios[method](url, itemData, config);
+      if (response.status === 200 || response.status === 201) {
+        const updatedProduct = response.data;
+        setInventory((prev) =>
+          formData._id
+            ? prev.map((product) =>
+                (product._id === updatedProduct._id ? updatedProduct : product))
+            : [...prev, response.data]
+        );
+  
+        // Reset form if it was a new item
+        if (!formData._id) {
+          setFormData({
+            productName: "",
+            productCategory: "",
+            sellingPrice: "",
+            costPrice: "",
+            quantity: "",
+            discount: false,
+            discountValue: "",
+            expiryDate: false,
+            returnPolicy: false,
+            shortDescription: "",
+            longDescription: "",
+            dateAdded: format(new Date(), "dd MMM yyyy"),
+            time: format(new Date(), "HH:mm"),
+            status: "Unpublish"
+          });
+        }
+        navigate("/inventory");
+      }
     } catch (error) {
-      console.error("Error creating product:", error);
-      alert("There was an error creating the product. Please try again.");
-    } finally {
-      setIsSubmitting(false);
-      setImage(null);
-      setHtml("");
-      setTime("09:00");
+      console.error("Error saving item:", error);
     }
   };
 
@@ -164,10 +237,10 @@ export const NewInventory = () => {
             <div className="pt-3 pb-3 flex text-[18px]">
               <h1>New Inventory Item</h1>
               <div className="ml-auto flex text-[16px]">
-                <button type="button" onClick={(event) => handleSubmit(event, "Unpublish")} className="bg-black text-white w-[171px] h-[36px] rounded-md mr-[24px]">
+                <button type="button" onClick={(event) => handleSubmit(event, "Unpublish")} className="cursor-pointer bg-black text-white w-[171px] h-[36px] rounded-md mr-[24px]">
                   Save as Draft
                 </button>
-                <button type="button" onClick={(event) => handleSubmit(event, "Publish")} className="bg-[#5570F1] text-white w-[161px] h-[36px] rounded-md">
+                <button type="button" onClick={(event) => handleSubmit(event, "Publish")} className="cursor-pointer bg-[#5570F1] text-white w-[161px] h-[36px] rounded-md">
                   Save & Publish
                 </button>
                 <button type="button" onClick={() => navigate("/inventory")}

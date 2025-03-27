@@ -68,18 +68,32 @@ const OrderDetail = () => {
   
       // Send request to update item status
       const response = await axios.patch(
-        `http://localhost:3000/orders/${orderId}/items/${itemId}`, 
-        { status: newStatus }, 
+        `http://localhost:3000/orders/${orderId}/items/${itemId}`,
+        { status: newStatus },
         config()
       );
   
       if (response.status === 200) {
-        setOrder((prevOrder) => ({
-          ...prevOrder,
-          items: prevOrder.items.map((item) =>
+        setOrder((prevOrder) => {
+          const updatedItems = prevOrder.items.map((item) =>
             item._id === itemId ? { ...item, status: newStatus } : item
-          ),
-        }));
+          );
+  
+          // Determine the overall order status
+          let overallStatus = "Completed";
+          if (updatedItems.some((item) => item.status === "Cancelled")) {
+            overallStatus = "Cancelled";
+          } else if (updatedItems.some((item) => item.status !== "Completed")) {
+            overallStatus = "Pending";
+          }
+  
+          // Update the overall order status if changed
+          if (prevOrder.status !== overallStatus) {
+            handleOrderStatusChange(overallStatus);
+          }
+  
+          return { ...prevOrder, items: updatedItems };
+        });
       } else {
         console.error("Failed to update order item status:", response.data);
       }
@@ -87,6 +101,7 @@ const OrderDetail = () => {
       console.error("Error updating order item status:", error);
     }
   };
+  
   
   // Function to update the overall order status
   const handleOrderStatusChange = async (newStatus) => {
