@@ -28,6 +28,7 @@ const connectDB = async () => {
 };
 connectDB();
 
+
 // User Schema
 const UserSchema = new mongoose.Schema({
   name: String,
@@ -713,6 +714,7 @@ app.get("/api/inventory", authMiddleware, async (req, res) => {
   }
 });
 
+
 app.get('/orders/product/:id', authMiddleware, async (req, res) => {
   try {
     const { id } = req.params;
@@ -722,10 +724,11 @@ app.get('/orders/product/:id', authMiddleware, async (req, res) => {
   } catch (error) {
     res.status(500).json({ error: "Error fetching orders for the product" });
   }
-});
+} );
+
+
 
 app.listen(port, () => {
   console.log(`Server running on http://localhost:${port}`);
 });
-
 
