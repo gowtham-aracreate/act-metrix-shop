@@ -10,6 +10,7 @@ import Cards from "../components/Cards";
 import PhoneInput from "react-phone-input-2";
 import "react-phone-input-2/lib/style.css";
 import Dropdown from "../components/dropdown";
+
 const config = () => {
   const token = localStorage.getItem("token");
   return {
@@ -26,8 +27,18 @@ const CustomersPage = () => {
   const [addAddress, setAddAddress] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [originalCustomers, setOriginalCustomers] = useState([]);
   const navigate = useNavigate();
   const location = useLocation();
+  const [filters, setFilters] = useState({
+  status: 'All',
+  amountFrom: '',
+  amountTo: '',
+  timePeriod: [],
+  dateRange: null,
+  sortBy: '',
+  sortOrder: 'asc'
+});
 
   const [newCustomer, setNewCustomer] = useState({
     id: "",
@@ -47,7 +58,7 @@ const CustomersPage = () => {
     pendingOrders: 0,
 
   });
-  
+
 
   useEffect(() => {
     fetchCustomers();
@@ -63,16 +74,19 @@ const CustomersPage = () => {
       const response = await axios.get("http://localhost:3000/customers", config());
       if (response.status === 200) {
         setCustomers(response.data);
+        setOriginalCustomers(response.data); 
+        calculateCustomerStats(response.data);
       } else {
         console.error("Unexpected response format:", response);
         setCustomers([]);
+        setOriginalCustomers([]); 
       }
     } catch (error) {
       console.error("Error fetching customers:", error);
       setCustomers([]);
+      setOriginalCustomers([]); 
     }
   };
-
 
   const resetForm = () => {
     setNewCustomer({
@@ -88,27 +102,39 @@ const CustomersPage = () => {
     setIsEditing(false);
   };
 
-  const filteredCustomers = customers.filter((customer) =>
-    customer.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    customer.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    customer.phone.includes(searchQuery) ||
-    customer.city.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    customer.state.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    customer.country.toLowerCase().includes(searchQuery.toLowerCase())
-  );
 
   const handleAddOrUpdateCustomer = async () => {
     try {
-       
+      const customerData = {
+        name: newCustomer.name,
+        email: newCustomer.email,
+        phone: newCustomer.phone,
+        address: newCustomer.address,
+        city: newCustomer.city,
+        state: newCustomer.state,
+        country: newCustomer.country
+      };
+
       const url = newCustomer._id
         ? `http://localhost:3000/customers/${newCustomer._id}`
         : "http://localhost:3000/customers";
       const method = newCustomer._id ? "put" : "post";
-      const response = await axios[method](url, newCustomer, config());
+
+      const response = await axios[method](url, customerData, config());
       if (response.status === 200 || response.status === 201) {
-        fetchCustomers();
+        const updatedCustomer = response.data;
+
+        setCustomers((prevCustomers) =>
+          newCustomer._id
+            ? prevCustomers.map((customer) =>
+              customer._id === updatedCustomer._id ? updatedCustomer : customer
+            )
+            : [...prevCustomers, updatedCustomer]
+        );
+
         setIsModalOpen(false);
         setNewCustomer({
+          _id: "",
           name: "",
           email: "",
           phone: "",
@@ -125,8 +151,9 @@ const CustomersPage = () => {
     }
   };
 
+
   const handleCustomerClick = (customer) => {
-    navigate("/custorder", { state: { customer } });
+    navigate(`/customer/orders/${customer._id}`, { state: { customer } });
   };
 
   const calculateCustomerStats = (customerList) => {
@@ -192,9 +219,9 @@ const CustomersPage = () => {
       titleStyle: "text-[#8B8D97]",
       subtitleStyle: "font-bold text-[#45464E]",
       title1: "Purchasing",
-      subTitle1: customerStats.totalOrders, 
+      subTitle1: customerStats.totalOrders,
       title2: "Abandoned Cart",
-      subTitle2: customerStats.pendingOrders, 
+      subTitle2: customerStats.pendingOrders,
       showDropdown: true,
     }
   ];
@@ -208,7 +235,7 @@ const CustomersPage = () => {
 
     const today = new Date();
 
-    const customerOrders = Array.isArray(cust.orders) ? cust.orders : []; 
+    const customerOrders = Array.isArray(cust.orders) ? cust.orders : [];
 
     const recentOrders = customerOrders.filter(order => {
       const orderDate = new Date(order.orderDate);
@@ -220,7 +247,6 @@ const CustomersPage = () => {
     const totalCost = customerOrders.reduce((sum, order) => sum + (order.totalAmount || 0), 0);
 
     const status = recentOrders.length > 0 ? "Active" : "Inactive";
-
     return {
       name: (
         <span
@@ -232,17 +258,104 @@ const CustomersPage = () => {
       ),
       email: cust.email || "N/A",
       phone: cust.phone || "N/A",
-      orders: totalOrders, 
-      total: totalCost ? `$${totalCost.toFixed(2)}` : "$0.00", 
+      orders: totalOrders,
+      total: totalCost ? `$${totalCost.toFixed(2)}` : "$0.00",
       status: status,
     };
   });
 
 
+  const handleSearch = (searchTerm) => {
+    setSearchQuery(searchTerm);
+
+    if (searchTerm) {
+      const filteredCustomers = originalCustomers.filter((item) =>
+        item.name?.toLowerCase().startsWith(searchTerm.toLowerCase())
+      );
+      setCustomers(filteredCustomers);
+    } else {
+      setCustomers(originalCustomers);
+    }
+  };
+
+  const handleSortChange = (newFilters) => {
+    setFilters(newFilters);
+
+    let sortedCustomers = [...originalCustomers];
+
+    if (newFilters.status && newFilters.status !== "All") {
+    sortedCustomers = sortedCustomers.filter((customer) =>
+      customer.status?.toLowerCase() === newFilters.status.toLowerCase()
+    );
+  }
+
+  // Filter by amount range
+  if (newFilters.amountFrom) {
+    sortedCustomers = sortedCustomers.filter(
+      (customer) => parseFloat(customer.totalAmount || 0) >= parseFloat(newFilters.amountFrom)
+    );
+  }
+  if (newFilters.amountTo) {
+    sortedCustomers = sortedCustomers.filter(
+      (customer) => parseFloat(customer.totalAmount || 0) <= parseFloat(newFilters.amountTo)
+    );
+  }
+
+    setCustomers(sortedCustomers);
+  };
+
+  // const handleDateFilter = (filters) => {
+  //   let filteredCustomers = [...originalCustomers];
+
+  //   if (filters.timePeriod.length > 0) {
+  //     filteredCustomers = filteredCustomers.filter((customer) => {
+  //       const customerDate = dayjs(customer.customerSince || customer.createdAt);
+  //       return filters.timePeriod.some((period) => {
+  //         switch (period) {
+  //           case "This Week":
+  //             return customerDate.isAfter(dayjs().startOf("week"));
+  //           case "Last Week":
+  //             return (
+  //               customerDate.isAfter(dayjs().subtract(1, "week").startOf("week")) &&
+  //               customerDate.isBefore(dayjs().startOf("week"))
+  //             );
+  //           case "This Month":
+  //             return customerDate.isAfter(dayjs().startOf("month"));
+  //           case "Last Month":
+  //             return (
+  //               customerDate.isAfter(dayjs().subtract(1, "month").startOf("month")) &&
+  //               customerDate.isBefore(dayjs().startOf("month"))
+  //             );
+  //           case "This Year":
+  //             return productDate.isAfter(dayjs().startOf("year"));
+  //           case "Last Year":
+  //             return (
+  //               productDate.isAfter(dayjs().subtract(1, "year").startOf("year")) &&
+  //               productDate.isBefore(dayjs().startOf("year"))
+  //             );
+  //           default:
+  //             return true;
+  //         }
+  //       });
+  //     });
+  //   }
+
+  //   if (filters.dateRange && filters.dateRange.length === 2) {
+  //     const [startDate, endDate] = filters.dateRange.map((date) => dayjs(date).startOf("day"));
+  //     filteredCustomers = filteredCustomers.filter((customer) => {
+  //       const customerDate = dayjs(customer.customerSince || customer.createdAt).startOf("day");
+  //       return (
+  //         customerDate.isAfter(startDate.subtract(1, "day")) &&
+  //         customerDate.isBefore(endDate.add(1, "day"))
+  //       );
+  //     });
+  //   }
+
+  //   setCustomers(filteredCustomers);
+  // };
+
   return (
     <div className="">
-      {/* Main content with blur effect */}
-
       <Sidebar
         title={"Customer"} />
       <div className="ml-64 mt-15 bg-[#5E636614] h-screen">
@@ -261,6 +374,9 @@ const CustomersPage = () => {
             <Table
               title="Customers"
               mode="customer"
+              onSearch={handleSearch}
+              onSortChange={handleSortChange}
+              // onFilterChange={handleDateFilter}
               heading={["Name", "Email", "Phone", "Orders", "Total", "Status"]}
               tableContent={Customertable}
             />

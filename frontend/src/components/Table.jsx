@@ -394,9 +394,17 @@ const Table = ({ title, tableContent, heading, onSearch, mode, onSortChange, fil
   // Filtering logic
   const filteredContent = React.useMemo(() => {
     return sortedContent.filter((item) =>
-      Object.values(item).some((value) =>
-        value.toString().toLowerCase().includes(searchQuery.toLowerCase())
-      )
+      Object.values(item).some((value) => {
+        // Handle different types of values
+        if (React.isValidElement(value)) {
+          // For React elements (like spans), extract the text content
+          const textContent = value.props?.children;
+          return textContent && textContent.toString().toLowerCase().includes(searchQuery.toLowerCase());
+        }
+        
+        // For regular string or number values
+        return value && value.toString().toLowerCase().includes(searchQuery.toLowerCase());
+      })
     );
   }, [sortedContent, searchQuery]);
 
@@ -417,6 +425,12 @@ const Table = ({ title, tableContent, heading, onSearch, mode, onSortChange, fil
       setSelectedRows(new Set());
     } else {
       setSelectedRows(new Set(currentItems.map((item) => item.id)));
+    }
+  };
+  const handleSearch = (query) => {
+    setSearchQuery(query);
+    if (onSearch) {
+      onSearch(query); // Call the passed search function if provided
     }
   };
 
@@ -475,8 +489,8 @@ const Table = ({ title, tableContent, heading, onSearch, mode, onSortChange, fil
                     className="block ps-10 w-[220px] h-[29px] border border-gray-300 rounded-lg"
                     placeholder="Search"
                     value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                  />
+                    onChange={(e) => handleSearch(e.target.value)}
+                    />
                 </div>
               </div>
               <div className="flex gap-[12px]">

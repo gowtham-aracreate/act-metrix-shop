@@ -8,6 +8,7 @@ import cart from "../assets/cart.svg";
 import Table from "../components/Table";
 import Sidebar from "../layout/Sidebar";
 import Cards from "../components/Cards";
+import Dropdown from "../components/dropdown";
 
 const config = () => {
   const token = localStorage.getItem("token");
@@ -24,8 +25,18 @@ const CustOrderPage = () => {
   const { id } = useParams();
   const [customer, setCustomer] = useState(location.state?.customer || {});
   const [orders, setOrders] = useState([]);
+  const [customerNumber, setCustomerNumber] = useState(null);
   const [customers, setCustomers] = useState([]);
-  const [salesData, setSalesData] = useState({});
+  const [salesData, setSalesData] = useState({
+    totalOrders: 0,
+    inProgress: 0,
+    completed: 0,
+    totalCustomers: 0,
+    abandonedCart: 0,
+    homeDelivery: 0,
+    pickUp: 0,
+  });
+
 
 
   useEffect(() => {
@@ -42,49 +53,113 @@ const CustOrderPage = () => {
   }, [id, location.state]);
 
   useEffect(() => {
-    const fetchData = async () => {
+    if (!id) return;
+
+    const fetchCustomerSalesData = async () => {
+      if (!id) {
+        console.error("Customer ID is missing!");
+        return;
+      }
       try {
-        const [ordersRes, customersRes] = await Promise.all([
-          axios.get("http://localhost:3000/api/orders", config()),
-          axios.get("http://localhost:3000/api/customers", config()),
-        ]);
 
-        const customersWithLastOrder = customersRes.data.map((customer) => {
-          const customerOrders = ordersRes.data.filter(
-            (order) => order.customerId === customer._id
-          );
-          const lastOrderDate = customerOrders.length
-            ? new Date(
-                Math.max(...customerOrders.map((order) => new Date(order.orderDate)))
-              ).toLocaleString()
-            : "No Orders";
-
-          return { ...customer, lastOrderDate };
+        const response = await fetch(`http://localhost:3000/api/sales/customer/${id}`, config());
+        const salesJson = await response.json();
+        setSalesData({
+          totalOrders: salesJson.totalOrders || 0,
+          inProgress: salesJson.inProgress || 0,
+          completed: salesJson.completed || 0,
+          abandonedCart: salesJson.abandonedCart || 0,
+          homeDelivery: salesJson.homeDelivery || 0,
+          pickUp: salesJson.pickUp || 0,
         });
-
-        setOrders(ordersRes.data);
-        setCustomers(customersWithLastOrder);
       } catch (error) {
-        console.error("Error fetching data:", error);
+        console.error("Error fetching customer sales data:", error);
       }
     };
 
-    fetchData();
-  }, []);
+    fetchCustomerSalesData();
+  }, [id]);
 
+  useEffect(() => {
+    const fetchCustomers = async () => {
+      try {
+        const response = await fetch("http://localhost:3000/customers", config());
+        const customersData = await response.json();
+        setCustomerNumber(customersData.findIndex(cust => cust._id === id) + 1);
+      } catch (error) {
+        console.error("Error fetching customers:", error);
+      }
+    };
+
+    fetchCustomers();
+  }, [id]);
+
+  useEffect(() => {
+    const fetchOrders = async () => {
+      try {
+        const response = await fetch(`http://localhost:3000/api/orders/customer/${id}`,config());
+        if (!response.ok) {
+          if (response.status === 404) {
+            setOrders([]); // Set orders to an empty array if no orders exist
+            return;
+          }
+          throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+        const data = await response.json();
+        setOrders(data); 
+      } catch (error) {
+        console.error("Error fetching orders:", error);
+        setOrders([]); // Ensure orders is always an array
+      }
+    };
+  
+    fetchOrders();
+  }, [id]);
+  
 
   const handleEditCustomer = () => {
     navigate("/customer", { state: { customer } });
   };
 
-  const heading = [
-    "Order Date",
-    "Order Type",
-    "Tracking ID",
-    "Order Total",
-    "Action",
-    "Status",
-  ];
+  const handleActionChange = async (orderId, selectedOption) => {
+    try {
+      const newStatus = selectedOption.label;
+  
+      const response = await fetch(
+        `http://localhost:3000/orders/${orderId}`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+          body: JSON.stringify({ status: newStatus }),
+        }
+      );
+  
+      if (response.ok) {
+        setOrders((prevOrders) =>
+          prevOrders.map((order) =>
+            order._id === orderId ? { ...order, status: newStatus } : order
+          )
+        );
+      } else {
+        console.error("Failed to update order status:", await response.json());
+      }
+    } catch (error) {
+      console.error("Error updating order status:", error);
+    }
+  };
+  
+
+  // const heading = [
+  //   "Order Date",
+  //   "Order Type",
+  //   "Tracking ID",
+  //   "Order Total",
+  //   "Action",
+  //   "Status",
+  // ];
 
   const fields = [
     {
@@ -108,7 +183,7 @@ const CustOrderPage = () => {
       titleStyle: "text-gray-800 font-semibold ",
       subtitleStyle: "text-gray-500",
       title1: "Total Orders",
-      subTitle1: salesData?.totalOrders ?? 0,
+      subTitle1: salesData.totalOrders,
       showDropdown: false,
     },
   ];
@@ -122,11 +197,11 @@ const CustOrderPage = () => {
       titleStyle: "text-gray-800 font-semibold ",
       subtitleStyle: "text-gray-500",
       title1: "All Orders",
-      subTitle1: salesData?.totalOrders ?? 0,
+      subTitle1: salesData.totalOrders,
       title2: "In-Progress",
-      subTitle2: salesData?.inProgress ?? 0,
+      subTitle2: salesData.inProgress,
       title3: "Completed",
-      subTitle3: salesData?.completed ?? 0,
+      subTitle3: salesData.completed,
       showDropdown: false,
     },
     {
@@ -137,9 +212,9 @@ const CustOrderPage = () => {
       titleStyle: "text-gray-800 font-semibold ",
       subtitleStyle: "text-gray-500",
       title1: "Home Delivery",
-      subTitle1: salesData?.totalSales ?? 0,
+      subTitle1: salesData.homeDelivery,
       title2: "Pickup",
-      subTitle2: salesData?.totalVolume ?? 0,
+      subTitle2: salesData.pickUp,
       showDropdown: false,
     },
     {
@@ -162,10 +237,10 @@ const CustOrderPage = () => {
         <div className="flex justify-between pb-4">
           <div className="flex">
             <h2 className="">Customer Number</h2>
-            <p className="pl-1">#1</p>
+            <p className="pl-1">#{customerNumber ?? "N/A"}</p>
           </div>
           <div className="flex items-end">
-            <button onClick={handleEditCustomer} className="px-6 py-3 bg-gray-400 rounded-lg ">
+            <button onClick={handleEditCustomer} className="px-6 py-3 bg-black text-white rounded-lg ">
               Edit Customer
             </button>
             <button className="px-6 py-3 bg-red-500 text-white rounded-lg ml-2">
@@ -206,17 +281,29 @@ const CustOrderPage = () => {
           <Cards fields={fields2} cardplace="flex flex-row gap-4 pr-5" />
         </div>
         <div className="mt-6">
-        <Table title={`${customer.name}'s Orders`} 
-            tableContent={orders.map(order => ({
-              orderDate: order.orderDate || "N/A",
-              orderType: order.orderType || "N/A",
-              trackingID: order.trackingID || "N/A",
-              orderTotal: order.total || "N/A",
-              action: "View Details",
-              status: order.status || "Pending",
-            }))} 
-            heading={["Order Date", "Order Type", "Tracking ID", "Order Total", "Action", "Status"]} 
-          />        </div>
+          <Table
+            title={`${customer.name}'s Orders`}
+            heading={["Order Date", "Order Type", "Tracking ID", "Order Total", "Action", "Status"]}
+            tableContent={orders.map((order) => ({
+              orderDate: order?.orderDate || "N/A",
+              orderType: order?.orderType || "N/A",
+              trackingID: order?.trackingID || "N/A",
+              orderTotal: order?.totalAmount || "N/A",
+              action: (
+                <Dropdown
+                  dropdownButtonStyle="text-gray-600 h-[23px] justify-center w-[130px] pr-10 bg-[#5E636614] text-[15px] rounded-md"
+                  dropdownButtonText={order?.status || "Pending"}
+                  dropdownOptions={[
+                    { label: "Pending" },
+                    { label: "In-Progress" },
+                    { label: "Completed" },
+                  ]}
+                  onSelect={(selectedOption) => handleActionChange(order._id, selectedOption)}
+                />
+              ),
+              status: order?.status || "Pending",            }))}
+          />
+        </div>
       </div>
     </div>
   );
