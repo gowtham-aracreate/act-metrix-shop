@@ -388,6 +388,42 @@ app.post("/customers", authMiddleware, async (req, res) => {
   }
 });
 
+app.put("/customers/:id", async (req, res) => {
+  try {
+    const customer = await Customer.findById(req.params.id);
+    if (!customer) {
+      return res.status(404).json({ error: "Customer not found" });
+    }
+
+    const updatedCustomer = await Customer.findByIdAndUpdate(
+      req.params.id,
+      req.body,
+      { 
+        new: true, 
+        runValidators: true,
+        context: 'query' // This helps catch validation errors
+      }
+    );
+
+    if (!updatedCustomer) {
+      return res.status(500).json({ error: "Failed to update customer" });
+    }
+
+    res.status(200).json(updatedCustomer);
+  } catch (error) {
+    console.error("Detailed Error updating customer:", {
+      message: error.message,
+      name: error.name,
+      stack: error.stack,
+      details: error
+    });
+    res.status(500).json({ 
+      error: "Internal Server Error", 
+      message: error.message,
+      details: error.toString() 
+    });
+  }
+});
 
 // Fetch All Orders
 app.get("/orders", authMiddleware, async (req, res) => {
@@ -480,6 +516,79 @@ app.patch("/orders/:orderId/items/:itemId", async (req, res) => {
   }
 });
 
+app.get("/api/orders/customer/:id", authMiddleware, async (req, res) => {
+  try {
+    const customerId = req.params.id;
+
+    // Validate customerId
+    if (!mongoose.Types.ObjectId.isValid(customerId)) {
+      return res.status(400).json({ error: "Invalid customer ID" });
+    }
+
+    // Find orders related to the customer
+    const orders = await Order.find({ customerId }).populate("customerId", "name email");
+
+    if (!orders || orders.length === 0) {
+      return res.status(404).json({ message: "No orders found for this customer" });
+    }
+
+    res.status(200).json(orders);
+  } catch (error) {
+    console.error("Error fetching customer orders:", error);
+    res.status(500).json({ error: "Server error while fetching orders" });
+  }
+});
+
+app.get("/api/sales/customer/:customerId", authMiddleware, async (req, res) => {
+  try {
+    const { customerId } = req.params;
+  
+
+    if (!customerId) {
+      return res.status(400).json({ message: "Customer ID is required" });
+    }
+
+    const orders = await Order.find({ customerId });
+
+    if (!orders.length) {
+      return res.status(404).json({ message: "No orders found for this customer" });
+    }
+
+    let totalSales = 0;
+    let totalVolume = 0;
+    orders.forEach((order) => {
+      totalSales += order.totalAmount || 0;
+      totalVolume += (order.items || []).reduce((acc, item) => acc + (item.quantity || 0), 0);
+    });
+
+    const totalOrders = orders.length;
+    const inProgress = await Order.countDocuments({ customerId, status: "In-Progress" });
+    const completed = await Order.countDocuments({ customerId, status: "Completed" });
+    const abandonedCart = await Order.countDocuments({ customerId, status: "Pending" });
+    const homeDelivery = await Order.countDocuments({ customerId, orderType: "Home Delivery" });
+    const pickUp = await Order.countDocuments({ customerId, orderType: "Pick Up" });
+
+    const responseData = {
+      totalSales,
+      totalVolume,
+      totalOrders,
+      inProgress,
+      completed,
+      abandonedCart,
+      homeDelivery,
+      pickUp,
+    };
+
+
+    res.json(responseData);
+  } catch (error) {
+    console.error("Error fetching customer sales data:", error);
+    res.status(500).json({ message: "Server Error" });
+  }
+});
+
+
+
 
 app.get("/api/sales", authMiddleware, async (req, res) => {
   try {
@@ -497,7 +606,8 @@ app.get("/api/sales", authMiddleware, async (req, res) => {
     const completed = await Order.countDocuments({ status: "Completed" });
     const totalCustomers = await Customer.countDocuments();
     const abandonedCart = await Order.countDocuments({ status: "Pending" });
-
+    const homeDelivery = await Order.countDocuments({ orderType: "Home Delivery" });
+    const pickUp = await Order.countDocuments({ orderType: "Pick Up" });
     res.json({
       totalSales,
       totalVolume,
@@ -506,14 +616,14 @@ app.get("/api/sales", authMiddleware, async (req, res) => {
       completed,
       totalCustomers,
       abandonedCart,
+      homeDelivery,
+      pickUp
     });
   } catch (error) {
     console.error("Error fetching sales data:", error);
     res.status(500).json({ message: "Server Error" });
   }
 });
-
-
 
 
 // Fetch Products
