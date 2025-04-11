@@ -118,6 +118,7 @@ const ProductDetail = ({ productId }) => {
       subTitle2: salesData.homeDelivery,
       title3: "Pickup",
       subTitle3: salesData.pickup,
+      showDropdown: false,
     },
     {
       icon: orderIcon,
@@ -132,12 +133,15 @@ const ProductDetail = ({ productId }) => {
       subTitle2: salesData.pending,
       title3: "Completed",
       subTitle3: salesData.completed,
+      showDropdown: false,
+
     },
   ];
 
   return (
     <div>
-      <Sidebar />
+      <Sidebar
+    title="Inventory" />
       <div className="ml-64 mt-15 bg-[#5E636614] h-screen p-4">
         <div className="ml-4">
           <div className="flex justify-between items-center">

@@ -230,7 +230,7 @@ export const NewInventory = () => {
 
   return (
     <div className="">
-      <Sidebar />
+      <Sidebar title=	"Inventory" />
       <div className="ml-64 mt-15 bg-[#5E636614] h-screen ">
         <div className="ml-6">
           <form onSubmit={(event) => handleSubmit(event, formData.status)}>

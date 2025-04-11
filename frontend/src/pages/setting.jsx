@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Sidebar from "../layout/Sidebar";
 import profile from "../assets/profile.svg";
+import axios from "axios";
 import Message from "../assets/message.svg";
 import location from "../assets/location.svg";
 import { Country, State } from "country-state-city";
@@ -24,6 +25,11 @@ export const Setting = () => {
   const [countries] = useState(Country.getAllCountries());
   const [states, setStates] = useState([]);
   const [message, setMessage] = useState({ type: "", text: "" });
+  const [profileImage, setProfileImage] = useState(null);
+  const [previewImage, setPreviewImage] = useState(null);
+  const [isNewUpload, setIsNewUpload] = useState(false);
+
+
   const navigate = useNavigate();
 
   const token = localStorage.getItem("token");
@@ -37,17 +43,17 @@ export const Setting = () => {
           navigate("/login");
           return;
         }
-  
+
         const response = await fetch("http://localhost:3000/me", {
           headers: { Authorization: `Bearer ${token}` },
         });
-  
+
         const data = await response.json();
         console.log("Fetched User Data:", data);
-  
+
         if (data.success && data.user) {
           const nameParts = data.user.name ? data.user.name.split(" ") : ["", ""];
-          
+
           setUser({
             firstName: nameParts[0] || "",
             lastName: nameParts.slice(1).join(" ") || "",
@@ -59,11 +65,14 @@ export const Setting = () => {
             state: data.user.state || "",
             // profileImage: data.user.profileImage || null,
           });
-          
+
           // Set selected country and load states if country exists
           if (data.user.country) {
             const states = State.getStatesOfCountry(data.user.country);
             setStates(states);
+          }
+          if (data.user.profileImage) {
+            setPreviewImage(`http://localhost:3000${data.user.profileImage}`);
           }
         } else {
           setMessage({ type: "error", text: "Failed to load user data" });
@@ -71,12 +80,12 @@ export const Setting = () => {
       } catch (error) {
         console.error("Error fetching user data:", error);
         setMessage({ type: "error", text: "Error loading profile data" });
-      } 
+      }
     };
-  
+
     if (token) fetchUser();
   }, [navigate]);
-  
+
   // Update states when country changes
   useEffect(() => {
     if (user.country) {
@@ -86,38 +95,38 @@ export const Setting = () => {
       setStates([]);
     }
   }, [user.country]);
-  
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setMessage({ type: "", text: "" });
-  
+
     try {
       // Combine firstName and lastName to create the full name
       const fullName = `${user.firstName} ${user.lastName}`.trim();
-      
-      const updatedData = {
-        name: fullName,
-        phone: user.phone,
-        address: user.address,
-        city: user.city,
-        country: user.country,
-        state: user.state,
-      };
-      
+
+      const formData = new FormData();
+      formData.append("name", fullName);
+      formData.append("phone", user.phone);
+      formData.append("address", user.address);
+      formData.append("city", user.city);
+      formData.append("country", user.country);
+      formData.append("state", user.state);
+
+      if (profileImage) {
+        formData.append("profileImage", profileImage); // image file
+      }
+
       const response = await fetch("http://localhost:3000/update-profile", {
         method: "PUT",
         headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
+          Authorization: `Bearer ${token}`, // ❗️Don't include 'Content-Type' when using FormData
         },
-        body: JSON.stringify(updatedData),
+        body: formData,
       });
-  
+
       const data = await response.json();
       if (response.ok) {
-        setUser({
-          ...user,
-        });
+        setUser({ ...user }); // optionally update fields with `data.user`
         setMessage({ type: "success", text: "Profile updated successfully!" });
       } else {
         setMessage({ type: "error", text: data.error || "Error updating profile" });
@@ -125,11 +134,75 @@ export const Setting = () => {
     } catch (error) {
       console.error("Error updating profile:", error);
       setMessage({ type: "error", text: "Network error. Please try again." });
-    } finally {
-      setIsLoading(false);
     }
   };
-  
+
+
+  const handleUpload = async () => {
+    if (!profileImage) return;
+
+    const formData = new FormData();
+    formData.append("profileImage", profileImage);
+
+    try {
+      const response = await fetch("http://localhost:3000/update-profile", {
+        method: "PUT",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        body: formData,
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        // ✅ Update user profileImage in state so preview persists
+        setUser((prevUser) => ({
+          ...prevUser,
+          profileImage: data.user.profileImage,
+        }));
+        setPreviewImage(`http://localhost:3000${data.user.profileImage}`);
+        setProfileImage(null);
+        setIsNewUpload(false);
+        setMessage({ type: "success", text: "Profile image uploaded!" });
+      } else {
+        setMessage({ type: "error", text: data.error || "Upload failed" });
+      }
+    } catch (error) {
+      console.error("Upload error:", error);
+      setMessage({ type: "error", text: "Error uploading image" });
+    }
+  };
+  const handleRemove = async () => {
+    try {
+      const response = await fetch("http://localhost:3000/remove-profile-image", {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setUser((prevUser) => ({
+          ...prevUser,
+          profileImage: null,
+        }));
+        setPreviewImage(null);
+        setProfileImage(null);
+        setMessage({ type: "success", text: "Profile image removed!" });
+      } else {
+        setMessage({ type: "error", text: data.error || "Failed to remove image" });
+      }
+    } catch (error) {
+      console.error("Remove error:", error);
+      setMessage({ type: "error", text: "Error removing image" });
+    }
+  };
+
+
+
   const handleCountryChange = (e) => {
     const countryCode = e.target.value;
     setUser({ ...user, country: countryCode, state: "" });
@@ -138,7 +211,7 @@ export const Setting = () => {
   return (
     <div>
       <Sidebar
-      title={"Settings"} />
+        title={"Settings"} />
       <div className="ml-64 mt-15 bg-[#5E636614] min-h-screen">
         <div className="ml-4 pb-8">
           <form className="pt-3" onSubmit={handleSubmit}>
@@ -149,16 +222,16 @@ export const Setting = () => {
                   type="submit"
                   className="bg-[#5570F1] text-white w-[150px] h-[40px] rounded-md"
                 >
-                   Update
+                  Update
                 </button>
               </div>
-              
+
               {message.text && (
                 <div className={`p-3 mb-4 rounded-md ${message.type === "success" ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}>
                   {message.text}
                 </div>
               )}
-              
+
               <div className="flex flex-row">
                 <div className="flex flex-col ">
                   <p className="py-2">First Name</p>
@@ -253,27 +326,77 @@ export const Setting = () => {
                     </div>
                   </div>
                 </div>
-              
-                <div className="py-2 ">
-                  <p className="pl-4 ">Profile Image</p>
-                  <div className="flex items-center space-x-4 pt-4 pl-4 ">
-                    <img
-                      src={profile} // Using the default profile icon
-                      alt="Profile"
-                      className="w-16 h-16 rounded-full border"
+
+                <div className="py-4">
+                  <p className="pl-4 font-medium text-gray-700">Profile Image</p>
+                  <div className="flex flex-col items-center space-y-4 pt-4 pl-4">
+                    {/* Image preview */}
+                    {previewImage ? (
+                      <img
+                        src={previewImage}
+                        alt="Preview"
+                        className="w-32 h-32 rounded-full object-cover border shadow-lg transition duration-300"
+                      />
+                    ) : (
+                      <label
+                        htmlFor="profileUpload"
+                        className="pl-5  w-34 h-34 flex items-center justify-center border-dashed border-2 border-gray-400 rounded-full cursor-pointer text-sm text-gray-500 hover:border-blue-400 transition"
+                      >
+                        Choose a file
+                        to upload
+                      </label>
+                    )}
+
+                    {/* Hidden file input */}
+                    <input
+                      id="profileUpload"
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => {
+                        const file = e.target.files[0];
+                        if (file) {
+                          setProfileImage(file);
+                          setPreviewImage(URL.createObjectURL(file));
+                          setIsNewUpload(true);
+                        }
+                      }}
+                      className="hidden"
                     />
-                    <div>
-                      <p className="text-gray-500 text-sm mb-2">Profile image upload is currently disabled</p>
-                      <button 
+
+                    {/* Upload button (only if new file is selected and not yet uploaded) */}
+                    {isNewUpload && previewImage && (
+                      <button
                         type="button"
-                        disabled={true}
-                        className="p-2 bg-gray-200 text-gray-500 rounded-md cursor-not-allowed"
+                        onClick={handleUpload}
+                        className="p-2 bg-blue-600 text-white rounded-md"
                       >
                         Upload Image
                       </button>
-                    </div>
+                    )}
+
+
+                    {previewImage && (
+                      <div className="flex justify-between gap-4">
+                        <button
+                          type="button"
+                          onClick={() => document.getElementById("profileUpload").click()}
+                          className="px-2 py-2 rounded-md bg-yellow-100 text-yellow-800 hover:bg-yellow-200 transition"
+                        >
+                          Change Profile
+                        </button>
+                        <button
+                          type="button"
+                          onClick={handleRemove}
+                          className="px-2 py-2 rounded-md bg-red-100 text-red-700 hover:bg-red-200 transition"
+                        >
+                          Remove Profile
+                        </button>
+                      </div>
+                    )}
                   </div>
                 </div>
+
+
               </div>
             </div>
           </form>

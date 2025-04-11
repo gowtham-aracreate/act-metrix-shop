@@ -232,7 +232,7 @@ const CustOrderPage = () => {
 
   return (
     <div>
-      <Sidebar title="Orders" />
+      <Sidebar title="Customer" />
       <div className="ml-64 mt-15 bg-[#5E636614] h-screen p-4">
         <div className="flex justify-between pb-4">
           <div className="flex">

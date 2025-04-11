@@ -56,7 +56,6 @@ const CustomersPage = () => {
     inactiveCustomers: 0,
     totalOrders: 0,
     pendingOrders: 0,
-
   });
 
 
@@ -195,9 +194,6 @@ const CustomersPage = () => {
       alt: "order",
       cardStyle: "bg-white rounded-lg w-[605px] h-[145px]",
       maintitleStyle: "gap-40 pl-4",
-      dropdownButtonStyle: "text-gray-400 border-none pr-10",
-      dropdownMenuStyle: "bg-white",
-      dropdownButtonText: "This Week",
       titleStyle: "text-[#8B8D97]",
       subtitleStyle: "font-bold text-[#45464E]",
       title1: "All Customers",
@@ -206,23 +202,20 @@ const CustomersPage = () => {
       subTitle2: customerStats.activeCustomers,
       title3: "Inactive",
       subTitle3: customerStats.inactiveCustomers,
-      showDropdown: true,
+      showDropdown: false,
     },
     {
       icon: Order,
       alt: "Sales",
       cardStyle: "bg-white rounded-lg w-[605px] h-[145px]",
       maintitleStyle: "justify-between pl-4",
-      dropdownButtonStyle: "text-gray-400 border-none pr-10",
-      dropdownMenuStyle: "bg-white",
-      dropdownButtonText: "This Week",
       titleStyle: "text-[#8B8D97]",
       subtitleStyle: "font-bold text-[#45464E]",
       title1: "Purchasing",
       subTitle1: customerStats.totalOrders,
       title2: "Abandoned Cart",
       subTitle2: customerStats.pendingOrders,
-      showDropdown: true,
+      showDropdown: false,
     }
   ];
 

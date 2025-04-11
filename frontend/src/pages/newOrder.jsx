@@ -44,7 +44,7 @@ export const NewOrder = ({ isOpen, onClose, onOrderAdded }) => {
     const [customers, setCustomers] = useState([]);
     const [selectedCustomer, setSelectedCustomer] = useState("");
     const [isNewCustomer, setIsNewCustomer] = useState(false);
-const [newCustomerCount, setNewCustomerCount] = useState(0);
+    const [newCustomerCount, setNewCustomerCount] = useState(0);
 
 
     const [formData, setFormData] = useState({

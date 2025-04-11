@@ -1,40 +1,78 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { IoLogOut } from "react-icons/io5";
 import metrixlogo from "../assets/metrixlogo.svg";
-import Dropdown from "../components/dropdown";
-import notification from "../assets/notification.svg";
-import profile from "../assets/profile.svg";
 import { useNavigate } from "react-router-dom";
-
+import profilepic from "../assets/profilepic.jpg";
 
 const Sidebar = ({ children,title }) => {
   const [activeLink, setActiveLink] = React.useState("");
-
+  const navigate = useNavigate();
   const handleLinkClick = (link, path) => {
     setActiveLink(link);
     navigate(path);
   };
-  const navigate = useNavigate();
+  React.useEffect(() => {
+    const currentPath = window.location.pathname;
+    const activeRoute = currentPath.substring(1); // Remove "/"
+    setActiveLink(activeRoute);
+  }, []);
   const handleLogout = () => {
-    localStorage.removeItem("token"); // Remove the token
+     localStorage.clear(); // Clears all localStorage
+    sessionStorage.clear();  // Remove the token
     navigate("/login"); // Redirect to login page
   };
+  const [user,setUser]=useState({
+    firstName:" ",
+    profileImage: "",
+  })
+  const token = localStorage.getItem("token");
+
+ useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        if (!token) {
+          console.error("No token found");
+          navigate("/login");
+          return;
+        }
+  
+        const response = await fetch("http://localhost:3000/me", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+  
+        const data = await response.json();
+        console.log("Fetched User Data:", data);
+  
+        if (data.success && data.user) {
+          const nameParts = data.user.name ? data.user.name.split(" ") : ["", ""];
+          
+          setUser({
+            firstName: nameParts[0] || "",
+            profileImage: `http://localhost:3000${data.user.profileImage || ""}`,
+          });
+        } 
+      } catch (error) {
+        console.error("Error fetching user data:", error);
+      } 
+    };
+  
+    if (token) fetchUser();
+  }, []);
+
+  const defaultAvatar = "/default-avatar.png";
+  
   return (
     <div>
-        <div className="absolute left-64 bg-white fixed top-0 pt-4 pb-4 flex justify-between items-center ">
-          <h3 className="text-lg pl-3 font-semibold">{title}</h3>
-          <div className="relative">
-            <div className=" flex justify-between pl-235">
-              <Dropdown
-                dropdownButtonStyle="bg-[#FFCC9133] border-none justify-center pr-5 w-[200px] h-[32px] rounded-md "
-                dropdownMenuStyle="bg-white"
-                dropdownButtonText="Nanny's Shop"
-              />
-            </div>
-          </div>
-          <div className="flex r-0">
-            <img src={notification} alt="Notification" className="h-6 w-6 mr-1" />
-            <img src={profile} alt="Profile" className="h-6 w-6 mr-1" />
+        <div className="absolute left-64 pr-80 bg-white fixed top-0 pt-4 pb-4 flex justify-between items-center w-screen">
+          <h3 className="text-lg pl-3 font-semibold">{title}</h3>  
+          <div className="flex">
+          <p className="bg-[#FFCC9133] border-none text-center  w-full p-2 rounded-md">{user.firstName}</p>
+          <img
+            src={user.profileImage || defaultAvatar}
+            alt="Profile"
+            className="h-10 w-12 ml-2 rounded-3xl object-cover"
+          />          
           </div>
         </div>
         <div className="w-64 text-[14px] text-black-500 p-6 fixed left-0 top-0">
@@ -44,10 +82,9 @@ const Sidebar = ({ children,title }) => {
           </div>
 
           <ul className="">
-            <a
-              href="#"
+            <button
               onClick={() => handleLinkClick("Dashboard", "/dashboard")}
-              className={`p-3 rounded-md flex items-center ${activeLink === "Dashboard"
+              className={`p-3 rounded-md flex items-center w-full ${title === "Dashboard"
                   ? "bg-[#5570F1] text-white"
                   : "text-black-600"
                 }`}
@@ -58,7 +95,7 @@ const Sidebar = ({ children,title }) => {
                 viewBox="0 0 24 24"
                 fill="none"
                 xmlns="http://www.w3.org/2000/svg"
-                className={`mr-3 ${activeLink === "Dashboard" ? "text-white" : "text-black-600"
+                className={`mr-3 ${title === "Dashboard" ? "text-white" : "text-black-600"
                   }`}
               >
                 <path
@@ -74,11 +111,10 @@ const Sidebar = ({ children,title }) => {
                 />
               </svg>
               Dashboard
-            </a>
-            <a
-              href="#"
+            </button>
+            <button
               onClick={() => handleLinkClick("Orders", "/order")}
-              className={`p-3 flex items-center rounded-md ${activeLink === "Orders"
+              className={`p-3 flex items-center w-full rounded-md ${title === "Orders"
                   ? "bg-[#5570F1] text-white"
                   : "hover:bg-gray-200"
                 }`}
@@ -89,7 +125,7 @@ const Sidebar = ({ children,title }) => {
                 viewBox="0 0 21 22"
                 fill="none"
                 xmlns="http://www.w3.org/2000/svg"
-                className={`mr-3 ${activeLink === "Orders" ? "text-white" : "text-black-600"
+                className={`mr-3 ${title === "Orders" ? "text-white" : "text-black-600"
                   }`}
               >
                 <path
@@ -124,11 +160,10 @@ const Sidebar = ({ children,title }) => {
                 />
               </svg>
               Orders
-            </a>
-            <a
-              href="#"
+            </button>
+            <button
               onClick={() => handleLinkClick("Customers", "/customer")}
-              className={`p-3 flex items-center rounded-md ${activeLink === "Customers"
+              className={`p-3 flex items-center w-full rounded-md ${title === "Customer"
                   ? "bg-[#5570F1] text-white"
                   : "hover:bg-gray-200"
                 }`}
@@ -139,7 +174,7 @@ const Sidebar = ({ children,title }) => {
                 viewBox="0 0 24 24"
                 fill="none"
                 xmlns="http://www.w3.org/2000/svg"
-                className={`mr-3 ${activeLink === "Customers" ? "text-white" : "text-black-600"
+                className={`mr-3 ${title === "Customer" ? "text-white" : "text-black-600"
                   }`}
               >
                 <path
@@ -176,11 +211,10 @@ const Sidebar = ({ children,title }) => {
                 />
               </svg>
               Customers
-            </a>
-            <a
-              href="#"
+            </button>
+            <button
               onClick={() => handleLinkClick("Inventory", "/inventory")}
-              className={`p-3 flex items-center rounded-md ${activeLink === "Inventory"
+              className={`p-3 flex items-center w-full rounded-md ${title === "Inventory" 
                   ? "bg-[#5570F1] text-white"
                   : "hover:bg-gray-200"
                 }`}
@@ -191,7 +225,7 @@ const Sidebar = ({ children,title }) => {
                 viewBox="0 0 24 24"
                 fill="none"
                 xmlns="http://www.w3.org/2000/svg"
-                className={` mr-3 ${activeLink === "Inventory" ? "text-white" : "text-black-600"
+                className={` mr-3 ${title === "Inventory" ? "text-white" : "text-black-600"
                   }`}
               >
                 <path
@@ -212,11 +246,11 @@ const Sidebar = ({ children,title }) => {
                 />
               </svg>
               Inventory
-            </a>
-            <a
+            </button>
+            <button
               href="#"
               onClick={() => handleLinkClick("Conversations","/chatpage")}
-              className={`p-3 flex items-center rounded-md ${activeLink === "Conversations"
+              className={`p-3 flex items-center w-full rounded-md ${title === "Conversations"
                   ? "bg-[#5570F1] text-white"
                   : "hover:bg-gray-200"
                 }`}
@@ -227,7 +261,7 @@ const Sidebar = ({ children,title }) => {
                 viewBox="0 0 22 22"
                 fill="none"
                 xmlns="http://www.w3.org/2000/svg"
-                className={`mr-3 ${activeLink === "Conversations" ? "text-white" : "text-black-600"
+                className={`mr-3 ${title === "Conversations" ? "text-white" : "text-black-600"
                   }`}
               >
                 <path
@@ -262,11 +296,10 @@ const Sidebar = ({ children,title }) => {
                 />
               </svg>
               Conversations
-            </a>
-            <a
-              href="#"
+            </button>
+            <button
               onClick={() => handleLinkClick("Settings", "/setting")}	
-              className={`p-3 flex items-center rounded-md ${activeLink === "Settings"
+              className={`p-3 flex items-center  w-full rounded-md ${title === "Settings"
                   ? "bg-[#5570F1] text-white"
                   : "hover:bg-gray-200"
                 }`}
@@ -277,7 +310,7 @@ const Sidebar = ({ children,title }) => {
                 viewBox="0 0 24 24"
                 fill="none"
                 xmlns="http://www.w3.org/2000/svg"
-                className={`mr-3 ${activeLink === "Settings" ? "text-white" : "text-black-600"
+                className={`mr-3 ${title === "Settings" ? "text-white" : "text-black-600"
                   }`}
               >
                 <path
@@ -300,12 +333,11 @@ const Sidebar = ({ children,title }) => {
                 />
               </svg>
               Settings
-            </a>
+            </button>
 
-            <a
-              href="#"
+            <button
               onClick={() => handleLinkClick("Contact")}
-              className={`mt-25 p-3 flex items-center rounded-md ${activeLink === "Contact"
+              className={`mt-25 p-3 flex items-center w-full rounded-md ${activeLink === "Contact"
                   ? "bg-[#5570F1] text-white"
                   : "bg-gray-100"
                 }`}
@@ -335,12 +367,11 @@ const Sidebar = ({ children,title }) => {
                 />
               </svg>
               Contact Support
-            </a>
+            </button>
 
-            <a
-              href="#"
+            <button
               onClick={() => handleLinkClick("Gift")}
-              className="mt-6 p-4 flex items-center rounded-lg bg-[#FFCC9133]"
+              className="mt-6 p-4 flex items-center w-full rounded-lg bg-[#FFCC9133]"
             >
               <div className="flex-col">
                 <p className="text-black inline-flex text-md font-semibold w-50">
@@ -410,7 +441,7 @@ const Sidebar = ({ children,title }) => {
                   </svg>
                 </p>
               </div>
-            </a>
+            </button>
 
             <div className="mt-6">
               <button

@@ -19,6 +19,7 @@ import ForgotPassword from './pages/forgotPassword';
 import Verify from './pages/verifyOtp';
 import ResetPassword  from './pages/reset';
 import ProductDetail  from './pages/productDetail';
+import OrderDetail from './pages/orderDetail';
 import ErrorBoundary from './components/ErrorBoundary';
 
 

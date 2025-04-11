@@ -6,10 +6,16 @@ const jwt = require("jsonwebtoken");
 require("dotenv").config();
 const crypto = require("crypto");
 const nodemailer = require("nodemailer");
-
-
+const http = require("http");
+const { Server } = require("socket.io");
 const app = express();
-const port = 3000;
+const server = http.createServer(app);
+const multer = require("multer");
+const path = require("path")
+
+const HTTP_PORT = 3000;
+const WS_PORT = 4000;
+
 
 app.use(cors());
 app.use(express.json());
@@ -28,6 +34,17 @@ const connectDB = async () => {
 };
 connectDB();
 
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, "uploads/profileImages"); // Folder to save uploaded images
+  },
+  filename: function (req, file, cb) {
+    const uniqueName = `${Date.now()}-${file.originalname}`;
+    cb(null, uniqueName);
+  }
+});
+
+const upload = multer({ storage });
 
 // User Schema
 const UserSchema = new mongoose.Schema({
@@ -39,7 +56,7 @@ const UserSchema = new mongoose.Schema({
   city: { type: String, default: "" },
   country: { type: String, default: "" },
   state: { type: String, default: "" },
-  // profileImage: { type: String, default: "" },
+  profileImage: { type: String, default: null },
 });
 
 const ProductSchema = new mongoose.Schema({
@@ -92,11 +109,29 @@ const OrderSchema = new mongoose.Schema({
   status: { type: String, default: "Pending" },
   totalAmount: { type: Number, required: true },
 });
+// Add to your schemas section
+const MessageSchema = new mongoose.Schema({
+  sender: { type: String, required: true }, // 'user' or 'customer'
+  content: { type: String, required: true },
+  timestamp: { type: Date, default: Date.now }
+});
+
+const ConversationSchema = new mongoose.Schema({
+  customerId: { type: mongoose.Schema.Types.ObjectId, ref: "Customer", required: true },
+  customer: { type: String, required: true },
+  messages: [MessageSchema],
+  lastUpdated: { type: Date, default: Date.now }
+});
+
+const Conversation = mongoose.model("Conversation", ConversationSchema);
 
 const UserDetail = mongoose.model("User", UserSchema);
 const Order = mongoose.model("Order", OrderSchema);
 const Customer = mongoose.model("Customer", CustomerSchema);
 const Product = mongoose.model("Product", ProductSchema);
+
+
+
 
 
 const sendOTPEmail = async (email, otp) => {
@@ -239,6 +274,8 @@ app.post("/resend-otp", async (req, res) => {
   }
 });
 
+
+
 // User Registration
 app.post("/create", async (req, res) => {
   const { name, email, password } = req.body;
@@ -286,7 +323,7 @@ app.post("/login", async (req, res) => {
         city: user.city,
         country: user.country,
         state: user.state,
-        // profileImage: user.profileImage,
+        profileImage: user.profileImage || null,
       },
     });
   } catch (error) {
@@ -296,6 +333,68 @@ app.post("/login", async (req, res) => {
 });
 
 const authMiddleware = require("./authMiddleware");
+
+// Get conversations for a customer
+app.get("/api/conversations/:customerId", authMiddleware, async (req, res) => {
+  try {
+    const conversations = await Conversation.findOne({ customerId: req.params.customerId })
+      .populate('customerId', 'name email phone');
+    res.json(conversations || { messages: [] });
+  } catch (error) {
+    res.status(500).json({ error: "Error fetching conversations" });
+  }
+});
+
+// Send a message
+app.post("/api/conversations/:customerId", authMiddleware, async (req, res) => {
+  try {
+    const { content, sender } = req.body;
+    const customerId = req.params.customerId;
+
+    console.log("Incoming message:", { customerId, content, sender });
+
+    let conversation = await Conversation.findOne({ customerId });
+
+    if (!conversation) {
+      const customerData = await Customer.findById(customerId).select("name");
+
+      if (!customerData) {
+        return res.status(404).json({ error: "Customer not found" });
+      }
+
+      conversation = new Conversation({
+        customerId,
+        customer: customerData.name, 
+        messages: []
+      });
+    }
+
+    conversation.messages.push({ sender, content });
+    conversation.lastUpdated = new Date();
+    await conversation.save();
+
+    res.json(conversation);
+  } catch (error) {
+    console.error("Error sending message:", error);
+    res.status(500).json({ error: "Error sending message" });
+  }
+});
+
+
+
+
+// Get all conversations (for sidebar)
+app.get("/api/conversations", authMiddleware, async (req, res) => {
+  try {
+    const conversations = await Conversation.find()
+      .populate('customerId', 'name email phone')
+      .sort({ lastUpdated: -1 });
+      
+    res.json(conversations);
+  } catch (error) {
+    res.status(500).json({ error: "Error fetching conversations" });
+  }
+});
 
 app.get('/me', authMiddleware, async (req, res) => {
   try {
@@ -310,7 +409,10 @@ app.get('/me', authMiddleware, async (req, res) => {
   }
 });
 
-app.put("/update-profile", authMiddleware, async (req, res) => {
+app.put(
+  "/update-profile",
+  authMiddleware,
+  upload.single("profileImage"), async (req, res) => {
   try {
     const { name, phone, address, city, country, state } = req.body;
 
@@ -325,6 +427,9 @@ app.put("/update-profile", authMiddleware, async (req, res) => {
     if (country) user.country = country;
     if (state) user.state = state;
     // if (profileImage) user.profileImage = profileImage;
+    if (req.file) {
+      user.profileImage = `/uploads/profileImages/${req.file.filename}`;
+    }
 
     await user.save();
 
@@ -333,7 +438,177 @@ app.put("/update-profile", authMiddleware, async (req, res) => {
     res.status(500).json({ error: "Error updating profile", details: error.message });
   }
 });
+app.use("/uploads", express.static("uploads"));
+app.delete("/remove-profile-image", authMiddleware, async (req, res) => {
+  try {
+    const user = await UserDetail.findById(req.user.userId);
+    if (!user) return res.status(404).json({ error: "User not found" });
 
+    // Optional: remove image file from disk using fs.unlink if you want
+    user.profileImage = null;
+    await user.save();
+    console.log("Updated user:", user);
+    res.json({ message: "Profile image removed" });
+  } catch (err) {
+    res.status(500).json({ error: "Failed to remove image", details: err.message });
+  }
+});
+
+
+app.get("/api/dashboard/summary", authMiddleware, async (req, res) => {
+  try {
+    const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+    const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+    const currentDate = new Date().toISOString().split('T')[0];
+    
+    const [
+      totalCustomers,
+      activeCustomers,
+      totalProducts,
+      activeProducts,
+      lowStockProducts,
+      expiredProducts,
+      pendingOrders,
+      completedOrders,
+      allOrders,
+      abandonedCarts,
+      recentWeekOrders,
+      homeDeliveryOrders,
+      pickupOrders,
+      totalInventoryValue
+    ] = await Promise.all([
+      Customer.countDocuments(),
+      Customer.countDocuments({ status: "Active" }),
+      Product.countDocuments(),
+      Product.countDocuments({ status: "Publish" }),
+      Product.countDocuments({ quantity: { $lt: 20 } }),
+      Product.countDocuments({ 
+        expiryDate: { $lt: currentDate },
+        status: "Publish"
+      }),
+      Order.countDocuments({ status: "Pending" }),
+      Order.countDocuments({ status: "Completed" }),
+      Order.find().populate('customerId', 'name email'),
+      Order.countDocuments({ 
+        status: "Pending",
+        createdAt: { $lt: oneDayAgo }
+      }),
+      Order.countDocuments({ createdAt: { $gte: sevenDaysAgo } }),
+      Order.countDocuments({ orderType: "Home Delivery" }),
+      Order.countDocuments({ orderType: "Pick Up" }),
+      Product.aggregate([
+        {
+          $group: {
+            _id: null,
+            totalValue: { $sum: { $multiply: ["$quantity", "$sellingPrice"] } }
+          }
+        }
+      ])
+    ]);
+
+    // Calculate metrics
+    const totalSales = allOrders.reduce((sum, order) => sum + (order.totalAmount || 0), 0);
+    const totalVolume = allOrders.reduce((sum, order) => {
+      return sum + (order.items?.reduce((itemSum, item) => itemSum + (item.quantity || 0), 0) || 0);
+    }, 0);
+
+    const abandonedCartPercentage = pendingOrders > 0 
+      ? Math.round((abandonedCarts / pendingOrders) * 100)
+      : 0;
+
+    // Get recent orders (last 5)
+    const recentOrders = allOrders
+      .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+      .slice(0, 5);
+
+    res.json({
+      totals: {
+        sales: totalSales,
+        volume: totalVolume,
+        customers: totalCustomers,
+        products: totalProducts,
+        orders: allOrders.length,
+        recentWeekSales: recentWeekOrders,
+        recentWeekOrders,
+        inventoryValue: totalInventoryValue[0]?.totalValue || 0
+      },
+      statusCounts: {
+        customers: {
+          active: activeCustomers,
+          inactive: totalCustomers - activeCustomers
+        },
+        products: {
+          active: activeProducts,
+          inactive: totalProducts - activeProducts,
+          lowStock: lowStockProducts,
+          expired: expiredProducts
+        },
+        orders: {
+          pending: pendingOrders,
+          completed: completedOrders,
+          total: allOrders.length,
+          abandoned: abandonedCarts,
+          abandonedPercentage: abandonedCartPercentage,
+          homeDelivery: homeDeliveryOrders,
+          pickup: pickupOrders
+        }
+      },
+      recentOrders: recentOrders.map(order => ({
+        _id: order._id,
+        customer: order.customerId?.name || 'Unknown',
+        email: order.customerId?.email || '',
+        totalAmount: order.totalAmount,
+        status: order.status,
+        orderDate: order.orderDate,
+        items: order.items.map(item => ({
+          productName: item.productName,
+          price: item.price,
+          quantity: item.quantity
+        }))
+      }))
+    });
+  } catch (error) {
+    console.error("Dashboard summary error:", error);
+    res.status(500).json({ error: "Failed to fetch dashboard data" });
+  }
+});
+
+app.get("/api/inventory/sales-summary", authMiddleware, async (req, res) => {
+  try {
+    const days = parseInt(req.query.days) || 7;
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - days);
+
+    const salesData = await Order.aggregate([
+      {
+        $match: {
+          orderDate: { $gte: startDate.toISOString().split("T")[0] } // Match orderDate instead of createdAt
+        }
+      },
+      {
+        $group: {
+          _id: "$orderDate", // Group by orderDate
+          totalSales: { $sum: "$totalAmount" },
+          orderCount: { $sum: 1 }
+        }
+      },
+      { $sort: { "_id": 1 } },
+      { 
+        $project: {
+          date: "$_id",
+          sales: "$totalSales",
+          orders: "$orderCount",
+          _id: 0
+        }
+      }
+    ]);
+
+    res.json(salesData);
+  } catch (error) {
+    console.error("Sales summary error:", error);
+    res.status(500).json({ error: "Failed to fetch sales summary data" });
+  }
+});
 
 
 // Fetch Customers
@@ -726,9 +1001,12 @@ app.get('/orders/product/:id', authMiddleware, async (req, res) => {
   }
 } );
 
+server.listen(WS_PORT, () => {
+  console.log(`Server running on http://localhost:${WS_PORT}`);
+  console.log(`Socket.IO server is ready for connections`);
+});
 
-
-app.listen(port, () => {
-  console.log(`Server running on http://localhost:${port}`);
+app.listen(HTTP_PORT, () => {
+  console.log(`Server running on http://localhost:${HTTP_PORT}`);
 });
 
