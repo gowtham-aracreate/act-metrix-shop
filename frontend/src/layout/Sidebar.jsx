@@ -41,15 +41,13 @@ const Sidebar = ({ children,title }) => {
           headers: { Authorization: `Bearer ${token}` },
         });
   
-        const data = await response.json();
-        console.log("Fetched User Data:", data);
-  
+        const data = await response.json();  
         if (data.success && data.user) {
           const nameParts = data.user.name ? data.user.name.split(" ") : ["", ""];
           
           setUser({
             firstName: nameParts[0] || "",
-            profileImage: `http://localhost:3000${data.user.profileImage || ""}`,
+            profileImage: data.user.profileImage || "",
           });
         } 
       } catch (error) {
@@ -335,7 +333,7 @@ const Sidebar = ({ children,title }) => {
               Settings
             </button>
 
-            <button
+            {/* <button
               onClick={() => handleLinkClick("Contact")}
               className={`mt-25 p-3 flex items-center w-full rounded-md ${activeLink === "Contact"
                   ? "bg-[#5570F1] text-white"
@@ -441,13 +439,13 @@ const Sidebar = ({ children,title }) => {
                   </svg>
                 </p>
               </div>
-            </button>
+            </button> */}
 
-            <div className="mt-6">
+            <div className="mt-65">
               <button
               onClick={handleLogout} 
-              className="p-3 w-full flex items-center text-red-500 hover:bg-red-100 rounded-md cursor-pointer">
-                <IoLogOut className="h-5 w-5 mr-2" />
+              className="p-3 w-full flex  items-center text-red-500 hover:bg-red-100 rounded-md cursor-pointer">
+                <IoLogOut className="h-6 w-6 mr-2" />
                 Logout
               </button>
             </div>

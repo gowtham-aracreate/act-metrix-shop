@@ -11,11 +11,23 @@ const { Server } = require("socket.io");
 const app = express();
 const server = http.createServer(app);
 const multer = require("multer");
-const path = require("path")
+const { S3Client } = require("@aws-sdk/client-s3");
+const { Upload } = require("@aws-sdk/lib-storage");
+
 
 const HTTP_PORT = 3000;
 const WS_PORT = 4000;
+const s3 = new S3Client({
+  region: process.env.AWS_REGION,
+  credentials: {
+    accessKeyId: process.env.AWS_ACCESS_KEY,
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+  },
+});
 
+// Multer memory storage
+const storage = multer.memoryStorage();
+const upload = multer({ storage: storage });
 
 app.use(cors());
 app.use(express.json());
@@ -34,17 +46,8 @@ const connectDB = async () => {
 };
 connectDB();
 
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, "uploads/profileImages"); // Folder to save uploaded images
-  },
-  filename: function (req, file, cb) {
-    const uniqueName = `${Date.now()}-${file.originalname}`;
-    cb(null, uniqueName);
-  }
-});
+const fs = require("fs");
 
-const upload = multer({ storage });
 
 // User Schema
 const UserSchema = new mongoose.Schema({
@@ -74,6 +77,8 @@ const ProductSchema = new mongoose.Schema({
   dateAdded: String,
   time: String,
   status: String,
+  image: { type: String, default: null },
+
 });
 
 const CustomerSchema = new mongoose.Schema({
@@ -130,7 +135,7 @@ const Order = mongoose.model("Order", OrderSchema);
 const Customer = mongoose.model("Customer", CustomerSchema);
 const Product = mongoose.model("Product", ProductSchema);
 
-
+// app.post('/upload-profile-image', uploadToS3);
 
 
 
@@ -159,6 +164,7 @@ const sendOTPEmail = async (email, otp) => {
 };
 
 const otpGenerator = require("otp-generator");
+// app.use("/uploads", express.static("uploads"));
 
 app.post("/forgot-password", async (req, res) => {
   const { email } = req.body;
@@ -408,36 +414,113 @@ app.get('/me', authMiddleware, async (req, res) => {
     res.status(500).json({ success: false, message: "Server Error" });
   }
 });
+// Modified upload-profile endpoint
+app.post("/upload-profile", authMiddleware, upload.single("image"), async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: "No image file provided" });
+    }
 
+    const file = req.file;
+
+    // Upload to S3
+    const upload = new Upload({
+      client: s3,
+      params: {
+        Bucket: "metrix-shop",
+        Key: `profileImages/${Date.now()}-${file.originalname}`,
+        Body: file.buffer,
+        ContentType: file.mimetype,
+      },
+    });
+
+    const result = await upload.done();
+    const imageUrl = result.Location;
+
+    // Update the user's profile image in the database 
+    const user = await UserDetail.findById(req.user.userId);
+    if (user) {
+      user.profileImage = imageUrl;
+      await user.save();
+    }
+
+    return res.status(200).json({ 
+      imageUrl,
+      message: "Profile image updated successfully" 
+    });
+  } catch (err) {
+    console.error("Error uploading image:", err);
+    return res.status(500).json({ error: "Image upload failed" });
+  }
+});
 app.put(
   "/update-profile",
   authMiddleware,
-  upload.single("profileImage"), async (req, res) => {
-  try {
-    const { name, phone, address, city, country, state } = req.body;
+  upload.single("profileImage"), 
+  async (req, res) => {
+    try {
+      const { name, phone, address, city, country, state, profileImage } = req.body;
 
-    const user = await UserDetail.findById(req.user.userId);
-    if (!user) {
-      return res.status(404).json({ error: "User not found" });
+      const user = await UserDetail.findById(req.user.userId);
+      if (!user) {
+        return res.status(404).json({ error: "User not found" });
+      }
+      
+      // Update user fields if provided
+      if (name) user.name = name;
+      if (phone) user.phone = phone;
+      if (address) user.address = address;
+      if (city) user.city = city;
+      if (country) user.country = country;
+      if (state) user.state = state;
+      
+      // Handle profile image
+      if (req.file) {
+        // If we're using S3, the file was already uploaded using the upload middleware
+        // So we just need to generate the S3 URL path
+        try {
+          const upload = new Upload({
+            client: s3,
+            params: {
+              Bucket: "metrix-shop",
+              Key: `profileImages/${Date.now()}-${req.file.originalname}`,
+              Body: req.file.buffer,
+              ContentType: req.file.mimetype,
+            },
+          });
+
+          const result = await upload.done();
+          user.profileImage = result.Location; // Store the full S3 URL
+        } catch (err) {
+          console.error("Error uploading to S3:", err);
+          return res.status(500).json({ error: "Failed to upload image" });
+        }
+      } else if (profileImage) {
+        // If profileImage URL is passed directly in the body (e.g., from a separate upload)
+        user.profileImage = profileImage;
+      }
+
+      await user.save();
+
+      res.json({ 
+        message: "Profile updated successfully", 
+        user: {
+          name: user.name,
+          email: user.email,
+          phone: user.phone,
+          address: user.address,
+          city: user.city,
+          country: user.country,
+          state: user.state,
+          profileImage: user.profileImage
+        }
+      });
+    } catch (error) {
+      console.error("Error updating profile:", error);
+      res.status(500).json({ error: "Error updating profile", details: error.message });
     }
-    if (name) user.name = name;
-    if (phone) user.phone = phone;
-    if (address) user.address = address;
-    if (city) user.city = city;
-    if (country) user.country = country;
-    if (state) user.state = state;
-    // if (profileImage) user.profileImage = profileImage;
-    if (req.file) {
-      user.profileImage = `/uploads/profileImages/${req.file.filename}`;
-    }
-
-    await user.save();
-
-    res.json({ message: "Profile updated successfully", user });
-  } catch (error) {
-    res.status(500).json({ error: "Error updating profile", details: error.message });
   }
-});
+);
 app.use("/uploads", express.static("uploads"));
 app.delete("/remove-profile-image", authMiddleware, async (req, res) => {
   try {
@@ -664,7 +747,7 @@ app.post("/customers", authMiddleware, async (req, res) => {
   }
 });
 
-app.put("/customers/:id", async (req, res) => {
+app.put("/customers/:id", authMiddleware, async (req, res) => {
   try {
     const customer = await Customer.findById(req.params.id);
     if (!customer) {
@@ -701,6 +784,20 @@ app.put("/customers/:id", async (req, res) => {
   }
 });
 
+app.delete('/customers/:id', authMiddleware, async (req, res) => {
+  try {
+    const customerId = req.params.id;
+    const customer = await Customer.findByIdAndDelete(customerId);
+    
+    if (!customer) {
+      return res.status(404).json({ message: "Customer not found" });
+    }
+    
+    res.status(200).json({ message: "Customer deleted successfully" });
+  } catch (error) {
+    res.status(500).json({ message: "Error deleting customer", error });
+  }
+});
 // Fetch All Orders
 app.get("/orders", authMiddleware, async (req, res) => {
   try {
@@ -913,12 +1010,36 @@ app.get("/products", authMiddleware, async (req, res) => {
 });
 
 // Add Product
-app.post("/product", authMiddleware, async (req, res) => {
+app.post("/product", authMiddleware, upload.single("image"), async (req, res) => {
   try {
-    const newProduct = new Product(req.body);
+    const productData = req.body;
+    
+    // Handle image upload to S3 if a file is provided
+    if (req.file) {
+      try {
+        const upload = new Upload({
+          client: s3,
+          params: {
+            Bucket: "metrix-shop",
+            Key: `productImages/${Date.now()}-${req.file.originalname}`,
+            Body: req.file.buffer,
+            ContentType: req.file.mimetype,
+          },
+        });
+
+        const result = await upload.done();
+        productData.image = result.Location; // Store the S3 URL
+      } catch (err) {
+        console.error("Error uploading to S3:", err);
+        return res.status(500).json({ error: "Failed to upload product image" });
+      }
+    }
+
+    const newProduct = new Product(productData);
     await newProduct.save();
     res.json(newProduct);
   } catch (error) {
+    console.error("Error adding product:", error);
     res.status(500).send("Error adding product");
   }
 });
@@ -951,17 +1072,42 @@ app.get('/product/:id', authMiddleware, async (req, res) => {
 });
 
 
-app.put('/product/:id', authMiddleware, async (req, res) => {
+app.put("/product/:id", authMiddleware, upload.single("image"), async (req, res) => {
   try {
-    const product = await Product.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    const productData = req.body;
+    
+    // Handle image upload to S3 if a file is provided
+    if (req.file) {
+      try {
+        const upload = new Upload({
+          client: s3,
+          params: {
+            Bucket: "metrix-shop",
+            Key: `productImages/${Date.now()}-${req.file.originalname}`,
+            Body: req.file.buffer,
+            ContentType: req.file.mimetype,
+          },
+        });
+
+        const result = await upload.done();
+        productData.image = result.Location; // Store the S3 URL
+      } catch (err) {
+        console.error("Error uploading to S3:", err);
+        return res.status(500).json({ error: "Failed to upload product image" });
+      }
+    }
+
+    const product = await Product.findByIdAndUpdate(req.params.id, productData, { new: true });
     if (!product) {
       return res.status(404).send('Product not found');
     }
     res.json(product);
   } catch (error) {
+    console.error("Error updating product:", error);
     res.status(500).send('Error updating product');
   }
 });
+
 
 app.delete('/product/:id', authMiddleware, async (req, res) => {
   try {
@@ -972,6 +1118,35 @@ app.delete('/product/:id', authMiddleware, async (req, res) => {
     res.send('Product deleted');
   } catch (error) {
     res.status(500).send('Error deleting product');
+  }
+});
+app.post("/upload-product-image", upload.single("image"), async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: "No image file provided" });
+    }
+
+    // Upload to S3
+    const uploadResult = new Upload({
+      client: s3,
+      params: {
+        Bucket: "metrix-shop",
+        Key: `productImages/${Date.now()}-${req.file.originalname}`,
+        Body: req.file.buffer,
+        ContentType: req.file.mimetype,
+      },
+    });
+
+    const result = await uploadResult.done();
+    const imageUrl = result.Location;
+
+    return res.status(200).json({ 
+      imageUrl,
+      message: "Product image uploaded successfully" 
+    });
+  } catch (err) {
+    console.error("Error uploading image:", err);
+    return res.status(500).json({ error: "Image upload failed" });
   }
 });
 

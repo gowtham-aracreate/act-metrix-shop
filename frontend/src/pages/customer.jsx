@@ -101,14 +101,22 @@ const CustomersPage = () => {
     setIsEditing(false);
   };
 
+  const formatPhoneNumber = (phoneNumber) => {
+    const cleanNumber = phoneNumber.replace(/\D/g, "");
+    const countryCode = cleanNumber.slice(0, 2); 
+    const phoneNumberPart = cleanNumber.slice(2);
+  
+    return `+${countryCode} ${phoneNumberPart}`;
+  };
+  
 
   const handleAddOrUpdateCustomer = async () => {
     try {
+      const formattedPhone = formatPhoneNumber(newCustomer.phone);
       const customerData = {
         name: newCustomer.name,
         email: newCustomer.email,
-        phone: newCustomer.phone,
-        address: newCustomer.address,
+        phone: formattedPhone,        address: newCustomer.address,
         city: newCustomer.city,
         state: newCustomer.state,
         country: newCustomer.country
@@ -253,7 +261,15 @@ const CustomersPage = () => {
       phone: cust.phone || "N/A",
       orders: totalOrders,
       total: totalCost ? `$${totalCost.toFixed(2)}` : "$0.00",
-      status: status,
+      status: (
+        <span
+          className={` py-1 rounded-lg text-sm font-medium px-4 ${
+            status === "Active" ? "bg-green-400 text-green-800" : "bg-red-300 text-red-700"
+          }`}
+        >
+          {status}
+        </span>
+      ),
     };
   });
 

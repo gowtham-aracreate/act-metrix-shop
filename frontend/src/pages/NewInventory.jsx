@@ -114,14 +114,21 @@ export const NewInventory = () => {
     }));
   };
 
-  const handleImageUpload = (event) => {
+  const handleImageUpload = async (event) => {
     const file = event.target.files[0];
-    if (file) {
-      const imageUrl = URL.createObjectURL(file);
-      setImage(imageUrl);
-      setFormData({ ...formData, image: file });
-    }
+    if (!file) return;
+  
+    setFormData(prev => ({
+      ...prev,
+      image: file  // Store the actual file object in formData
+    }));
+  
+    // Create a preview URL for the UI
+    const previewUrl = URL.createObjectURL(file);
+    setImage(previewUrl);
   };
+  
+  
 
   const handleChange = (event) => {
     const { name, value, type, checked } = event.target;
@@ -153,7 +160,9 @@ export const NewInventory = () => {
         time: product.time || "09:00",
         status: product.status || "Unpublish",
       });
-  
+      if (product.image) {
+        setImage(product.image);
+      }
       setIsEditing(true);
     } else {
       console.log("No inventory found in location.state");
@@ -163,40 +172,56 @@ export const NewInventory = () => {
 
   const handleSubmit = async (e, status) => {
     e.preventDefault();
+  
     try {
-      const itemData = {
-        productName: formData.productName,
-        productCategory: formData.productCategory,
-        sellingPrice: formData.sellingPrice,
-        costPrice: formData.costPrice,
-        quantity: formData.quantity,
-        discount: formData.discount,
-        discountValue: formData.discountValue,
-        expiryDate: formData.expiryDate,
-        returnPolicy: formData.returnPolicy,
-        shortDescription: formData.shortDescription,
-        longDescription: formData.longDescription,
-        dateAdded: formData.dateAdded,
-        time: formData.time,
-        status: status || formData.status,
-      };
+      const form = new FormData();
+  
+      form.append("productName", formData.productName);
+      form.append("productCategory", formData.productCategory);
+      form.append("sellingPrice", formData.sellingPrice);
+      form.append("costPrice", formData.costPrice);
+      form.append("quantity", formData.quantity);
+      form.append("discount", formData.discount);
+      form.append("discountValue", formData.discountValue);
+      form.append("expiryDate", formData.expiryDate);
+      form.append("returnPolicy", formData.returnPolicy);
+      form.append("shortDescription", formData.shortDescription);
+      form.append("longDescription", formData.longDescription);
+      form.append("dateAdded", formData.dateAdded);
+      form.append("time", formData.time);
+      form.append("status", status || formData.status);
+  
+      if (formData.image && formData.image instanceof File) {
+        form.append("image", formData.image);
+      }
   
       const url = formData._id
         ? `http://localhost:3000/product/${formData._id}`
         : "http://localhost:3000/product";
+  
       const method = formData._id ? "put" : "post";
   
-      const response = await axios[method](url, itemData, config);
+      const response = await axios({
+        method,
+        url,
+        data: form,
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "multipart/form-data",
+        },
+      });
+  
+  
       if (response.status === 200 || response.status === 201) {
         const updatedProduct = response.data;
         setInventory((prev) =>
           formData._id
             ? prev.map((product) =>
-                (product._id === updatedProduct._id ? updatedProduct : product))
-            : [...prev, response.data]
+                product._id === updatedProduct._id ? updatedProduct : product
+              )
+            : [...prev, updatedProduct]
         );
   
-        // Reset form if it was a new item
         if (!formData._id) {
           setFormData({
             productName: "",
@@ -212,15 +237,20 @@ export const NewInventory = () => {
             longDescription: "",
             dateAdded: format(new Date(), "dd MMM yyyy"),
             time: format(new Date(), "HH:mm"),
-            status: "Unpublish"
+            status: "Unpublish",
+            image: null,
           });
+          setImage(null);
+          setIsEditing(false);
         }
+  
         navigate("/inventory");
       }
     } catch (error) {
       console.error("Error saving item:", error);
     }
   };
+  
 
   const productCategory = [
     { label: "Gadgets" },
@@ -231,7 +261,7 @@ export const NewInventory = () => {
   return (
     <div className="">
       <Sidebar title=	"Inventory" />
-      <div className="ml-64 mt-15 bg-[#5E636614] h-screen ">
+      <div className="ml-64 mt-17 bg-[#5E636614] h-screen ">
         <div className="ml-6">
           <form onSubmit={(event) => handleSubmit(event, formData.status)}>
             <div className="pt-3 pb-3 flex text-[18px]">
@@ -247,9 +277,9 @@ export const NewInventory = () => {
                   className="bg-red-500 text-white w-[171px] h-[36px] rounded-md mx-[24px]">Cancel</button>   
                            </div>
             </div>
-            <div className="flex">
+            <div className="flex bg-white rounded-md py-[25px]">
               <div className="flex">
-                <div className="flex flex-col bg-white gap-[20px] px-[33px] py-[25px] ">
+                <div className="flex flex-col  gap-[20px] px-[33px] py-[25px] ">
                   <input
                     type="text"
                     name="productName"
@@ -503,7 +533,7 @@ export const NewInventory = () => {
                     />
                   </label>
                 </div>
-                <p className="py-[12px]">Additional Images</p>
+                {/* <p className="py-[12px]">Additional Images</p>
                 <div className="flex ">
                   <div className="flex items-center justify-center mr-8">
                     <label
@@ -538,7 +568,7 @@ export const NewInventory = () => {
                       />
                     </label>
                   </div>
-                </div>
+                </div> */}
               </div>
             </div>
           </form>

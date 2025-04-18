@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 
-const Dropdown = ({ dropdownButtonStyle, dropdownMenuStyle, dropdownButtonText, dropdownOptions, onSelect }) => {
+const Dropdown = ({ dropdownButtonStyle, dropdownMenuStyle, dropdownButtonText, dropdownOptions,onSelect, staticLabel = false, }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [selectedOption, setSelectedOption] = useState(dropdownButtonText);
 
@@ -13,13 +13,12 @@ const Dropdown = ({ dropdownButtonStyle, dropdownMenuStyle, dropdownButtonText, 
   };
 
   const handleOptionClick = (option) => {
-    setSelectedOption(option.label);
-    setIsOpen(false);
-    if (onSelect) {
-      onSelect(option); 
+    if (!staticLabel) {
+      setSelectedOption(option.label); // only update if not static
     }
+    setIsOpen(false);
+    onSelect?.(option);
   };
-
   return (
     <div className="relative inline-block text-left">
       <div>

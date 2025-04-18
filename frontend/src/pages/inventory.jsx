@@ -28,6 +28,7 @@ const options = [
 ]
 
 const tableTitle = [
+  "Product Image",
   "Product name",
   "Category",
   "Unit Price",
@@ -103,9 +104,7 @@ const InventoryPage = () => {
       alt: "Sales",
       cardStyle: "bg-white rounded-lg w-[605px] h-[145px]",
       maintitleStyle: "gap-50 pl-4",
-      dropdownButtonStyle: "text-gray-400 border-none pr-10",
-      dropdownMenuStyle: "bg-white",
-      dropdownButtonText: "This Week",
+      
       dropdownOptions: options,
       titleStyle: "text-[#8B8D97]",
       subtitleStyle: "font-bold text-[#45464E]",
@@ -113,8 +112,7 @@ const InventoryPage = () => {
       subTitle1: `${inventoryData.lowStockCount || 0}`,
       title2: "Expired",
       subTitle2: `${inventoryData.expiredCount || 0}`,
-      showDropdown: true,
-    },
+      showDropdown: false,    },
   ];
 
   useEffect(() => {
@@ -270,6 +268,13 @@ const InventoryPage = () => {
     const discountAmount = discount > 0 ? unitPrice * (discount / 100) : 0;
   
     return {
+      productImage: item.image ? (
+        <img 
+          src={item.image} 
+          alt={item.productName} 
+          className="h-10 w-10 object-contain rounded-lg bg-white"
+        />
+      ) : "-",
       product: (
         <span
           className="cursor-pointer font-semibold"
@@ -354,6 +359,7 @@ const InventoryPage = () => {
               onFilterChange={handleDateFilter}
               filters={filters}
               tableContent={Products.map((item) => [
+                item.productImage,
                 item.product,
                 item.category,
                 item.unit ? `₦ ${item.unit}` : "-",

@@ -193,16 +193,16 @@ const OrderDetail = () => {
               <h1 className="font-semibold">Tracking ID</h1>
               <p className="px-2 text-gray-600">{order?.trackingID || "N/A"}</p>
             </div>
-            <div className="flex items-end pr-5">
+            <div className="flex items-end pr-5 pt-4">
               <button
-                className="bg-black text-white px-3 py-1 rounded-md"
+                className="bg-black text-white px-3 py-3 rounded-md"
                 onClick={() => handleOrderStatusChange( "Completed")}
               >
                 Mark as Completed
               </button>
 
               <button
-                className="bg-red-500 text-white px-3 py-1 rounded-md ml-2"
+                className="bg-red-500 text-white px-4 py-3 rounded-md ml-2"
                 onClick={() =>handleOrderStatusChange("Cancelled" )}
               >
                 Cancel

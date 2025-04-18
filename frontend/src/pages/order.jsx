@@ -276,8 +276,18 @@ const Order = () => {
                 onSelect={(selectedOption) => handleActionChange(order._id, selectedOption)}
             />
         ),
-        status: order.status || "Pending",
-    }));
+        status: (
+            <span
+              className={`px-4 py-1 rounded-lg text-sm font-medium
+                ${order.status === "Completed" ? "bg-green-400 text-green-800 " :
+                  order.status === "In-Progress" ? "bg-yellow-400 text-yellow-800" :
+                  "bg-red-400 text-red-800"}
+              `}
+            >
+              {order.status}
+            </span>
+          ),
+            }));
 
     return (
         <div className="">

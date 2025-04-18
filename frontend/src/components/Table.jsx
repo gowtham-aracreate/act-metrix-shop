@@ -4,8 +4,11 @@ import { useNavigate } from "react-router-dom";
 import Filter from "../assets/filter.svg";
 import Calendar from "../assets/calendar.svg";
 import Send from "../assets/send.svg";
-import Dropdown from "./dropdown";
+import select from "../assets/select.png";
 import { CalendarPopup } from "./CalendarPopup";
+import * as XLSX from "xlsx";
+import { saveAs } from "file-saver";
+
 
 const Table = ({ title, tableContent, heading, onSearch, mode, onSortChange, filters, onFilterChange }) => {
   const [isSortingOpen, setIsSortingOpen] = useState(false);
@@ -16,18 +19,8 @@ const Table = ({ title, tableContent, heading, onSearch, mode, onSortChange, fil
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
   const navigate = useNavigate();
-  
 
-  const handleSort = (key) => {
-    let direction = 'asc';
-    if (sortConfig.key === key && sortConfig.direction === 'asc') {
-      direction = 'desc';
-    }
-    setSortConfig({ key, direction });
-    if (onSortChange) {
-      onSortChange({ key, direction });
-    }
-  };
+
 
   // Sorting logic
   const sortedContent = React.useMemo(() => {
@@ -46,24 +39,18 @@ const Table = ({ title, tableContent, heading, onSearch, mode, onSortChange, fil
     return sortableItems;
   }, [tableContent, sortConfig]);
 
-  // Filtering logic
   const filteredContent = React.useMemo(() => {
     return sortedContent.filter((item) =>
       Object.values(item).some((value) => {
-        // Handle different types of values
         if (React.isValidElement(value)) {
-          // For React elements (like spans), extract the text content
           const textContent = value.props?.children;
           return textContent && textContent.toString().toLowerCase().includes(searchQuery.toLowerCase());
         }
-        
-        // For regular string or number values
         return value && value.toString().toLowerCase().includes(searchQuery.toLowerCase());
       })
     );
   }, [sortedContent, searchQuery]);
 
-  // Handle row selection
   const handleRowSelect = (id) => {
     const newSelectedRows = new Set(selectedRows);
     if (newSelectedRows.has(id)) {
@@ -73,19 +60,32 @@ const Table = ({ title, tableContent, heading, onSearch, mode, onSortChange, fil
     }
     setSelectedRows(newSelectedRows);
   };
+  
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentItems = filteredContent.slice(indexOfFirstItem, indexOfLastItem);
+  const totalPages = Math.ceil(filteredContent.length / itemsPerPage);
 
-  // Handle select all rows
   const handleSelectAll = () => {
-    if (selectedRows.size === currentItems.length) {
-      setSelectedRows(new Set());
+    const currentIds = currentItems.map((item, index) => getRowKey(item, index));
+    const allSelected = currentIds.every((id) => selectedRows.has(id));
+  
+    if (allSelected) {
+      const newSelectedRows = new Set(selectedRows);
+      currentIds.forEach((id) => newSelectedRows.delete(id));
+      setSelectedRows(newSelectedRows);
     } else {
-      setSelectedRows(new Set(currentItems.map((item) => item.id)));
+      const newSelectedRows = new Set(selectedRows);
+      currentIds.forEach((id) => newSelectedRows.add(id));
+      setSelectedRows(newSelectedRows);
     }
   };
+  
+
   const handleSearch = (query) => {
     setSearchQuery(query);
     if (onSearch) {
-      onSearch(query); // Call the passed search function if provided
+      onSearch(query);
     }
   };
 
@@ -96,17 +96,66 @@ const Table = ({ title, tableContent, heading, onSearch, mode, onSortChange, fil
       console.error("onFilterChange is not defined!");
     }
   };
-  
-  const indexOfLastItem = currentPage * itemsPerPage;
-  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentItems = filteredContent.slice(indexOfFirstItem, indexOfLastItem);
-  const totalPages = Math.ceil(filteredContent.length / itemsPerPage);
 
-  const handlePageChange = (page) => {
-    if (page >= 1 && page <= totalPages) {
-      setCurrentPage(page);
+  const handleShare = () => {
+    const rowsToExport = tableContent.filter((item, index) =>
+      selectedRows.has(getRowKey(item, index))
+    );
+  
+    if (rowsToExport.length === 0) {
+      alert("No rows selected to share/export.");
+      return;
     }
+  
+    const plainData = rowsToExport.map((row, rowIndex) => {
+      const plainRow = {};
+      Object.entries(row).forEach(([key, value]) => {
+        if (React.isValidElement(value)) {
+          plainRow[key] = getTextFromReactElement(value);
+        } else {
+          plainRow[key] = value;
+        }
+      });
+      return plainRow;
+    });
+  
+    const worksheet = XLSX.utils.json_to_sheet(plainData);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Data");
+  
+    const excelBuffer = XLSX.write(workbook, {
+      bookType: "xlsx",
+      type: "array",
+    });
+  
+    const data = new Blob([excelBuffer], { type: "application/octet-stream" });
+    saveAs(data, "selected_rows.xlsx");
   };
+  
+  const getTextFromReactElement = (element) => {
+    if (typeof element === 'string' || typeof element === 'number') {
+      return element;
+    }
+  
+    if (React.isValidElement(element)) {
+      const children = element.props.children;
+      if (typeof children === 'string' || typeof children === 'number') {
+        return children;
+      }
+  
+      if (Array.isArray(children)) {
+        return children.map(child => getTextFromReactElement(child)).join('');
+      }
+  
+      return getTextFromReactElement(children);
+    }
+  
+    return '';
+  };
+    
+  
+  const getRowKey = (item, index) => item.id || item._id || item.key || index;
+
   // const filteredContent = tableContent.filter((item) =>
   //   item.some((data) => data.toString().toLowerCase().includes(searchQuery.toLowerCase()))
   // );
@@ -145,7 +194,7 @@ const Table = ({ title, tableContent, heading, onSearch, mode, onSortChange, fil
                     placeholder="Search"
                     value={searchQuery}
                     onChange={(e) => handleSearch(e.target.value)}
-                    />
+                  />
                 </div>
               </div>
               <div className="flex gap-[12px]">
@@ -181,17 +230,23 @@ const Table = ({ title, tableContent, heading, onSearch, mode, onSortChange, fil
                   )}
                 </div>
                 <div>
-                  <button className="flex w-[67px] pt-1 h-[30px] justify-center text-gray-600 border border-gray-600 rounded-lg">
+                  <button 
+                  onClick={handleShare}
+                  className="flex w-[67px] pt-1 h-[30px] justify-center text-gray-600 border border-gray-600 rounded-lg">
                     <img className="w-[16px] h-[16px] mt-1 mr-1" src={Send} alt="send" />
                     Share
                   </button>
                 </div>
                 <div>
-                  <Dropdown
-                    dropdownButtonStyle="text-gray-600 h-[30px] pt-1 justify-center w-[135px] pr-5 border border-gray-600 rounded-lg"
-                    dropdownMenuStyle="bg-white"
-                    dropdownButtonText="Bulk Action"
-                  />
+                  <button
+                    onClick={handleSelectAll}
+                    className="text-gray-600 h-[30px] pt-1 justify-center px-2 w-auto  border border-gray-600 rounded-lg">
+                    <img src={select} alt="select" className="w-5 h-5 mx-1 inline-flex mb-1"
+                    />
+{currentItems.every((item, index) => selectedRows.has(getRowKey(item, index)))
+  ? "Deselect All"
+  : "Select All"}
+                                     </button>
                 </div>
               </div>
             </div>
@@ -200,46 +255,17 @@ const Table = ({ title, tableContent, heading, onSearch, mode, onSortChange, fil
         <thead className="border-y border-gray-300 w-full text-left">
           <tr>
             <th scope="col" className="p-4">
-              <input
-                type="checkbox"
-                className="w-4 h-4 rounded-sm focus:ring-blue-500"
-                checked={selectedRows.size === currentItems.length}
-                onChange={handleSelectAll}
-              />
+              {/*  */}
             </th>
             {heading.map((topic, index) => (
               <th
                 key={index}
                 scope="col"
                 className="px-4 py-3 text-[14px] font-semibold text-[#2C2D33]"
-                // onClick={() => handleSort(topic.toLowerCase())}
+              // onClick={() => handleSort(topic.toLowerCase())}
               >
                 {topic}
-                <svg
-                onClick={() => sortedContent}
-                  className="ml-2 inline-flex"
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="18"
-                  height="22"
-                  viewBox="0 0 16 16"
-                  fill="none"
-                >
-                  <path
-                    stroke="currentColor"
-                    d="M14 5.1665H2C1.72667 5.1665 1.5 4.93984 1.5 4.6665C1.5 4.39317 1.72667 4.1665 2 4.1665H14C14.2733 4.1665 14.5 4.39317 14.5 4.6665C14.5 4.93984 14.2733 5.1665 14 5.1665Z"
-                    fill="#00092E"
-                  />
-                  <path
-                    stroke="currentColor"
-                    d="M12 8.5H4C3.72667 8.5 3.5 8.27333 3.5 8C3.5 7.72667 3.72667 7.5 4 7.5H12C12.2733 7.5 12.5 7.72667 12.5 8C12.5 8.27333 12.2733 8.5 12 8.5Z"
-                    fill="#00092E"
-                  />
-                  <path
-                    stroke="currentColor"
-                    d="M9.33332 11.8335H6.66666C6.39332 11.8335 6.16666 11.6068 6.16666 11.3335C6.16666 11.0602 6.39332 10.8335 6.66666 10.8335H9.33332C9.60666 10.8335 9.83332 11.0602 9.83332 11.3335C9.83332 11.6068 9.60666 11.8335 9.33332 11.8335Z"
-                    fill="#00092E"
-                  />
-                </svg>
+                
               </th>
             ))}
           </tr>
@@ -253,8 +279,8 @@ const Table = ({ title, tableContent, heading, onSearch, mode, onSortChange, fil
                   <input
                     type="checkbox"
                     className="w-4 h-4 rounded-sm focus:ring-blue-500"
-                    checked={selectedRows.has(data.id)}
-                    onChange={() => handleRowSelect(data.id)}
+                    checked={selectedRows.has(data.id || index)}
+                    onChange={() => handleRowSelect(getRowKey(data, index))}
                   />
                   {data.icon && <img className="pl-5" src={data.icon} alt="icon" />}
                 </td>
@@ -291,11 +317,10 @@ const Table = ({ title, tableContent, heading, onSearch, mode, onSortChange, fil
               <li key={i}>
                 <button
                   onClick={() => setCurrentPage(i + 1)}
-                  className={`flex items-center justify-center px-3 h-8 leading-tight border border-gray-300 hover:bg-gray-100 hover:text-gray-700 dark:border-gray-700 ${
-                    currentPage === i + 1
-                      ? "text-blue-600 bg-blue-50"
-                      : "text-gray-500 bg-white"
-                  }`}
+                  className={`flex items-center justify-center px-3 h-8 leading-tight border border-gray-300 hover:bg-gray-100 hover:text-gray-700 dark:border-gray-700 ${currentPage === i + 1
+                    ? "text-blue-600 bg-blue-50"
+                    : "text-gray-500 bg-white"
+                    }`}
                 >
                   {i + 1}
                 </button>

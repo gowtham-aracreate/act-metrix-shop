@@ -206,7 +206,7 @@ export const NewOrder = ({ isOpen, onClose, onOrderAdded }) => {
         }
 
         const filteredProducts = originalProducts.filter((product) =>
-            product.productName.toLowerCase().includes(searchTerm.toLowerCase())
+            product.productName.toLowerCase().startsWith(searchTerm.toLowerCase())
         );
 
         console.log("Filtered Products:", filteredProducts);

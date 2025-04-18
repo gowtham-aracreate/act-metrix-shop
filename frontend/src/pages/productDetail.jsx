@@ -75,8 +75,34 @@ const ProductDetail = ({ productId }) => {
     fetchData();
   }, [id]);
 
+  const handleToggleStatus = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        console.error("No token found");
+        return;
+      }
+  
+      const newStatus = product.status === "Publish" ? "Unpublish" : "Publish";
+  
+      const config = {
+        headers: { Authorization: `Bearer ${token}` },
+      };
+  
+      const response = await axios.patch(
+        `http://localhost:3000/products/${id}`,
+        { status: newStatus },
+        config
+      );
+  
+      setProduct(response.data); // update local state with new product data
+    } catch (error) {
+      console.error("Failed to update status:", error);
+    }
+  };
+
   const handleEditProduct = () => {
-    
+
     navigate("/NewInventory", { state: { product } });
   };
 
@@ -84,7 +110,7 @@ const ProductDetail = ({ productId }) => {
   const tableTitle = ["Order Date", "Order Type", "Unit Price", "Quantity", "Discount", " Order Total", "Status"];
   const OrderData = orders.map(({ orderDate, orderType, items, totalAmount, status }) => {
     const productItem = items.find(item => item.productId === id);
-  
+
     return [
       new Date(orderDate).toLocaleString("en-GB", {
         day: "2-digit",
@@ -93,16 +119,17 @@ const ProductDetail = ({ productId }) => {
         hour: "2-digit",
         minute: "2-digit",
         hour12: true,
-      }),
+      }).replace(",", " -"),
+      
       orderType || "-",
       productItem ? `₦ ${productItem.price.toFixed(2)}` : "-",
       productItem ? productItem.quantity : "-",
-      productItem ? `₦ ${(productItem.discount || 0).toFixed(2)}` : "-", 
-      `₦ ${totalAmount.toFixed(2)}`, 
+      productItem ? `₦ ${(productItem.discount || 0).toFixed(2)}` : "-",
+      `₦ ${totalAmount.toFixed(2)}`,
       status || "Pending",
     ];
   });
-  
+
   // Cards Data
   const fields = [
     {
@@ -141,7 +168,7 @@ const ProductDetail = ({ productId }) => {
   return (
     <div>
       <Sidebar
-    title="Inventory" />
+        title="Inventory" />
       <div className="ml-64 mt-15 bg-[#5E636614] h-screen p-4">
         <div className="ml-4">
           <div className="flex justify-between items-center">
@@ -149,23 +176,31 @@ const ProductDetail = ({ productId }) => {
               <h1 className="font-semibold">{product?.productName}</h1>
               <h1 className="pl-5 font-semibold">Date Added</h1>
               <p className="pl-2 text-gray-600">
-                {product?.dateAdded}
+                {product?.dateAdded}{" - "}
                 {product?.
                   time
                 }
               </p>
             </div>
-            <div className="flex items-end">
-            <button onClick={handleEditProduct} className="px-6 py-3 bg-black text-white rounded-lg ">
-              Edit Product
-            </button>
-            <button className="px-6 py-3 bg-red-500 text-white rounded-lg ml-2">
-              Unpublish Product
-            </button>
-          </div>
+            <div className="flex items-end pt-4">
+              <button onClick={handleEditProduct} className="px-6 py-3 bg-black text-white rounded-lg ">
+                Edit Product
+              </button>
+              <button
+                onClick={handleToggleStatus}
+                className={`px-6 py-3 rounded-lg ml-2 ${product?.status === "Unpublish"
+                    ? "bg-green-500 text-white"
+                    : "bg-red-500 text-white"
+                  }`}
+              >
+                {product?.status === "Unpublish" ? "Publish Product" : "Unpublish Product"}
+              </button>
+
+            </div>
           </div>
           <div className="flex justify-between mt-4">
-            <img src={upload} alt="Product" />
+            <img src={product?.image} alt="Product"
+              className="w-[150px] h-[145px] object-contain rounded-lg bg-white" />
             <div className="bg-white p-4 rounded-lg w-[300px] h-[140px]">
               <div className="flex justify-between items-center">
                 <p className="text-gray-500 text-[14px]">

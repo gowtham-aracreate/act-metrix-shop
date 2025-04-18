@@ -19,7 +19,6 @@ export const Setting = () => {
     city: "",
     country: "",
     state: "",
-    // profileImage: null, // Commented out as requested
   });
 
   const [countries] = useState(Country.getAllCountries());
@@ -27,11 +26,9 @@ export const Setting = () => {
   const [message, setMessage] = useState({ type: "", text: "" });
   const [profileImage, setProfileImage] = useState(null);
   const [previewImage, setPreviewImage] = useState(null);
-  const [isNewUpload, setIsNewUpload] = useState(false);
-
+  const [isLoading, setIsLoading] = useState(false);
 
   const navigate = useNavigate();
-
   const token = localStorage.getItem("token");
 
   useEffect(() => {
@@ -47,9 +44,9 @@ export const Setting = () => {
         const response = await fetch("http://localhost:3000/me", {
           headers: { Authorization: `Bearer ${token}` },
         });
+        console.log("Backend response:", response.data);
 
         const data = await response.json();
-        console.log("Fetched User Data:", data);
 
         if (data.success && data.user) {
           const nameParts = data.user.name ? data.user.name.split(" ") : ["", ""];
@@ -63,16 +60,26 @@ export const Setting = () => {
             city: data.user.city || "",
             country: data.user.country || "",
             state: data.user.state || "",
-            // profileImage: data.user.profileImage || null,
           });
-
           // Set selected country and load states if country exists
           if (data.user.country) {
             const states = State.getStatesOfCountry(data.user.country);
             setStates(states);
           }
+          
+          // Handle profile image
           if (data.user.profileImage) {
-            setPreviewImage(`http://localhost:3000${data.user.profileImage}`);
+            console.log("Profile image from API:", data.user.profileImage);
+            // Check if the URL is valid
+            const img = new Image();
+            img.onload = () => {
+              console.log("Image loaded successfully");
+              setPreviewImage(data.user.profileImage);
+            };
+            img.onerror = () => {
+              console.error("Failed to load image from URL:", data.user.profileImage);
+            };
+            img.src = data.user.profileImage;
           }
         } else {
           setMessage({ type: "error", text: "Failed to load user data" });
@@ -99,6 +106,7 @@ export const Setting = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setMessage({ type: "", text: "" });
+    setIsLoading(true);
 
     try {
       // Combine firstName and lastName to create the full name
@@ -112,39 +120,11 @@ export const Setting = () => {
       formData.append("country", user.country);
       formData.append("state", user.state);
 
+      // Only append profileImage if a new one was selected
       if (profileImage) {
-        formData.append("profileImage", profileImage); // image file
+        formData.append("profileImage", profileImage);
       }
 
-      const response = await fetch("http://localhost:3000/update-profile", {
-        method: "PUT",
-        headers: {
-          Authorization: `Bearer ${token}`, // ❗️Don't include 'Content-Type' when using FormData
-        },
-        body: formData,
-      });
-
-      const data = await response.json();
-      if (response.ok) {
-        setUser({ ...user }); // optionally update fields with `data.user`
-        setMessage({ type: "success", text: "Profile updated successfully!" });
-      } else {
-        setMessage({ type: "error", text: data.error || "Error updating profile" });
-      }
-    } catch (error) {
-      console.error("Error updating profile:", error);
-      setMessage({ type: "error", text: "Network error. Please try again." });
-    }
-  };
-
-
-  const handleUpload = async () => {
-    if (!profileImage) return;
-
-    const formData = new FormData();
-    formData.append("profileImage", profileImage);
-
-    try {
       const response = await fetch("http://localhost:3000/update-profile", {
         method: "PUT",
         headers: {
@@ -154,27 +134,88 @@ export const Setting = () => {
       });
 
       const data = await response.json();
-
       if (response.ok) {
-        // ✅ Update user profileImage in state so preview persists
-        setUser((prevUser) => ({
-          ...prevUser,
-          profileImage: data.user.profileImage,
-        }));
-        setPreviewImage(`http://localhost:3000${data.user.profileImage}`);
-        setProfileImage(null);
-        setIsNewUpload(false);
-        setMessage({ type: "success", text: "Profile image uploaded!" });
+        setMessage({ type: "success", text: "Profile updated successfully!" });
       } else {
-        setMessage({ type: "error", text: data.error || "Upload failed" });
+        setMessage({ type: "error", text: data.error || "Error updating profile" });
       }
     } catch (error) {
-      console.error("Upload error:", error);
-      setMessage({ type: "error", text: "Error uploading image" });
+      console.error("Error updating profile:", error);
+      setMessage({ type: "error", text: "Network error. Please try again." });
+    } finally {
+      setIsLoading(false);
     }
   };
+
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    
+    // Update the profileImage state with the file
+    setProfileImage(file);
+    const fileUrl = URL.createObjectURL(file);
+  setPreviewImage(fileUrl);
+  };
+
+  const handleUploadImage = async () => {
+    if (!profileImage) {
+      setMessage({ type: "error", text: "Please select an image first" });
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const formData = new FormData();
+      formData.append("image", profileImage);
+
+      const response = await axios.post("http://localhost:3000/upload-profile", formData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+      console.log("Upload response:", response.data);
+
+      if (response.data && response.data.imageUrl) {
+      // Test the URL by creating an image object
+      const testImg = new Image();
+      testImg.onload = () => {
+        console.log("Image URL valid:", response.data.imageUrl);
+        setPreviewImage(response.data.imageUrl);
+        setMessage({ type: "success", text: "Profile image uploaded successfully!" });
+      };
+      testImg.onerror = () => {
+        console.error("Image URL invalid:", response.data.imageUrl);
+        setMessage({ type: "warning", text: "Image uploaded but cannot be displayed. Please try again." });
+      };
+      testImg.src = response.data.imageUrl;
+    } else {
+      setMessage({ type: "error", text: "Upload succeeded but no image URL returned" });
+    }
+        // const updateResponse = await fetch("http://localhost:3000/update-profile", {
+        //   method: "PUT",
+        //   headers: {
+        //     Authorization: `Bearer ${token}`,
+        //     'Content-Type': 'application/json',
+        //   },
+        //   body: JSON.stringify({ profileImage: response.data.imageUrl }),
+        // });
+
+        // if (updateResponse.ok) {
+        //   setMessage({ type: "success", text: "Profile image uploaded successfully!" });
+        // }
+      
+    } catch (err) {
+      console.error("Error uploading image:", err);
+      setMessage({ type: "error", text: "Failed to upload image" });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const handleRemove = async () => {
     try {
+      setIsLoading(true);
       const response = await fetch("http://localhost:3000/remove-profile-image", {
         method: "DELETE",
         headers: {
@@ -185,10 +226,6 @@ export const Setting = () => {
       const data = await response.json();
 
       if (response.ok) {
-        setUser((prevUser) => ({
-          ...prevUser,
-          profileImage: null,
-        }));
         setPreviewImage(null);
         setProfileImage(null);
         setMessage({ type: "success", text: "Profile image removed!" });
@@ -197,11 +234,11 @@ export const Setting = () => {
       }
     } catch (error) {
       console.error("Remove error:", error);
-      setMessage({ type: "error", text: "Error removing image" });
+      setMessage({ type: "error", text: "Error removing image." });
+    } finally {
+      setIsLoading(false);
     }
   };
-
-
 
   const handleCountryChange = (e) => {
     const countryCode = e.target.value;
@@ -210,8 +247,7 @@ export const Setting = () => {
 
   return (
     <div>
-      <Sidebar
-        title={"Settings"} />
+      <Sidebar title={"Settings"} />
       <div className="ml-64 mt-15 bg-[#5E636614] min-h-screen">
         <div className="ml-4 pb-8">
           <form className="pt-3" onSubmit={handleSubmit}>
@@ -221,8 +257,9 @@ export const Setting = () => {
                 <button
                   type="submit"
                   className="bg-[#5570F1] text-white w-[150px] h-[40px] rounded-md"
+                  disabled={isLoading}
                 >
-                  Update
+                  {isLoading ? "Updating..." : "Update"}
                 </button>
               </div>
 
@@ -327,24 +364,32 @@ export const Setting = () => {
                   </div>
                 </div>
 
-                <div className="py-4">
+                <div className="py-4 ml-8">
                   <p className="pl-4 font-medium text-gray-700">Profile Image</p>
                   <div className="flex flex-col items-center space-y-4 pt-4 pl-4">
                     {/* Image preview */}
                     {previewImage ? (
+                      <>
                       <img
                         src={previewImage}
                         alt="Preview"
-                        className="w-32 h-32 rounded-full object-cover border shadow-lg transition duration-300"
+                        className="w-32 h-32 rounded-full object-cover border shadow-lg"
+                        onError={(e) => {
+                          console.error("Image failed to load:", previewImage);
+                          e.target.onerror = null;
+                          e.target.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='150' height='150' viewBox='0 0 150 150'%3E%3Crect width='150' height='150' fill='%23f0f0f0'/%3E%3Ctext x='50%25' y='50%25' font-size='18' text-anchor='middle' dy='.3em' fill='%23999'%3ENo Image%3C/text%3E%3C/svg%3E";
+                        }}
                       />
+                      </>
                     ) : (
-                      <label
-                        htmlFor="profileUpload"
-                        className="pl-5  w-34 h-34 flex items-center justify-center border-dashed border-2 border-gray-400 rounded-full cursor-pointer text-sm text-gray-500 hover:border-blue-400 transition"
-                      >
-                        Choose a file
-                        to upload
-                      </label>
+                      <div className="w-32 h-32 rounded-full bg-gray-200 flex items-center justify-center">
+                        <label
+                          htmlFor="profileUpload"
+                          className="cursor-pointer text-sm text-gray-500 hover:text-blue-500 transition"
+                        >
+                          Choose image
+                        </label>
+                      </div>
                     )}
 
                     {/* Hidden file input */}
@@ -352,51 +397,44 @@ export const Setting = () => {
                       id="profileUpload"
                       type="file"
                       accept="image/*"
-                      onChange={(e) => {
-                        const file = e.target.files[0];
-                        if (file) {
-                          setProfileImage(file);
-                          setPreviewImage(URL.createObjectURL(file));
-                          setIsNewUpload(true);
-                        }
-                      }}
+                      onChange={handleImageChange}
                       className="hidden"
                     />
 
-                    {/* Upload button (only if new file is selected and not yet uploaded) */}
-                    {isNewUpload && previewImage && (
-                      <button
-                        type="button"
-                        onClick={handleUpload}
-                        className="p-2 bg-blue-600 text-white rounded-md"
-                      >
-                        Upload Image
-                      </button>
-                    )}
-
-
-                    {previewImage && (
-                      <div className="flex justify-between gap-4">
+                    {/* Image action buttons */}
+                    <div className="flex gap-2">
+                      {profileImage && !previewImage && (
                         <button
                           type="button"
-                          onClick={() => document.getElementById("profileUpload").click()}
-                          className="px-2 py-2 rounded-md bg-yellow-100 text-yellow-800 hover:bg-yellow-200 transition"
+                          onClick={handleUploadImage}
+                          className="px-3 py-1 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                          disabled={isLoading}
                         >
-                          Change Profile
+                          {isLoading ? "Uploading..." : "Upload"}
                         </button>
+                      )}
+
+                      <button
+                        type="button"
+                        onClick={() => document.getElementById("profileUpload").click()}
+                        className="px-3 py-1 bg-gray-100 text-gray-800 rounded-md hover:bg-gray-200"
+                      >
+                        {previewImage ? "Change" : "Select Image"}
+                      </button>
+
+                      {previewImage && (
                         <button
                           type="button"
                           onClick={handleRemove}
-                          className="px-2 py-2 rounded-md bg-red-100 text-red-700 hover:bg-red-200 transition"
+                          className="px-3 py-1 bg-red-100 text-red-700 rounded-md hover:bg-red-200"
+                          disabled={isLoading}
                         >
-                          Remove Profile
+                          {isLoading ? "Removing..." : "Remove"}
                         </button>
-                      </div>
-                    )}
+                      )}
+                    </div>
                   </div>
                 </div>
-
-
               </div>
             </div>
           </form>
