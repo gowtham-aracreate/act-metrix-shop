@@ -44,7 +44,6 @@ export const Setting = () => {
         const response = await fetch("http://localhost:3000/me", {
           headers: { Authorization: `Bearer ${token}` },
         });
-        console.log("Backend response:", response.data);
 
         const data = await response.json();
 
@@ -69,11 +68,9 @@ export const Setting = () => {
           
           // Handle profile image
           if (data.user.profileImage) {
-            console.log("Profile image from API:", data.user.profileImage);
             // Check if the URL is valid
             const img = new Image();
             img.onload = () => {
-              console.log("Image loaded successfully");
               setPreviewImage(data.user.profileImage);
             };
             img.onerror = () => {
