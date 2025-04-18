@@ -419,7 +419,7 @@ app.post("/upload-profile", authMiddleware, upload.single("image"), async (req, 
     const upload = new Upload({
       client: s3,
       params: {
-        Bucket: "metrix-shop",
+        Bucket: process.env.AWS_BUCKET_NAME,
         Key: `profileImages/${Date.now()}-${file.originalname}`,
         Body: file.buffer,
         ContentType: file.mimetype,
@@ -474,7 +474,7 @@ app.put(
           const upload = new Upload({
             client: s3,
             params: {
-              Bucket: "metrix-shop",
+              Bucket: process.env.AWS_BUCKET_NAME,
               Key: `profileImages/${Date.now()}-${req.file.originalname}`,
               Body: req.file.buffer,
               ContentType: req.file.mimetype,

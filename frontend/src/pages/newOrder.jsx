@@ -62,11 +62,9 @@ export const NewOrder = ({ isOpen, onClose, onOrderAdded }) => {
                     axios.get("http://localhost:3000/customers", config),
                 ]);
 
-                console.log("Fetched Products:", productsRes.data);
                 setOriginalProducts(productsRes.data);
                 setProducts([]); // Make sure this is intentional
 
-                console.log("Fetched Customers:", customersRes.data);
                 setCustomers(customersRes.data);
             } catch (error) {
                 console.error("Error fetching data:", error);
