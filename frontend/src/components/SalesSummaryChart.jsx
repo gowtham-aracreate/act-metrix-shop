@@ -145,7 +145,6 @@ const SalesSummaryChart = () => {
           </BarChart>
         </ResponsiveContainer>
       )}
-
     </div>
   );
 };

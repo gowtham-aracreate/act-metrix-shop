@@ -1,3 +1,5 @@
+
+
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
@@ -93,9 +95,11 @@ const CustomerSchema = new mongoose.Schema({
   total: String,
   customerSince: String,
   status: String,
+  lastOrderDate: Date,
 });
+
 const OrderSchema = new mongoose.Schema({
- customerId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true }, 
+  customerId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
   customer: { type: String, required: true },
   items: [{
     productId: { type: mongoose.Schema.Types.ObjectId, ref: 'Product', required: true },
@@ -139,10 +143,20 @@ const Product = mongoose.model("Product", ProductSchema);
 
 
 
+//   try {
+//     const decoded = jwt.verify(token, process.env.JWT_SECRET);
+//     req.user = decoded;
+//     next();
+//   } catch (err) {
+//     res.status(401).json({ message: "Token is not valid" });
+//   }
+// };
+
+// Email Utility
 const sendOTPEmail = async (email, otp) => {
   try {
     let transporter = nodemailer.createTransport({
-      service: "gmail", // Or use SMTP settings
+      service: "gmail",
       auth: {
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASS,
@@ -170,18 +184,14 @@ app.post("/forgot-password", async (req, res) => {
   const { email } = req.body;
   const user = await UserDetail.findOne({ email });
   try {
-
     if (!user) {
       return res.status(404).json({ error: "Email not found. Please register first." });
     }
     const otp = crypto.randomInt(100000, 999999).toString();
     user.resetOTP = otp;
-
     user.otpExpires = Date.now() + 15 * 60 * 1000;
-
     await user.save();
     await sendOTPEmail(email, otp);
-
     res.json({ message: "OTP sent to email" });
   } catch (error) {
     res.status(500).json({ message: "Error sending OTP" });
@@ -190,21 +200,14 @@ app.post("/forgot-password", async (req, res) => {
 
 app.post("/verify-otp", async (req, res) => {
   const { email, otp } = req.body;
-
   try {
     const user = await UserDetail.findOne({ email });
-
     if (!user) {
       return res.status(404).json({ error: "User not found" });
     }
-
     if (user.resetOTP !== otp || Date.now() > new Date(user.otpExpires).getTime()) {
       return res.status(400).json({ error: "Invalid or expired OTP" });
     }
-    // user.resetOTP = null;
-    // user.otpExpires = null;
-    // await user.save();
-
     res.json({ success: true, message: "OTP verified successfully" });
   } catch (error) {
     res.status(500).json({ error: "Server error during OTP verification" });
@@ -213,7 +216,6 @@ app.post("/verify-otp", async (req, res) => {
 
 app.post("/reset-password", async (req, res) => {
   const { email, otp, newPassword } = req.body;
-
   if (!email || !otp || !newPassword) {
     return res.status(400).json({ error: "All fields are required" });
   }
@@ -229,7 +231,6 @@ app.post("/reset-password", async (req, res) => {
     user.password = hashedPassword;
     user.resetOTP = null;
     user.otpExpires = null;
-
     await user.save();
     res.json({ message: "Password reset successful" });
   } catch (error) {
@@ -294,30 +295,20 @@ app.post("/create", async (req, res) => {
   }
 });
 
-// User Login
 app.post("/login", async (req, res) => {
   const { email, password } = req.body;
   try {
     const user = await UserDetail.findOne({ email });
-
     if (!user) {
       return res.status(401).json({ error: "Invalid email or password" });
     }
-
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
       return res.status(401).json({ error: "Invalid email or password" });
     }
-
-    const secretKey = process.env.JWT_SECRET;
-    if (!secretKey) {
-      throw new Error("JWT_SECRET is not defined in .env file");
-    }
-
-    const token = jwt.sign({ userId: user._id, email: user.email }, secretKey, {
+    const token = jwt.sign({ userId: user._id, email: user.email }, process.env.JWT_SECRET, {
       expiresIn: "1h",
     });
-
     res.json({
       token,
       message: "Login successful",
@@ -338,6 +329,7 @@ app.post("/login", async (req, res) => {
   }
 });
 
+// Dashboard Endpoints
 const authMiddleware = require("./authMiddleware");
 
 // Get conversations for a customer
@@ -975,9 +967,20 @@ app.get("/api/sales", authMiddleware, async (req, res) => {
     });
 
     const totalOrders = orders.length;
-    const inProgress = await Order.countDocuments({ status: "In-Progress" });
-    const completed = await Order.countDocuments({ status: "Completed" });
+    const activeOrders = await Order.countDocuments({ status: { $in: ["Pending", "Processing"] } });
+    const pendingOrders = await Order.countDocuments({ status: "Pending" });
+    const completedOrders = await Order.countDocuments({ status: "Completed" });
     const totalCustomers = await Customer.countDocuments();
+    const activeCustomers = await Customer.countDocuments({ status: "Active" });
+    // const abandonedCart = await Order.countDocuments({ 
+    //   status: "Pending", 
+    //   createdAt: { $lt: new Date(Date.now() - 24*60*60*1000) } 
+    // });
+    const abandonedCustomers = await Customer.countDocuments({ 
+      lastOrderDate: { $lt: new Date(Date.now() - 30*24*60*60*1000) },
+      status: "Active"
+    });
+
     const abandonedCart = await Order.countDocuments({ status: "Pending" });
     const homeDelivery = await Order.countDocuments({ orderType: "Home Delivery" });
     const pickUp = await Order.countDocuments({ orderType: "Pick Up" });
@@ -985,10 +988,13 @@ app.get("/api/sales", authMiddleware, async (req, res) => {
       totalSales,
       totalVolume,
       totalOrders,
-      inProgress,
-      completed,
+      activeOrders,
+      pendingOrders,
+      completedOrders,
       totalCustomers,
+      activeCustomers,
       abandonedCart,
+      abandonedCustomers,
       homeDelivery,
       pickUp
     });
@@ -1156,7 +1162,6 @@ app.get("/api/inventory", authMiddleware, async (req, res) => {
     const expiredCount = await Product.countDocuments({
       expiryDate: { $lt: new Date().toISOString() },
     });
-
     res.json({ lowStockCount, expiredCount });
   } catch (error) {
     console.error("Error fetching inventory data:", error);
@@ -1164,15 +1169,13 @@ app.get("/api/inventory", authMiddleware, async (req, res) => {
   }
 });
 
-
-app.get('/orders/product/:id', authMiddleware, async (req, res) => {
+app.get("/api/products", authMiddleware, async (req, res) => {
   try {
-    const { id } = req.params;
-    const orders = await Order.find({ 'items.productId': id });
-
-    res.json(orders);
+    const products = await Product.find();
+    res.json(products);
   } catch (error) {
-    res.status(500).json({ error: "Error fetching orders for the product" });
+    console.error("Error fetching products:", error);
+    res.status(500).json({ error: "Server error while fetching products" });
   }
 } );
 
@@ -1185,3 +1188,72 @@ app.listen(HTTP_PORT, () => {
   console.log(`Server running on http://localhost:${HTTP_PORT}`);
 });
 
+app.get("/api/orders/recent", authMiddleware, async (req, res) => {
+  try {
+    const recentOrders = await Order.find()
+      .sort({ createdAt: -1 })
+      .limit(5)
+      .populate('customerId', 'name email');
+
+    const formattedOrders = recentOrders.map(order => ({
+      _id: order._id,
+      orderDate: order.orderDate,
+      status: order.status,
+      items: order.items.map(item => ({
+        productName: item.productName,
+        price: item.price,
+        quantity: item.quantity
+      }))
+    }));
+
+    res.json(formattedOrders);
+  } catch (error) {
+    console.error("Error fetching recent orders:", error);
+    res.status(500).json({ error: "Server error while fetching recent orders" });
+  }
+});
+
+app.get("/api/inventory/sales-summary", authMiddleware, async (req, res) => {
+  try {
+    const { days = "7" } = req.query;
+    const daysNum = parseInt(days);
+    
+    if (isNaN(daysNum)) {
+      return res.status(400).json({ error: "Invalid days parameter" });
+    }
+
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - daysNum);
+    
+    const salesData = await Order.aggregate([
+      {
+        $match: {
+          orderDate: {
+            $gte: startDate.toISOString(),
+            $lte: new Date().toISOString()
+          }
+        }
+      },
+      {
+        $group: {
+          _id: { $dateToString: { format: "%Y-%m-%d", date: { $toDate: "$orderDate" } } },
+          totalSales: { $sum: "$totalAmount" },
+          count: { $sum: 1 }
+        }
+      },
+      { $sort: { "_id": 1 } },
+      { 
+        $project: {
+          date: "$_id",
+          sales: "$totalSales",
+          _id: 0
+        }
+      }
+    ]);
+
+    res.json(salesData);
+  } catch (error) {
+    console.error("Error fetching sales summary data:", error);
+    res.status(500).json({ error: "Server error while fetching sales data" });
+  }
+});

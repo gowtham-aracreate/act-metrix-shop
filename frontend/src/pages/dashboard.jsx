@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import Sidebar from "../layout/Sidebar";
 import dsIcon from "../assets/ds.svg";
@@ -70,6 +71,7 @@ const DashboardCards = () => {
     },
     recentOrders: []
   });
+
   const formatDate = (dateString) => {
     if (!dateString) return "-";
     const date = new Date(dateString);
