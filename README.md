@@ -1,4 +1,5 @@
 📦 Inventory Management System
+
 A full-stack MERN (MongoDB, Express, React, Node.js) web application for managing inventory, customers, and orders. Built as part of an internship project, this system provides a seamless interface for real-time product tracking, customer management, and order processing.
 
 🔧 Key Features
