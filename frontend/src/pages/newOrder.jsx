@@ -44,7 +44,7 @@ export const NewOrder = ({ isOpen, onClose, onOrderAdded }) => {
     const [customers, setCustomers] = useState([]);
     const [selectedCustomer, setSelectedCustomer] = useState("");
     const [isNewCustomer, setIsNewCustomer] = useState(false);
-const [newCustomerCount, setNewCustomerCount] = useState(0);
+    const [newCustomerCount, setNewCustomerCount] = useState(0);
 
 
     const [formData, setFormData] = useState({
@@ -62,11 +62,9 @@ const [newCustomerCount, setNewCustomerCount] = useState(0);
                     axios.get("http://localhost:3000/customers", config),
                 ]);
 
-                console.log("Fetched Products:", productsRes.data);
                 setOriginalProducts(productsRes.data);
                 setProducts([]); // Make sure this is intentional
 
-                console.log("Fetched Customers:", customersRes.data);
                 setCustomers(customersRes.data);
             } catch (error) {
                 console.error("Error fetching data:", error);
@@ -206,7 +204,7 @@ const [newCustomerCount, setNewCustomerCount] = useState(0);
         }
 
         const filteredProducts = originalProducts.filter((product) =>
-            product.productName.toLowerCase().includes(searchTerm.toLowerCase())
+            product.productName.toLowerCase().startsWith(searchTerm.toLowerCase())
         );
 
         console.log("Filtered Products:", filteredProducts);

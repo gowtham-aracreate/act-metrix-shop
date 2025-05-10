@@ -41,7 +41,7 @@ const CustOrderPage = () => {
 
   useEffect(() => {
     if (!location.state?.customer) {
-      fetch(`http://localhost:3000/api/customers/${id}`,config())
+      fetch(`http://localhost:3000/api/customers/${id}`, config())
         .then(response => response.json())
         .then(data => {
           setCustomer(data);
@@ -49,7 +49,7 @@ const CustOrderPage = () => {
         .catch(error => {
           console.error('Error fetching customer data:', error);
         });
-    } 
+    }
   }, [id, location.state]);
 
   useEffect(() => {
@@ -97,7 +97,7 @@ const CustOrderPage = () => {
   useEffect(() => {
     const fetchOrders = async () => {
       try {
-        const response = await fetch(`http://localhost:3000/api/orders/customer/${id}`,config());
+        const response = await fetch(`http://localhost:3000/api/orders/customer/${id}`, config());
         if (!response.ok) {
           if (response.status === 404) {
             setOrders([]); // Set orders to an empty array if no orders exist
@@ -106,25 +106,52 @@ const CustOrderPage = () => {
           throw new Error(`HTTP error! Status: ${response.status}`);
         }
         const data = await response.json();
-        setOrders(data); 
+        setOrders(data);
       } catch (error) {
         console.error("Error fetching orders:", error);
         setOrders([]); // Ensure orders is always an array
       }
     };
-  
+
     fetchOrders();
   }, [id]);
-  
+
 
   const handleEditCustomer = () => {
     navigate("/customer", { state: { customer } });
   };
 
+  const handleDeleteCustomer = async () => {
+    if (window.confirm("Are you sure you want to suspend this customer?")) {
+      try {
+        const response = await fetch(
+          `http://localhost:3000/customers/${id}`,
+          {
+            method: "DELETE",
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("token")}`,
+            },
+          }
+        );
+
+        if (response.ok) {
+          alert("Customer suspended successfully.");
+          navigate("/customer"); // Redirect to the customers list page or appropriate page after deletion
+        } else {
+          const errorData = await response.json();
+          alert(`Failed to suspend customer: ${errorData.message}`);
+        }
+      } catch (error) {
+        console.error("Error deleting customer:", error);
+        alert("An error occurred while trying to suspend the customer.");
+      }
+    }
+  };
+
   const handleActionChange = async (orderId, selectedOption) => {
     try {
       const newStatus = selectedOption.label;
-  
+
       const response = await fetch(
         `http://localhost:3000/orders/${orderId}`,
         {
@@ -136,7 +163,7 @@ const CustOrderPage = () => {
           body: JSON.stringify({ status: newStatus }),
         }
       );
-  
+
       if (response.ok) {
         setOrders((prevOrders) =>
           prevOrders.map((order) =>
@@ -150,7 +177,7 @@ const CustOrderPage = () => {
       console.error("Error updating order status:", error);
     }
   };
-  
+
 
   // const heading = [
   //   "Order Date",
@@ -232,18 +259,21 @@ const CustOrderPage = () => {
 
   return (
     <div>
-      <Sidebar title="Orders" />
+      <Sidebar title="Customer" />
       <div className="ml-64 mt-15 bg-[#5E636614] h-screen p-4">
-        <div className="flex justify-between pb-4">
-          <div className="flex">
+        <div className="flex justify-between pt-4">
+          <div className="flex ">
             <h2 className="">Customer Number</h2>
             <p className="pl-1">#{customerNumber ?? "N/A"}</p>
           </div>
-          <div className="flex items-end">
+          <div className="flex items-end pb-4">
             <button onClick={handleEditCustomer} className="px-6 py-3 bg-black text-white rounded-lg ">
               Edit Customer
             </button>
-            <button className="px-6 py-3 bg-red-500 text-white rounded-lg ml-2">
+            <button
+              onClick={handleDeleteCustomer}
+              className="px-6 py-3 bg-red-500 text-white rounded-lg ml-2"
+            >
               Suspend Customer
             </button>
           </div>
@@ -301,7 +331,8 @@ const CustOrderPage = () => {
                   onSelect={(selectedOption) => handleActionChange(order._id, selectedOption)}
                 />
               ),
-              status: order?.status || "Pending",            }))}
+              status: order?.status || "Pending",
+            }))}
           />
         </div>
       </div>

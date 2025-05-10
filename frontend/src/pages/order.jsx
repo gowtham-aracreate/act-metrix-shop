@@ -84,10 +84,6 @@ const Order = () => {
             alt: "order",
             cardStyle: "bg-white rounded-lg w-[605px] h-[145px]",
             maintitleStyle: "gap-40 pl-4",
-            dropdownButtonStyle: "text-gray-400 border-none pr-10",
-            dropdownMenuStyle: "bg-white",
-            dropdownButtonText: "This Week",
-            dropdownOptions: options,
             titleStyle: "text-[#8B8D97]",
             subtitleStyle: "font-bold text-[#45464E]",
             title1: "All Orders",
@@ -96,24 +92,21 @@ const Order = () => {
             subTitle2: salesData.inProgress,
             title3: "Completed",
             subTitle3: salesData.completed,
-            showDropdown: true,
+            showDropdown: false,
         },
         {
             icon: cart,
             alt: "Sales",
             cardStyle: "bg-white rounded-lg w-[605px] h-[145px]",
             maintitleStyle: "pl-3 justify-between",
-            dropdownButtonStyle: "text-gray-400 border-none pr-10",
-            dropdownMenuStyle: "bg-white",
-            dropdownButtonText: "This Week",
-            dropdownOptions: options,
             titleStyle: "text-[#8B8D97]",
             subtitleStyle: "font-bold text-[#45464E]",
             title1: "Customer",
             subTitle1: salesData.totalCustomers,
             title2: "Abandoned Cart",
             subTitle2: salesData.abandonedCart,
-            showDropdown: true,
+            showDropdown: false,
+
         }
     ];
 
@@ -283,8 +276,18 @@ const Order = () => {
                 onSelect={(selectedOption) => handleActionChange(order._id, selectedOption)}
             />
         ),
-        status: order.status || "Pending",
-    }));
+        status: (
+            <span
+              className={`px-4 py-1 rounded-lg text-sm font-medium
+                ${order.status === "Completed" ? "bg-green-400 text-green-800 " :
+                  order.status === "In-Progress" ? "bg-yellow-400 text-yellow-800" :
+                  "bg-red-400 text-red-800"}
+              `}
+            >
+              {order.status}
+            </span>
+          ),
+            }));
 
     return (
         <div className="">

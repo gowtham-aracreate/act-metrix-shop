@@ -51,7 +51,6 @@ export const AuthForm = ({
           password: formValues.password,
         })
         if (res.data.token) {
-          console.log("New Token:", res.data.token);
           localStorage.setItem("token", res.data.token); 
           navigate("/dashboard"); 
         } else {
